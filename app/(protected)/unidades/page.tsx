@@ -77,21 +77,8 @@ export default async function UnidadesPage() {
                 return (
                   <tr key={u.id} className="hover:bg-background/50">
                     <td className="px-4 py-3 font-medium text-foreground">{u.nome}</td>
-                    <td className="px-4 py-3">
-                      {marca && (
-                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                          <span
-                            className="h-2 w-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                (marca as { cor_primaria: string | null }).cor_primaria ??
-                                "#6b7280",
-                            }}
-                            aria-hidden="true"
-                          />
-                          {(marca as { nome: string }).nome}
-                        </span>
-                      )}
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {marca ? (marca as { nome: string }).nome : "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                       {u.cidade && u.estado
@@ -106,7 +93,7 @@ export default async function UnidadesPage() {
                         <Can role={user.role} perform="unidade:update">
                           <Link
                             href={`/unidades/${u.id}/editar`}
-                            className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                            className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                           >
                             Editar
                           </Link>
@@ -123,7 +110,7 @@ export default async function UnidadesPage() {
                             ) : (
                               <button
                                 type="submit"
-                                className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                                className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                               >
                                 Ativar
                               </button>
