@@ -6,6 +6,7 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { toggleUnidadeAtivo } from "@/app/(protected)/unidades/actions";
 import { toggleTurmaAtivo } from "@/app/(protected)/turmas/actions";
 import { toggleAlunoAtivo } from "@/app/(protected)/alunos/actions";
+import { getAnoAnalise } from "@/lib/auth/ano-analise";
 import type { RoleUsuario } from "@/lib/types/database";
 
 export const metadata = { title: "Escolas — Olimpíadas" };
@@ -71,6 +72,7 @@ export default async function EscolaPage({
   const abaParam = sp["aba"];
   const aba: Aba = abaParam === "alunos" ? "alunos" : "unidades";
   const busca = typeof sp["busca"] === "string" ? sp["busca"].trim() : "";
+  const anoSelecionado = await getAnoAnalise();
 
   // ---------------------------------------------------------------------------
   // Fetch condicional
@@ -101,7 +103,12 @@ export default async function EscolaPage({
     if (busca) q = q.ilike("nome", `%${busca}%`);
     return q;
   })();
-  const alunos = alunosQuery ? (await alunosQuery).data : null;
+  const alunosBrutos = alunosQuery ? (await alunosQuery).data : null;
+  const alunos =
+    alunosBrutos?.filter((a) => {
+      const t = Array.isArray(a.turma) ? a.turma[0] : a.turma;
+      return t && (t as { ano_letivo?: number | null }).ano_letivo === anoSelecionado;
+    }) ?? alunosBrutos;
 
   // ---------------------------------------------------------------------------
   // Agrupamento de unidades por marca
@@ -123,7 +130,8 @@ export default async function EscolaPage({
   const unidadeRows = unidadesSorted.map((u) => {
     const marcaNome = getMarcaNome(u.marca);
     const turmas = (Array.isArray(u.turmas) ? u.turmas : []) as Turma[];
-    const turmasSorted = [...turmas].sort((a, b) => a.nome.localeCompare(b.nome));
+    const turmasFiltradas = turmas.filter((t) => t.ano_letivo === anoSelecionado);
+    const turmasSorted = [...turmasFiltradas].sort((a, b) => a.nome.localeCompare(b.nome));
     return { ...u, marcaNome, turmasSorted };
   });
 

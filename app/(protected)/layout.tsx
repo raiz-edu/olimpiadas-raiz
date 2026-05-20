@@ -3,13 +3,32 @@ import { getServerSession } from "@/lib/auth/session";
 import { UserProvider } from "@/lib/auth/context";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Sidebar } from "@/components/layout/sidebar";
+import { YearSelector } from "@/components/layout/year-selector";
 import { ROLE_LABELS } from "@/lib/auth/roles";
+import { getAnoAnalise } from "@/lib/auth/ano-analise";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();
   if (!session) redirect("/login");
 
   const { user } = session;
+
+  // Anos disponíveis para seleção (distinct anos das turmas + ano atual)
+  const supabase = createAdminClient();
+  const { data: anoRows } = await supabase
+    .from("turma")
+    .select("ano_letivo")
+    .not("ano_letivo", "is", null)
+    .order("ano_letivo", { ascending: false });
+
+  const anoAtual = new Date().getFullYear();
+  const anosSet = new Set<number>([anoAtual]);
+  (anoRows ?? []).forEach((r) => {
+    if (r.ano_letivo) anosSet.add(r.ano_letivo);
+  });
+  const anos = [...anosSet].sort((a, b) => b - a);
+  const anoSelecionado = await getAnoAnalise();
 
   return (
     <UserProvider user={user}>
@@ -37,6 +56,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               </div>
               <span className="text-sm font-semibold text-foreground">Olimpíadas</span>
             </div>
+
+            {/* Seletor de ano */}
+            <YearSelector anos={anos} anoAtual={anoSelecionado} />
 
             {/* User info + logout */}
             <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Can } from "@/components/auth/can";
 import { ROLE_LABELS } from "@/lib/auth/roles";
+import { getAnoAnalise } from "@/lib/auth/ano-analise";
 
 export const metadata = { title: "Dashboard — Olimpíadas" };
 
@@ -73,7 +74,7 @@ export default async function DashboardPage() {
 
   const { user } = session;
   const supabase = createAdminClient();
-  const anoAtual = new Date().getFullYear();
+  const anoAtual = await getAnoAnalise();
 
   // Queries paralelas
   const [

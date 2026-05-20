@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { confirmarInscricao, cancelarInscricao } from "./actions";
+import { getAnoAnalise } from "@/lib/auth/ano-analise";
 
 export const metadata = { title: "Inscrições — Olimpíadas" };
 
@@ -38,10 +39,12 @@ export default async function InscricoesPage({
   // Filtros
   const filterOlimpiada = sp.olimpiada ?? "";
   const filterStatus = sp.status ?? "";
+  const anoSelecionado = await getAnoAnalise();
 
   let query = supabase
     .from("v_dashboard_inscricoes")
     .select("*")
+    .eq("ano_letivo", anoSelecionado)
     .order("inscrito_em", { ascending: false });
 
   if (filterOlimpiada) query = query.eq("olimpiada_id", filterOlimpiada);
