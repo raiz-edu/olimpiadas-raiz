@@ -3,7 +3,6 @@ import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { can } from "@/lib/auth/roles";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import { toggleTurmaAtivo } from "@/app/(protected)/turmas/actions";
 import { toggleAlunoAtivo } from "@/app/(protected)/alunos/actions";
 import { getAnoAnalise } from "@/lib/auth/ano-analise";
 import type { RoleUsuario } from "@/lib/types/database";
@@ -44,15 +43,6 @@ function TabNav({ aba, userRole }: { aba: Aba; userRole: RoleUsuario }) {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const getMarcaNome = (m: unknown): string => {
-  const obj = (Array.isArray(m) ? m[0] : m) as { nome?: string } | null | undefined;
-  return obj?.nome ?? "—";
-};
-
-// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -77,15 +67,13 @@ export default async function EscolaPage({
   // Fetch condicional
   // ---------------------------------------------------------------------------
 
-  // Unidades + turmas aninhadas
-  const unidades =
+  // Marcas com contagem de unidades e turmas
+  const marcas =
     aba === "unidades" && can(user.role, "unidade:read")
       ? (
           await supabase
-            .from("unidade")
-            .select(
-              "id, nome, cidade, estado, ativo, marca_id, marca:marca_id(nome), turmas:turma(id, nome, serie, ano_letivo, ativo)",
-            )
+            .from("marca")
+            .select("id, nome, unidades:unidade(id, turmas:turma(id, ano_letivo))")
             .order("nome")
         ).data
       : null;
@@ -110,28 +98,23 @@ export default async function EscolaPage({
     }) ?? alunosBrutos;
 
   // ---------------------------------------------------------------------------
-  // Agrupamento de unidades por marca
+  // Contagem por marca
   // ---------------------------------------------------------------------------
 
-  type Turma = {
-    id: string;
-    nome: string;
-    serie: string | null;
-    ano_letivo: number | null;
-    ativo: boolean;
-  };
-
-  const unidadesSorted = [...(unidades ?? [])].sort(
-    (a, b) =>
-      getMarcaNome(a.marca).localeCompare(getMarcaNome(b.marca)) || a.nome.localeCompare(b.nome),
-  );
-
-  const unidadeRows = unidadesSorted.map((u) => {
-    const marcaNome = getMarcaNome(u.marca);
-    const turmas = (Array.isArray(u.turmas) ? u.turmas : []) as Turma[];
-    const turmasFiltradas = turmas.filter((t) => t.ano_letivo === anoSelecionado);
-    const turmasSorted = [...turmasFiltradas].sort((a, b) => a.nome.localeCompare(b.nome));
-    return { ...u, marcaNome, turmasSorted };
+  const marcaRows = (marcas ?? []).map((m) => {
+    const unidadeList = (Array.isArray(m.unidades) ? m.unidades : []) as {
+      id: string;
+      turmas: { id: string; ano_letivo: number | null }[] | null;
+    }[];
+    const numUnidades = unidadeList.length;
+    const numTurmas = unidadeList.reduce((acc, u) => {
+      const turmas = (Array.isArray(u.turmas) ? u.turmas : []) as {
+        id: string;
+        ano_letivo: number | null;
+      }[];
+      return acc + turmas.filter((t) => t.ano_letivo === anoSelecionado).length;
+    }, 0);
+    return { id: m.id, nome: m.nome, numUnidades, numTurmas };
   });
 
   // ---------------------------------------------------------------------------
@@ -183,93 +166,40 @@ export default async function EscolaPage({
       {/* ------------------------------------------------------------------ */}
       {aba === "unidades" && (
         <>
-          {!unidades || unidades.length === 0 ? (
+          {marcaRows.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Nenhuma unidade encontrada.
+              Nenhuma marca encontrada.
             </p>
           ) : (
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <table className="w-full table-fixed text-sm">
                 <colgroup>
-                  <col className="w-[15%]" />
+                  <col className="w-[40%]" />
                   <col className="w-[20%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[12%] hidden sm:table-column" />
-                  <col className="w-[8%] hidden sm:table-column" />
-                  <col className="w-[18%] hidden sm:table-column" />
-                  <col className="w-[17%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[20%]" />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-background">
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Marca</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                      Unidade
+                      Unidades
                     </th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Turma</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                      Série
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      Turmas
                     </th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                      Ano
-                    </th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                      Localização
-                    </th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ano</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {unidadeRows.flatMap((u) =>
-                    u.turmasSorted.map((t) => (
-                      <tr key={`t-${t.id}`} className="hover:bg-background/50">
-                        <td className="px-4 py-3 text-muted-foreground">{u.marcaNome}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{u.nome}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{t.nome}</td>
-                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                          {t.serie ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                          {t.ano_letivo ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                          {u.cidade && u.estado
-                            ? `${u.cidade} / ${u.estado}`
-                            : (u.cidade ?? u.estado ?? "—")}
-                        </td>
-                        <td className="px-4 py-3">
-                          {can(user.role, "turma:update") && (
-                            <div className="flex items-center gap-2">
-                              <Link
-                                href={`/turmas/${t.id}/editar`}
-                                className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
-                              >
-                                Editar
-                              </Link>
-                              <form action={toggleTurmaAtivo}>
-                                <input type="hidden" name="id" value={t.id} />
-                                <input type="hidden" name="ativo" value={String(t.ativo)} />
-                                {t.ativo ? (
-                                  <ConfirmButton
-                                    message={`Desativar a turma "${t.nome}"?`}
-                                    className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
-                                  >
-                                    Desativar
-                                  </ConfirmButton>
-                                ) : (
-                                  <button
-                                    type="submit"
-                                    className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
-                                  >
-                                    Ativar
-                                  </button>
-                                )}
-                              </form>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    )),
-                  )}
+                  {marcaRows.map((m) => (
+                    <tr key={m.id} className="hover:bg-background/50">
+                      <td className="px-4 py-3 text-muted-foreground">{m.nome}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.numUnidades}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.numTurmas}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{anoSelecionado}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
