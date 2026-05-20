@@ -8,7 +8,7 @@ import { toggleTurmaAtivo } from "@/app/(protected)/turmas/actions";
 import { toggleAlunoAtivo } from "@/app/(protected)/alunos/actions";
 import type { RoleUsuario } from "@/lib/types/database";
 
-export const metadata = { title: "Escola — Olimpíadas" };
+export const metadata = { title: "Escolas — Olimpíadas" };
 
 type Aba = "unidades" | "alunos";
 
@@ -170,7 +170,7 @@ export default async function EscolaPage({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Escola</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Escolas</h1>
         {novoButton}
       </div>
 
