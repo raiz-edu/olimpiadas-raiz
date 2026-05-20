@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { getServerSession } from "@/lib/auth/session";
 import { UserProvider } from "@/lib/auth/context";
 import { LogoutButton } from "@/components/auth/logout-button";
@@ -37,24 +38,21 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         <header className="sticky top-0 z-30 border-b border-border bg-card">
           <div className="flex h-14 items-center justify-between px-4">
             {/* Logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-700">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4 text-white"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="8" r="6" />
-                  <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-                </svg>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo-raiz.png"
+                alt="Raiz Educação"
+                width={36}
+                height={36}
+                className="object-contain"
+                priority
+              />
+              <div className="hidden sm:block">
+                <p className="text-sm font-semibold leading-tight text-foreground">
+                  Programa Inhame de Ouro
+                </p>
+                <p className="text-xs text-muted-foreground leading-tight">Raiz Educação</p>
               </div>
-              <span className="text-sm font-semibold text-foreground">Olimpíadas</span>
             </div>
 
             {/* Seletor de ano */}
