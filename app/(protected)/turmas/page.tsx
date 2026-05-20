@@ -101,7 +101,7 @@ export default async function TurmasPage() {
                         <Can role={user.role} perform="turma:update">
                           <Link
                             href={`/turmas/${t.id}/editar`}
-                            className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                            className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                           >
                             Editar
                           </Link>
@@ -111,14 +111,14 @@ export default async function TurmasPage() {
                             {t.ativo ? (
                               <ConfirmButton
                                 message={`Desativar a turma "${t.nome}"?`}
-                                className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                                className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
                               >
                                 Desativar
                               </ConfirmButton>
                             ) : (
                               <button
                                 type="submit"
-                                className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                                className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                               >
                                 Ativar
                               </button>

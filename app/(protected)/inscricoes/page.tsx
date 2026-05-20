@@ -178,7 +178,7 @@ export default async function InscricoesPage({
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`text-xs font-medium ${STATUS_STYLES[i.status] ?? "text-muted-foreground"}`}
+                      className={`text-sm font-medium ${STATUS_STYLES[i.status] ?? "text-muted-foreground"}`}
                     >
                       {STATUS_LABELS[i.status] ?? i.status}
                     </span>
@@ -191,7 +191,7 @@ export default async function InscricoesPage({
                             <input type="hidden" name="id" value={i.inscricao_id} />
                             <button
                               type="submit"
-                              className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                              className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                             >
                               Confirmar
                             </button>
@@ -202,7 +202,7 @@ export default async function InscricoesPage({
                             <input type="hidden" name="id" value={i.inscricao_id} />
                             <ConfirmButton
                               message={`Cancelar a inscrição de ${i.aluno_nome} em ${i.olimpiada_nome}?`}
-                              className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-destructive transition-colors"
+                              className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-destructive transition-colors"
                             >
                               Cancelar
                             </ConfirmButton>

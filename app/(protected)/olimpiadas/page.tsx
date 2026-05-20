@@ -102,7 +102,7 @@ export default async function OlimpiadasPage() {
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${CLASSIFICACAO_COLORS[o.classificacao] ?? "bg-secondary text-muted-foreground"}`}
+                      className={`inline-flex rounded-full px-2 py-0.5 text-sm font-medium ${CLASSIFICACAO_COLORS[o.classificacao] ?? "bg-secondary text-muted-foreground"}`}
                     >
                       {CLASSIFICACAO_LABELS[o.classificacao] ?? o.classificacao}
                     </span>
@@ -117,14 +117,14 @@ export default async function OlimpiadasPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/olimpiadas/${o.id}`}
-                        className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                        className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
                       >
                         Ver
                       </Link>
                       <Can role={user.role} perform="olimpiada:update">
                         <Link
                           href={`/olimpiadas/${o.id}/editar`}
-                          className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                          className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                         >
                           Editar
                         </Link>
@@ -134,14 +134,14 @@ export default async function OlimpiadasPage() {
                           {o.ativo ? (
                             <ConfirmButton
                               message={`Desativar a olimpíada "${o.nome}"?`}
-                              className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                              className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
                             >
                               Desativar
                             </ConfirmButton>
                           ) : (
                             <button
                               type="submit"
-                              className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                              className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                             >
                               Ativar
                             </button>

@@ -93,7 +93,7 @@ export default async function UnidadesPage() {
                         <Can role={user.role} perform="unidade:update">
                           <Link
                             href={`/unidades/${u.id}/editar`}
-                            className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                            className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                           >
                             Editar
                           </Link>
@@ -103,14 +103,14 @@ export default async function UnidadesPage() {
                             {u.ativo ? (
                               <ConfirmButton
                                 message={`Desativar a unidade "${u.nome}"?`}
-                                className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                                className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
                               >
                                 Desativar
                               </ConfirmButton>
                             ) : (
                               <button
                                 type="submit"
-                                className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                                className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                               >
                                 Ativar
                               </button>

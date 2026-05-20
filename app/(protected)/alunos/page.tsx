@@ -122,7 +122,7 @@ export default async function AlunosPage() {
                         <Can role={user.role} perform="aluno:update">
                           <Link
                             href={`/alunos/${a.id}/editar`}
-                            className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                            className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                           >
                             Editar
                           </Link>
@@ -132,14 +132,14 @@ export default async function AlunosPage() {
                             {a.ativo ? (
                               <ConfirmButton
                                 message={`Desativar o aluno "${a.nome}"?`}
-                                className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                                className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
                               >
                                 Desativar
                               </ConfirmButton>
                             ) : (
                               <button
                                 type="submit"
-                                className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
+                                className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
                               >
                                 Ativar
                               </button>
