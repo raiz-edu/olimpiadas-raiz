@@ -10,9 +10,9 @@ import { confirmarInscricao, cancelarInscricao } from "./actions";
 export const metadata = { title: "Inscrições — Olimpíadas" };
 
 const STATUS_STYLES: Record<string, string> = {
-  pendente: "bg-yellow-50 text-yellow-700",
-  confirmada: "bg-green-50  text-green-700",
-  cancelada: "bg-red-50    text-red-600",
+  pendente: "text-muted-foreground",
+  confirmada: "text-foreground",
+  cancelada: "text-muted-foreground/60",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -99,7 +99,7 @@ export default async function InscricoesPage({
 
         <button
           type="submit"
-          className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:bg-gray-200"
+          className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary/80"
         >
           Filtrar
         </button>
@@ -157,10 +157,10 @@ export default async function InscricoesPage({
                   Inscrito em
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {inscricoes.map((i) => (
                 <tr key={i.inscricao_id} className="hover:bg-background/50">
                   <td className="px-4 py-3 font-medium text-foreground">{i.aluno_nome}</td>
@@ -178,20 +178,20 @@ export default async function InscricoesPage({
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[i.status] ?? "bg-secondary text-muted-foreground"}`}
+                      className={`text-xs font-medium ${STATUS_STYLES[i.status] ?? "text-muted-foreground"}`}
                     >
                       {STATUS_LABELS[i.status] ?? i.status}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center gap-1">
                       <Can role={user.role} perform="inscricao:update">
                         {i.status === "pendente" && (
                           <form action={confirmarInscricao}>
                             <input type="hidden" name="id" value={i.inscricao_id} />
                             <button
                               type="submit"
-                              className="rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50"
+                              className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                             >
                               Confirmar
                             </button>
@@ -202,7 +202,7 @@ export default async function InscricoesPage({
                             <input type="hidden" name="id" value={i.inscricao_id} />
                             <ConfirmButton
                               message={`Cancelar a inscrição de ${i.aluno_nome} em ${i.olimpiada_nome}?`}
-                              className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
+                              className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-destructive transition-colors"
                             >
                               Cancelar
                             </ConfirmButton>

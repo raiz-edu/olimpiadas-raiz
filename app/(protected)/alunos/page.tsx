@@ -77,7 +77,7 @@ export default async function AlunosPage() {
                   Nascimento
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -89,42 +89,26 @@ export default async function AlunosPage() {
                     ? (
                         (turma as { unidade: unknown[] }).unidade as {
                           nome: string;
-                          marca: unknown;
                         }[]
                       )[0]
-                    : (turma as { unidade: { nome: string; marca: unknown } | null }).unidade);
-                const marca =
-                  unidade &&
-                  (Array.isArray((unidade as { marca: unknown }).marca)
-                    ? (
-                        (unidade as { marca: unknown[] }).marca as { cor_primaria: string | null }[]
-                      )[0]
-                    : (unidade as { marca: { cor_primaria: string | null } | null }).marca);
+                    : (turma as { unidade: { nome: string } | null }).unidade);
 
                 return (
                   <tr key={a.id} className="hover:bg-background/50">
                     <td className="px-4 py-3 font-medium text-foreground">{a.nome}</td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      {turma && (
-                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                          {marca && (
-                            <span
-                              className="h-2 w-2 rounded-full shrink-0"
-                              style={{
-                                backgroundColor:
-                                  (marca as { cor_primaria: string | null }).cor_primaria ??
-                                  "#6b7280",
-                              }}
-                              aria-hidden="true"
-                            />
-                          )}
+                      {turma ? (
+                        <span className="text-muted-foreground">
                           {(turma as { nome: string }).nome}
                           {unidade && (
                             <span className="text-muted-foreground">
+                              {" "}
                               · {(unidade as { nome: string }).nome}
                             </span>
                           )}
                         </span>
+                      ) : (
+                        "—"
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
@@ -134,11 +118,11 @@ export default async function AlunosPage() {
                       <StatusBadge ativo={a.ativo} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center gap-2">
                         <Can role={user.role} perform="aluno:update">
                           <Link
                             href={`/alunos/${a.id}/editar`}
-                            className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                            className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                           >
                             Editar
                           </Link>
@@ -155,7 +139,7 @@ export default async function AlunosPage() {
                             ) : (
                               <button
                                 type="submit"
-                                className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                                className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                               >
                                 Ativar
                               </button>

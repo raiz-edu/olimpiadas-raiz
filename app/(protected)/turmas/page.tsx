@@ -74,44 +74,18 @@ export default async function TurmasPage() {
                   Ano letivo
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {(turmas as TurmaRow[]).map((t) => {
                 const unidade = Array.isArray(t.unidade) ? t.unidade[0] : t.unidade;
-                const marca =
-                  unidade &&
-                  (Array.isArray((unidade as { marca: unknown }).marca)
-                    ? (
-                        (unidade as { marca: unknown[] }).marca as {
-                          nome: string;
-                          cor_primaria: string | null;
-                        }[]
-                      )[0]
-                    : (unidade as { marca: { nome: string; cor_primaria: string | null } | null })
-                        .marca);
 
                 return (
                   <tr key={t.id} className="hover:bg-background/50">
                     <td className="px-4 py-3 font-medium text-foreground">{t.nome}</td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      {unidade && (
-                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                          {marca && (
-                            <span
-                              className="h-2 w-2 rounded-full shrink-0"
-                              style={{
-                                backgroundColor:
-                                  (marca as { cor_primaria: string | null }).cor_primaria ??
-                                  "#6b7280",
-                              }}
-                              aria-hidden="true"
-                            />
-                          )}
-                          {(unidade as { nome: string }).nome}
-                        </span>
-                      )}
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                      {unidade ? (unidade as { nome: string }).nome : "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                       {t.serie ?? "—"}
@@ -123,11 +97,11 @@ export default async function TurmasPage() {
                       <StatusBadge ativo={t.ativo} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center gap-2">
                         <Can role={user.role} perform="turma:update">
                           <Link
                             href={`/turmas/${t.id}/editar`}
-                            className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                            className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                           >
                             Editar
                           </Link>
@@ -144,7 +118,7 @@ export default async function TurmasPage() {
                             ) : (
                               <button
                                 type="submit"
-                                className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                                className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                               >
                                 Ativar
                               </button>

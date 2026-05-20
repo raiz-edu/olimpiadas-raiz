@@ -16,8 +16,8 @@ const CLASSIFICACAO_LABELS: Record<string, string> = {
 };
 
 const CLASSIFICACAO_COLORS: Record<string, string> = {
-  obrigatoria: "bg-blue-50 text-blue-700",
-  facultativa: "bg-amber-50 text-amber-700",
+  obrigatoria: "bg-secondary text-foreground",
+  facultativa: "bg-secondary text-muted-foreground",
 };
 
 export default async function OlimpiadasPage() {
@@ -83,7 +83,7 @@ export default async function OlimpiadasPage() {
                   Ano
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -92,7 +92,7 @@ export default async function OlimpiadasPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/olimpiadas/${o.id}`}
-                      className="font-medium text-blue-700 hover:underline"
+                      className="font-medium text-foreground hover:text-primary hover:underline"
                     >
                       {o.nome}
                     </Link>
@@ -114,7 +114,7 @@ export default async function OlimpiadasPage() {
                     <StatusBadge ativo={o.ativo} />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/olimpiadas/${o.id}`}
                         className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
@@ -124,7 +124,7 @@ export default async function OlimpiadasPage() {
                       <Can role={user.role} perform="olimpiada:update">
                         <Link
                           href={`/olimpiadas/${o.id}/editar`}
-                          className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                          className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                         >
                           Editar
                         </Link>
@@ -141,7 +141,7 @@ export default async function OlimpiadasPage() {
                           ) : (
                             <button
                               type="submit"
-                              className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
+                              className="rounded px-2 py-1 text-xs font-bold text-foreground hover:text-primary transition-colors"
                             >
                               Ativar
                             </button>
