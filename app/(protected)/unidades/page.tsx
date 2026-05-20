@@ -73,7 +73,14 @@ export default async function UnidadesPage() {
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full min-w-[600px] text-sm">
+          <table className="w-full min-w-[600px] table-fixed text-sm">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[30%]" />
+              <col className="w-[25%] hidden sm:table-column" />
+              <col className="w-[10%]" />
+              <col className="w-[13%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-border bg-background">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Marca</th>
