@@ -23,14 +23,10 @@ export default async function UnidadesPage() {
     .select("id, nome, cidade, estado, ativo, marca_id, marca:marca_id(nome, cor_primaria)")
     .order("nome");
 
-  function getMarcaNome(
-    m: typeof unidades extends null | undefined
-      ? never
-      : NonNullable<typeof unidades>[number]["marca"],
-  ): string {
-    const obj = (Array.isArray(m) ? m[0] : m) as unknown as { nome: string } | null;
+  const getMarcaNome = (m: unknown): string => {
+    const obj = (Array.isArray(m) ? m[0] : m) as { nome?: string } | null | undefined;
     return obj?.nome ?? "—";
-  }
+  };
 
   const sorted = [...(unidades ?? [])].sort(
     (a, b) =>
@@ -39,7 +35,7 @@ export default async function UnidadesPage() {
 
   const rows = sorted.map((u, i) => {
     const marcaNome = getMarcaNome(u.marca);
-    const prevMarcaNome = i > 0 ? getMarcaNome(sorted[i - 1].marca) : null;
+    const prevMarcaNome = i > 0 ? getMarcaNome(sorted[i - 1]?.marca) : null;
     return { ...u, marcaNome, isFirstInGroup: marcaNome !== prevMarcaNome };
   });
 
