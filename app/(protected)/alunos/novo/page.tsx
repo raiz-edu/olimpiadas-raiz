@@ -36,7 +36,7 @@ export default async function NovoAlunoPage() {
     <div className="space-y-6">
       <Breadcrumbs items={[{ label: "Alunos", href: "/alunos" }, { label: "Novo aluno" }]} />
       <PageHeader title="Novo Aluno" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <AlunoForm turmas={turmasFormatted} />
       </div>
     </div>

@@ -36,7 +36,7 @@ export default async function NovaTurmaPage() {
     <div className="space-y-6">
       <Breadcrumbs items={[{ label: "Turmas", href: "/turmas" }, { label: "Nova turma" }]} />
       <PageHeader title="Nova Turma" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <TurmaForm unidades={unidadesFormatted} />
       </div>
     </div>

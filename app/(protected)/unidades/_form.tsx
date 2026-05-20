@@ -64,7 +64,7 @@ export function UnidadeForm({ marcas, unidade }: UnidadeFormProps) {
           name="marca_id"
           defaultValue={unidade?.marca_id ?? ""}
           disabled={isEdit}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-background disabled:text-muted-foreground"
         >
           <option value="" disabled>
             Selecione uma marca…
@@ -84,7 +84,7 @@ export function UnidadeForm({ marcas, unidade }: UnidadeFormProps) {
           type="text"
           defaultValue={unidade?.nome ?? ""}
           placeholder="Ex.: Colégio Qi — Recreio"
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </FormField>
 
@@ -96,7 +96,7 @@ export function UnidadeForm({ marcas, unidade }: UnidadeFormProps) {
             type="text"
             defaultValue={unidade?.cidade ?? ""}
             placeholder="Ex.: Rio de Janeiro"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
 
@@ -105,7 +105,7 @@ export function UnidadeForm({ marcas, unidade }: UnidadeFormProps) {
             id="estado"
             name="estado"
             defaultValue={unidade?.estado ?? ""}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">— UF —</option>
             {ESTADOS_BR.map((uf) => (
@@ -126,9 +126,9 @@ export function UnidadeForm({ marcas, unidade }: UnidadeFormProps) {
               type="checkbox"
               defaultChecked={unidade?.ativo ?? true}
               value="true"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">Unidade ativa</span>
+            <span className="text-sm text-foreground">Unidade ativa</span>
           </label>
         </FormField>
       )}
@@ -149,7 +149,7 @@ export function UnidadeForm({ marcas, unidade }: UnidadeFormProps) {
         </button>
         <a
           href="/unidades"
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
         >
           Cancelar
         </a>

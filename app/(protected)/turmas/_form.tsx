@@ -37,7 +37,7 @@ export function TurmaForm({ unidades, turma }: TurmaFormProps) {
           name="unidade_id"
           defaultValue={turma?.unidade_id ?? ""}
           disabled={isEdit}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-background disabled:text-muted-foreground"
         >
           <option value="" disabled>
             Selecione uma unidade…
@@ -57,7 +57,7 @@ export function TurmaForm({ unidades, turma }: TurmaFormProps) {
           type="text"
           defaultValue={turma?.nome ?? ""}
           placeholder="Ex.: 9º Ano A"
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </FormField>
 
@@ -67,7 +67,7 @@ export function TurmaForm({ unidades, turma }: TurmaFormProps) {
             id="ano_letivo"
             name="ano_letivo"
             defaultValue={turma?.ano_letivo ?? ANO_ATUAL}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {ANOS.map((a) => (
               <option key={a} value={a}>
@@ -84,7 +84,7 @@ export function TurmaForm({ unidades, turma }: TurmaFormProps) {
             type="text"
             defaultValue={turma?.serie ?? ""}
             placeholder="Ex.: 9º Ano"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
       </div>
@@ -98,9 +98,9 @@ export function TurmaForm({ unidades, turma }: TurmaFormProps) {
               type="checkbox"
               defaultChecked={turma?.ativo ?? true}
               value="true"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">Turma ativa</span>
+            <span className="text-sm text-foreground">Turma ativa</span>
           </label>
         </FormField>
       )}
@@ -121,7 +121,7 @@ export function TurmaForm({ unidades, turma }: TurmaFormProps) {
         </button>
         <a
           href="/turmas"
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
         >
           Cancelar
         </a>

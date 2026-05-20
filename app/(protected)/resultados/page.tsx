@@ -181,14 +181,17 @@ export default async function ResultadosPage({
       {/* Filtros em cascata */}
       <form method="GET" className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
-          <label htmlFor="sel-olimpiada" className="block text-xs font-medium text-gray-600">
+          <label
+            htmlFor="sel-olimpiada"
+            className="block text-xs font-medium text-muted-foreground"
+          >
             Olimpíada
           </label>
           <select
             id="sel-olimpiada"
             name="olimpiada"
             defaultValue={filterOlimpiada}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Selecione…</option>
             {(olimpiadas ?? []).map((o) => (
@@ -201,14 +204,14 @@ export default async function ResultadosPage({
 
         {filterOlimpiada && fases && fases.length > 0 && (
           <div className="space-y-1">
-            <label htmlFor="sel-fase" className="block text-xs font-medium text-gray-600">
+            <label htmlFor="sel-fase" className="block text-xs font-medium text-muted-foreground">
               Fase
             </label>
             <select
               id="sel-fase"
               name="fase"
               defaultValue={filterFase}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Selecione…</option>
               {fases.map((f) => (
@@ -222,7 +225,7 @@ export default async function ResultadosPage({
 
         <button
           type="submit"
-          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:bg-gray-200"
         >
           Ver resultados
         </button>
@@ -239,14 +242,18 @@ export default async function ResultadosPage({
 
       {/* Conteúdo principal */}
       {!filterOlimpiada && (
-        <div className="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
-          <p className="text-sm text-gray-500">Selecione uma olimpíada para ver os resultados.</p>
+        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Selecione uma olimpíada para ver os resultados.
+          </p>
         </div>
       )}
 
       {filterOlimpiada && !filterFase && fases && fases.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
-          <p className="text-sm text-gray-500">Selecione uma fase para registrar os resultados.</p>
+        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Selecione uma fase para registrar os resultados.
+          </p>
         </div>
       )}
 
@@ -254,23 +261,23 @@ export default async function ResultadosPage({
         <>
           {/* Cabeçalho da fase */}
           {faseSelecionada && (
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   {TIPO_FASE_LABEL[faseSelecionada.tipo] ?? faseSelecionada.tipo}
                 </p>
-                <p className="mt-0.5 text-base font-semibold text-gray-900">
+                <p className="mt-0.5 text-base font-semibold text-foreground">
                   {faseSelecionada.nome}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   {formatDate(faseSelecionada.data_inicio)} – {formatDate(faseSelecionada.data_fim)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">{totalComResultado}</p>
-                <p className="text-xs text-gray-500">de {totalAlunos} registrados</p>
+                <p className="text-2xl font-bold text-foreground">{totalComResultado}</p>
+                <p className="text-xs text-muted-foreground">de {totalAlunos} registrados</p>
                 {totalAlunos > 0 && (
-                  <div className="mt-1 h-1.5 w-24 rounded-full bg-gray-100">
+                  <div className="mt-1 h-1.5 w-24 rounded-full bg-secondary">
                     <div
                       className="h-1.5 rounded-full bg-blue-500"
                       style={{ width: `${Math.round((totalComResultado / totalAlunos) * 100)}%` }}
@@ -283,31 +290,35 @@ export default async function ResultadosPage({
 
           {/* Tabela de resultados */}
           {inscricoesComResultado.length === 0 ? (
-            <div className="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
-              <p className="text-sm font-medium text-gray-700">
+            <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+              <p className="text-sm font-medium text-foreground">
                 Nenhum aluno inscrito nesta olimpíada.
               </p>
-              <p className="mt-1 text-xs text-gray-400">
-                <Link href="/inscricoes/nova" className="text-blue-600 underline">
+              <p className="mt-1 text-xs text-muted-foreground">
+                <Link href="/inscricoes/nova" className="text-primary underline">
                   Realizar inscrições
                 </Link>
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Aluno</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600 hidden md:table-cell">
+                  <tr className="border-b border-border bg-background">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Aluno</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                       Turma / Unidade
                     </th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Resultado</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600 hidden sm:table-cell">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      Resultado
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
                       Pontuação
                     </th>
                     {canWrite && (
-                      <th className="px-4 py-3 text-right font-medium text-gray-600">Registrar</th>
+                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                        Registrar
+                      </th>
                     )}
                   </tr>
                 </thead>
@@ -317,30 +328,30 @@ export default async function ResultadosPage({
                     const res = insc.resultado;
 
                     return (
-                      <tr key={insc.id} className="hover:bg-gray-50/50">
+                      <tr key={insc.id} className="hover:bg-background/50">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-foreground">
                             {info?.nome ?? insc.aluno?.nome ?? "—"}
                           </p>
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
-                          <span className="text-gray-700">{info?.turma_nome ?? "—"}</span>
+                          <span className="text-foreground">{info?.turma_nome ?? "—"}</span>
                           {info?.unidade_nome && (
-                            <span className="text-gray-400"> · {info.unidade_nome}</span>
+                            <span className="text-muted-foreground"> · {info.unidade_nome}</span>
                           )}
                         </td>
                         <td className="px-4 py-3">
                           {res ? (
                             <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${TIPO_RESULTADO_STYLE[res.tipo] ?? "bg-gray-100 text-gray-600"}`}
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${TIPO_RESULTADO_STYLE[res.tipo] ?? "bg-secondary text-muted-foreground"}`}
                             >
                               {TIPO_RESULTADO_LABEL[res.tipo] ?? res.tipo}
                             </span>
                           ) : (
-                            <span className="text-xs text-gray-400 italic">Pendente</span>
+                            <span className="text-xs text-muted-foreground italic">Pendente</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
+                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                           {res?.pontuacao != null ? res.pontuacao : "—"}
                         </td>
                         {canWrite && (
@@ -403,7 +414,7 @@ function ResultadoInlineForm({
       <select
         name="tipo"
         defaultValue={resultado?.tipo ?? ""}
-        className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:border-blue-500 focus:outline-none"
+        className="rounded border border-border bg-card px-2 py-1 text-xs text-foreground focus:border-blue-500 focus:outline-none"
       >
         <option value="" disabled>
           Tipo…
@@ -422,7 +433,7 @@ function ResultadoInlineForm({
         min={0}
         defaultValue={resultado?.pontuacao ?? ""}
         placeholder="Pts"
-        className="w-16 rounded border border-gray-200 px-2 py-1 text-xs text-gray-700 focus:border-blue-500 focus:outline-none"
+        className="w-16 rounded border border-border px-2 py-1 text-xs text-foreground focus:border-blue-500 focus:outline-none"
       />
 
       <button

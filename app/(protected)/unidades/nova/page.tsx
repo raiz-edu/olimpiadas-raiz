@@ -25,7 +25,7 @@ export default async function NovaUnidadePage() {
     <div className="space-y-6">
       <Breadcrumbs items={[{ label: "Unidades", href: "/unidades" }, { label: "Nova unidade" }]} />
       <PageHeader title="Nova Unidade" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <UnidadeForm marcas={marcas ?? []} />
       </div>
     </div>

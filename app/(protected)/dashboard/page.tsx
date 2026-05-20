@@ -60,10 +60,10 @@ function MiniBar({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-gray-700 truncate max-w-[65%]">{label}</span>
-        <span className="font-medium text-gray-900">{value}</span>
+        <span className="text-foreground truncate max-w-[65%]">{label}</span>
+        <span className="font-medium text-foreground">{value}</span>
       </div>
-      <div className="h-2 rounded-full bg-gray-100">
+      <div className="h-2 rounded-full bg-secondary">
         <div className={`h-2 rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -142,8 +142,8 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       {/* Boas-vindas */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Olá, {user.nome.split(" ")[0]} 👋</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">Olá, {user.nome.split(" ")[0]} 👋</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           {ROLE_LABELS[user.role]} · {anoAtual}
         </p>
       </div>
@@ -176,8 +176,8 @@ export default async function DashboardPage() {
       {totalInscricoes > 0 && (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Status */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-700">Inscrições por status</h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Inscrições por status</h2>
             <div className="space-y-3">
               {["pendente", "confirmada", "cancelada"].map((s) => (
                 <MiniBar
@@ -192,10 +192,10 @@ export default async function DashboardPage() {
           </div>
 
           {/* Top olimpíadas */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-700">Top olimpíadas</h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Top olimpíadas</h2>
             {topOlimpiadas.length === 0 ? (
-              <p className="text-xs text-gray-400">Sem dados.</p>
+              <p className="text-xs text-muted-foreground">Sem dados.</p>
             ) : (
               <div className="space-y-3">
                 {topOlimpiadas.map(([nome, count]) => (
@@ -212,10 +212,10 @@ export default async function DashboardPage() {
           </div>
 
           {/* Top marcas */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-700">Por marca</h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Por marca</h2>
             {topMarcas.length === 0 ? (
-              <p className="text-xs text-gray-400">Sem dados.</p>
+              <p className="text-xs text-muted-foreground">Sem dados.</p>
             ) : (
               <div className="space-y-3">
                 {topMarcas.map(([nome, count]) => (
@@ -235,7 +235,7 @@ export default async function DashboardPage() {
 
       {/* Links rápidos */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-gray-700">Acesso rápido</h2>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">Acesso rápido</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <Can role={user.role} perform="olimpiada:read">
             <QuickLink href="/olimpiadas" icon="🏆" label="Olimpíadas" />
@@ -269,7 +269,7 @@ function QuickLink({ href, icon, label }: { href: string; icon: string; label: s
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+      className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
     >
       <span aria-hidden="true" className="text-lg">
         {icon}

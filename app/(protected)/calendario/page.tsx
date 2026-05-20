@@ -166,20 +166,20 @@ export default async function CalendarioPage({
       {/* Controles */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Navegação de ano */}
-        <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-1">
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-1">
           <Link
             href={buildUrl({ ano: String(ano - 1) })}
-            className="rounded px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100"
+            className="rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-secondary"
             aria-label="Ano anterior"
           >
             ‹
           </Link>
-          <span className="min-w-[3.5rem] text-center text-sm font-semibold text-gray-900">
+          <span className="min-w-[3.5rem] text-center text-sm font-semibold text-foreground">
             {ano}
           </span>
           <Link
             href={buildUrl({ ano: String(ano + 1) })}
-            className="rounded px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100"
+            className="rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-secondary"
             aria-label="Próximo ano"
           >
             ›
@@ -194,7 +194,7 @@ export default async function CalendarioPage({
             name="area"
             defaultValue={filterArea}
             onChange={(e) => (e.currentTarget.form as HTMLFormElement)?.requestSubmit()}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Todas as áreas</option>
             {areasUnicas.map((a) => (
@@ -210,7 +210,7 @@ export default async function CalendarioPage({
             name="marca"
             defaultValue={filterMarca}
             onChange={(e) => (e.currentTarget.form as HTMLFormElement)?.requestSubmit()}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Todas as marcas</option>
             {(marcas ?? []).map((m) => (
@@ -221,21 +221,21 @@ export default async function CalendarioPage({
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:bg-gray-200"
           >
             Filtrar
           </button>
           {(filterArea || filterMarca) && (
             <Link
               href={buildUrl({ area: "", marca: "" })}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-muted-foreground hover:text-foreground"
             >
               Limpar
             </Link>
           )}
         </form>
 
-        <span className="ml-auto text-xs text-gray-400">
+        <span className="ml-auto text-xs text-muted-foreground">
           {fasesFiltradas.length} {fasesFiltradas.length === 1 ? "fase" : "fases"}
         </span>
       </div>
@@ -243,7 +243,7 @@ export default async function CalendarioPage({
       {/* Legenda de tipos */}
       <div className="flex flex-wrap gap-3">
         {Object.entries(TIPO_FASE_LABEL).map(([tipo, label]) => (
-          <span key={tipo} className="flex items-center gap-1.5 text-xs text-gray-600">
+          <span key={tipo} className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span
               className={`h-2.5 w-2.5 rounded-full ${TIPO_FASE_DOT[tipo]}`}
               aria-hidden="true"
@@ -255,9 +255,11 @@ export default async function CalendarioPage({
 
       {/* Timeline */}
       {mesesComFases.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
-          <p className="text-sm font-medium text-gray-700">Nenhuma fase encontrada em {ano}</p>
-          <p className="mt-1 text-xs text-gray-400">Ajuste os filtros ou navegue para outro ano.</p>
+        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+          <p className="text-sm font-medium text-foreground">Nenhuma fase encontrada em {ano}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ajuste os filtros ou navegue para outro ano.
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -265,9 +267,9 @@ export default async function CalendarioPage({
             <section key={mesIdx}>
               {/* Cabeçalho do mês */}
               <div className="mb-3 flex items-center gap-3">
-                <h2 className="text-sm font-semibold text-gray-900">{MESES[mesIdx]}</h2>
-                <div className="flex-1 border-t border-gray-200" />
-                <span className="text-xs text-gray-400">
+                <h2 className="text-sm font-semibold text-foreground">{MESES[mesIdx]}</h2>
+                <div className="flex-1 border-t border-border" />
+                <span className="text-xs text-muted-foreground">
                   {fasesDoMes.length} {fasesDoMes.length === 1 ? "fase" : "fases"}
                 </span>
               </div>
@@ -277,7 +279,7 @@ export default async function CalendarioPage({
                 {fasesDoMes.map((f) => {
                   const olimpiada = Array.isArray(f.olimpiada) ? f.olimpiada[0] : f.olimpiada;
                   const colorClass =
-                    TIPO_FASE_COLOR[f.tipo] ?? "border-gray-300 bg-gray-50 text-gray-700";
+                    TIPO_FASE_COLOR[f.tipo] ?? "border-gray-300 bg-background text-foreground";
                   const marcasOlimpiada = olimpiada
                     ? ((olimpiada as { marcas: { marca: unknown }[] }).marcas ?? [])
                     : [];
@@ -298,13 +300,13 @@ export default async function CalendarioPage({
                       </div>
 
                       {/* Nome da fase */}
-                      <p className="text-sm font-semibold text-gray-900 leading-snug">{f.nome}</p>
+                      <p className="text-sm font-semibold text-foreground leading-snug">{f.nome}</p>
 
                       {/* Olimpíada */}
                       {olimpiada && (
                         <Link
                           href={`/olimpiadas/${(olimpiada as { id: string }).id}`}
-                          className="mt-0.5 block text-xs text-gray-600 hover:underline truncate"
+                          className="mt-0.5 block text-xs text-muted-foreground hover:underline truncate"
                         >
                           {(olimpiada as { nome: string }).nome}
                         </Link>
@@ -330,7 +332,7 @@ export default async function CalendarioPage({
                             return (
                               <span
                                 key={i}
-                                className="inline-flex items-center gap-1 rounded-full bg-white/60 px-1.5 py-0.5 text-[10px] text-gray-600"
+                                className="inline-flex items-center gap-1 rounded-full bg-card/60 px-1.5 py-0.5 text-[10px] text-muted-foreground"
                               >
                                 <span
                                   className="h-1.5 w-1.5 rounded-full"
@@ -341,7 +343,7 @@ export default async function CalendarioPage({
                             );
                           })}
                           {marcasOlimpiada.length > 3 && (
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-muted-foreground">
                               +{marcasOlimpiada.length - 3}
                             </span>
                           )}
@@ -350,7 +352,9 @@ export default async function CalendarioPage({
 
                       {/* Observações */}
                       {f.observacoes && (
-                        <p className="mt-1 text-[11px] text-gray-500 italic">{f.observacoes}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground italic">
+                          {f.observacoes}
+                        </p>
                       )}
                     </div>
                   );

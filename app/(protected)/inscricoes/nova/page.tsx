@@ -53,7 +53,7 @@ export default async function NovaInscricaoPage() {
         items={[{ label: "Inscrições", href: "/inscricoes" }, { label: "Nova inscrição" }]}
       />
       <PageHeader title="Nova Inscrição" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <InscricaoForm olimpiadas={olimpiadas ?? []} alunos={alunosFormatted} />
       </div>
     </div>

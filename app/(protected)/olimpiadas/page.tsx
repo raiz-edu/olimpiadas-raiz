@@ -68,27 +68,27 @@ export default async function OlimpiadasPage() {
           action={{ label: "Nova olimpíada", href: "/olimpiadas/nova" }}
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Olimpíada</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 hidden sm:table-cell">
+              <tr className="border-b border-border bg-background">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Olimpíada</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
                   Área
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 hidden md:table-cell">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                   Classificação
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 hidden sm:table-cell">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
                   Ano
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {(olimpiadas as OlimpiadaRow[]).map((o) => (
-                <tr key={o.id} className="hover:bg-gray-50/50">
+                <tr key={o.id} className="hover:bg-background/50">
                   <td className="px-4 py-3">
                     <Link
                       href={`/olimpiadas/${o.id}`}
@@ -97,17 +97,19 @@ export default async function OlimpiadasPage() {
                       {o.nome}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
+                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                     {o.area_conhecimento}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${CLASSIFICACAO_COLORS[o.classificacao] ?? "bg-gray-100 text-gray-600"}`}
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${CLASSIFICACAO_COLORS[o.classificacao] ?? "bg-secondary text-muted-foreground"}`}
                     >
                       {CLASSIFICACAO_LABELS[o.classificacao] ?? o.classificacao}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{o.ano_letivo}</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    {o.ano_letivo}
+                  </td>
                   <td className="px-4 py-3">
                     <StatusBadge ativo={o.ativo} />
                   </td>
@@ -115,14 +117,14 @@ export default async function OlimpiadasPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/olimpiadas/${o.id}`}
-                        className="rounded px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100"
+                        className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
                       >
                         Ver
                       </Link>
                       <Can role={user.role} perform="olimpiada:update">
                         <Link
                           href={`/olimpiadas/${o.id}/editar`}
-                          className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                          className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
                         >
                           Editar
                         </Link>
@@ -132,14 +134,14 @@ export default async function OlimpiadasPage() {
                           {o.ativo ? (
                             <ConfirmButton
                               message={`Desativar a olimpíada "${o.nome}"?`}
-                              className="rounded px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100"
+                              className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
                             >
                               Desativar
                             </ConfirmButton>
                           ) : (
                             <button
                               type="submit"
-                              className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                              className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-blue-50"
                             >
                               Ativar
                             </button>
