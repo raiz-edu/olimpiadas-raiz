@@ -32,7 +32,7 @@ export function FaseForm({ olimpiadaId, proximaOrdem }: FaseFormProps) {
             name="nome"
             type="text"
             placeholder="Ex.: 1ª Fase"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
 
@@ -41,7 +41,7 @@ export function FaseForm({ olimpiadaId, proximaOrdem }: FaseFormProps) {
             id="fase_tipo"
             name="tipo"
             defaultValue=""
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="" disabled>
               Selecione…
@@ -61,7 +61,7 @@ export function FaseForm({ olimpiadaId, proximaOrdem }: FaseFormProps) {
             id="fase_inicio"
             name="data_inicio"
             type="date"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
 
@@ -70,7 +70,7 @@ export function FaseForm({ olimpiadaId, proximaOrdem }: FaseFormProps) {
             id="fase_fim"
             name="data_fim"
             type="date"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
       </div>
@@ -81,7 +81,7 @@ export function FaseForm({ olimpiadaId, proximaOrdem }: FaseFormProps) {
           name="observacoes"
           type="text"
           placeholder="Opcional"
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </FormField>
 

@@ -32,14 +32,14 @@ function BarRow({
   return (
     <div className="space-y-1 py-2">
       <div className="flex items-center justify-between gap-4 text-sm">
-        <span className="truncate font-medium text-gray-800 max-w-[55%]">{label}</span>
-        <span className="shrink-0 text-gray-500">
-          <span className="font-semibold text-gray-900">{value}</span>
-          {sub && <span className="ml-1 text-xs text-gray-400">{sub}</span>}
-          <span className="ml-2 text-xs text-gray-400">{p}%</span>
+        <span className="truncate font-medium text-foreground max-w-[55%]">{label}</span>
+        <span className="shrink-0 text-muted-foreground">
+          <span className="font-semibold text-foreground">{value}</span>
+          {sub && <span className="ml-1 text-xs text-muted-foreground">{sub}</span>}
+          <span className="ml-2 text-xs text-muted-foreground">{p}%</span>
         </span>
       </div>
-      <div className="h-2 rounded-full bg-gray-100">
+      <div className="h-2 rounded-full bg-secondary">
         <div className={`h-2 rounded-full transition-all ${color}`} style={{ width: `${p}%` }} />
       </div>
     </div>
@@ -48,8 +48,10 @@ function BarRow({
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h2>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <h2 className="mb-4 text-sm font-semibold text-foreground uppercase tracking-wide">
+        {title}
+      </h2>
       {children}
     </div>
   );
@@ -184,11 +186,11 @@ export default async function AnalyticsPage({
           description={`Visão consolidada de inscrições e resultados — ${ano}`}
         />
         <form method="GET" className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-600">Ano letivo</label>
+          <label className="text-xs font-medium text-muted-foreground">Ano letivo</label>
           <select
             name="ano"
             defaultValue={ano}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {anos.map((a) => (
               <option key={a} value={a}>
@@ -198,7 +200,7 @@ export default async function AnalyticsPage({
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary/80"
           >
             Aplicar
           </button>
@@ -222,10 +224,10 @@ export default async function AnalyticsPage({
           <Link
             key={k.label}
             href={k.href}
-            className="rounded-xl border border-gray-200 bg-white p-4 text-center hover:border-blue-200 hover:bg-blue-50 transition-colors"
+            className="rounded-xl border border-border bg-card p-4 text-center hover:border-blue-200 hover:bg-blue-50 transition-colors"
           >
-            <p className="text-2xl font-bold text-gray-900">{k.value}</p>
-            <p className="mt-0.5 text-xs text-gray-500">{k.label}</p>
+            <p className="text-2xl font-bold text-foreground">{k.value}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{k.label}</p>
           </Link>
         ))}
       </div>
@@ -239,12 +241,12 @@ export default async function AnalyticsPage({
               const h = maxMes > 0 ? Math.round((v / maxMes) * 100) : 0;
               return (
                 <div key={mes} className="flex flex-1 flex-col items-center gap-1">
-                  <span className="text-[10px] text-gray-400">{v > 0 ? v : ""}</span>
+                  <span className="text-[10px] text-muted-foreground">{v > 0 ? v : ""}</span>
                   <div
                     className="w-full rounded-t bg-blue-500"
                     style={{ height: `${h}%`, minHeight: v > 0 ? "4px" : "0" }}
                   />
-                  <span className="text-[10px] text-gray-500">{mes}</span>
+                  <span className="text-[10px] text-muted-foreground">{mes}</span>
                 </div>
               );
             })}
@@ -257,9 +259,9 @@ export default async function AnalyticsPage({
         {/* Por marca */}
         <SectionCard title="Por marca">
           {sortedMarcas.length === 0 ? (
-            <p className="text-sm text-gray-400">Sem dados.</p>
+            <p className="text-sm text-muted-foreground">Sem dados.</p>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {sortedMarcas.map(([nome, count]) => (
                 <BarRow key={nome} label={nome} value={count} total={total} color="bg-purple-500" />
               ))}
@@ -270,9 +272,9 @@ export default async function AnalyticsPage({
         {/* Por área */}
         <SectionCard title="Por área do conhecimento">
           {sortedAreas.length === 0 ? (
-            <p className="text-sm text-gray-400">Sem dados.</p>
+            <p className="text-sm text-muted-foreground">Sem dados.</p>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {sortedAreas.map(([nome, count]) => (
                 <BarRow key={nome} label={nome} value={count} total={total} color="bg-blue-500" />
               ))}
@@ -283,9 +285,9 @@ export default async function AnalyticsPage({
         {/* Por olimpíada */}
         <SectionCard title="Top olimpíadas">
           {sortedOlimpiadas.length === 0 ? (
-            <p className="text-sm text-gray-400">Sem dados.</p>
+            <p className="text-sm text-muted-foreground">Sem dados.</p>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {sortedOlimpiadas.map(([nome, count]) => (
                 <BarRow key={nome} label={nome} value={count} total={total} color="bg-amber-500" />
               ))}
@@ -296,9 +298,9 @@ export default async function AnalyticsPage({
         {/* Por unidade */}
         <SectionCard title="Top unidades">
           {sortedUnidades.length === 0 ? (
-            <p className="text-sm text-gray-400">Sem dados.</p>
+            <p className="text-sm text-muted-foreground">Sem dados.</p>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {sortedUnidades.map(([nome, count]) => (
                 <BarRow key={nome} label={nome} value={count} total={total} color="bg-green-500" />
               ))}
@@ -308,7 +310,7 @@ export default async function AnalyticsPage({
 
         {/* Por classificação */}
         <SectionCard title="Classificação das olimpíadas">
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-border">
             {[
               { key: "obrigatoria", label: "Obrigatória", color: "bg-blue-500" },
               { key: "facultativa", label: "Facultativa", color: "bg-amber-500" },
@@ -327,16 +329,16 @@ export default async function AnalyticsPage({
         {/* Resultados */}
         <SectionCard title="Resultados registrados">
           {totalResultados === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum resultado registrado ainda.</p>
+            <p className="text-sm text-muted-foreground">Nenhum resultado registrado ainda.</p>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {Object.entries(TIPO_RES_LABEL).map(([tipo, label]) => (
                 <BarRow
                   key={tipo}
                   label={label}
                   value={porResultado[tipo] ?? 0}
                   total={totalResultados}
-                  color={TIPO_RES_COLOR[tipo] ?? "bg-gray-400"}
+                  color={TIPO_RES_COLOR[tipo] ?? "bg-muted-foreground"}
                 />
               ))}
             </div>
@@ -345,27 +347,27 @@ export default async function AnalyticsPage({
       </div>
 
       {/* Alunos ativos */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            <p className="text-sm font-semibold text-foreground uppercase tracking-wide">
               Base de alunos
             </p>
-            <p className="mt-1 text-3xl font-bold text-gray-900">{totalAlunos ?? 0}</p>
-            <p className="text-xs text-gray-500">
+            <p className="mt-1 text-3xl font-bold text-foreground">{totalAlunos ?? 0}</p>
+            <p className="text-xs text-muted-foreground">
               alunos ativos · {totalTurmas ?? 0} turmas · {totalUnidades ?? 0} unidades
             </p>
           </div>
           <div className="flex gap-3">
             <Link
               href="/alunos"
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background"
             >
               Ver alunos
             </Link>
             <Link
               href="/turmas"
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background"
             >
               Ver turmas
             </Link>

@@ -37,7 +37,7 @@ export default async function EditarOlimpiadaPage({ params }: { params: Promise<
         ]}
       />
       <PageHeader title="Editar Olimpíada" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <OlimpiadaForm olimpiada={olimpiada} />
       </div>
     </div>

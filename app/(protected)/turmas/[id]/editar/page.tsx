@@ -50,7 +50,7 @@ export default async function EditarTurmaPage({ params }: { params: Promise<{ id
         items={[{ label: "Turmas", href: "/turmas" }, { label: turma.nome }, { label: "Editar" }]}
       />
       <PageHeader title="Editar Turma" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <TurmaForm unidades={unidadesFormatted} turma={turma} />
       </div>
     </div>

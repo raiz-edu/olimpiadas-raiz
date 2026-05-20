@@ -36,6 +36,15 @@ yarn-error.log*
 # vercel
 .vercel
 
+# playwright mcp artifacts
+.playwright-mcp/
+.playwright-mcpdev-server.log
+
+# supabase temp
+supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

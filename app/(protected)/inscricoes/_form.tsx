@@ -44,7 +44,7 @@ export function InscricaoForm({ olimpiadas, alunos }: InscricaoFormProps) {
           name="olimpiada_id"
           value={olimpiadaId}
           onChange={(e) => setOlimpiadaId(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="" disabled>
             Selecione uma olimpíada…
@@ -59,7 +59,7 @@ export function InscricaoForm({ olimpiadas, alunos }: InscricaoFormProps) {
       </FormField>
 
       {olimpiadaSelecionada && olimpiadaSelecionada.series_elegiveis.length > 0 && (
-        <p className="text-xs text-gray-500 -mt-2">
+        <p className="text-xs text-muted-foreground -mt-2">
           Séries elegíveis: {olimpiadaSelecionada.series_elegiveis.join(", ")}
         </p>
       )}
@@ -70,7 +70,7 @@ export function InscricaoForm({ olimpiadas, alunos }: InscricaoFormProps) {
           name="aluno_id"
           defaultValue=""
           disabled={!olimpiadaId}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-background disabled:text-muted-foreground"
         >
           <option value="" disabled>
             {olimpiadaId ? "Selecione um aluno…" : "Selecione a olimpíada primeiro"}
@@ -107,7 +107,7 @@ export function InscricaoForm({ olimpiadas, alunos }: InscricaoFormProps) {
         </button>
         <a
           href="/inscricoes"
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
         >
           Cancelar
         </a>

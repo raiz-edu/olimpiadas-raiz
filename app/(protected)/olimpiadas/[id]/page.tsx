@@ -38,8 +38,8 @@ function formatDate(iso: string): string {
 function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</dt>
-      <dd className="mt-0.5 text-sm text-gray-900">{value ?? "—"}</dd>
+      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</dt>
+      <dd className="mt-0.5 text-sm text-foreground">{value ?? "—"}</dd>
     </div>
   );
 }
@@ -82,22 +82,22 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-gray-900">{olimpiada.nome}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{olimpiada.nome}</h1>
           <div className="flex items-center gap-2 flex-wrap">
             <StatusBadge ativo={olimpiada.ativo} />
-            <span className="text-sm text-gray-500">{olimpiada.area_conhecimento}</span>
+            <span className="text-sm text-muted-foreground">{olimpiada.area_conhecimento}</span>
             <span className="text-gray-300">·</span>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               {CLASSIFICACAO_LABELS[olimpiada.classificacao]}
             </span>
             <span className="text-gray-300">·</span>
-            <span className="text-sm text-gray-500">{olimpiada.ano_letivo}</span>
+            <span className="text-sm text-muted-foreground">{olimpiada.ano_letivo}</span>
           </div>
         </div>
         <Can role={user.role} perform="olimpiada:update">
           <Link
             href={`/olimpiadas/${id}/editar`}
-            className="shrink-0 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="shrink-0 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background"
           >
             Editar
           </Link>
@@ -105,8 +105,8 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
       </div>
 
       {/* Info grid */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-sm font-semibold text-foreground uppercase tracking-wide">
           Detalhes
         </h2>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
@@ -134,7 +134,7 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
           />
           {olimpiada.regulamento_link_externo && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Regulamento
               </dt>
               <dd className="mt-0.5">
@@ -142,7 +142,7 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
                   href={olimpiada.regulamento_link_externo}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm text-primary hover:underline"
                 >
                   Ver regulamento ↗
                 </a>
@@ -153,14 +153,14 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
       </div>
 
       {/* Marcas */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-sm font-semibold text-foreground uppercase tracking-wide">
           Marcas participantes
         </h2>
         <div className="space-y-3">
           {/* Vinculadas */}
           {(marcasVinculadas ?? []).length === 0 ? (
-            <p className="text-sm text-gray-500">Nenhuma marca vinculada.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma marca vinculada.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {(marcasVinculadas ?? []).map((mv) => {
@@ -170,14 +170,14 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
                 return (
                   <div
                     key={mv.marca_id}
-                    className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 pl-3 pr-1 py-1"
+                    className="flex items-center gap-1.5 rounded-full border border-border bg-background pl-3 pr-1 py-1"
                   >
                     <span
                       className="h-2 w-2 rounded-full"
                       style={{ backgroundColor: m.cor_primaria ?? "#6b7280" }}
                       aria-hidden="true"
                     />
-                    <span className="text-sm text-gray-700">{m.nome}</span>
+                    <span className="text-sm text-foreground">{m.nome}</span>
                     {canUpdate && (
                       <form action={vincularMarca} className="ml-1">
                         <input type="hidden" name="olimpiada_id" value={id} />
@@ -185,7 +185,7 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
                         <input type="hidden" name="action" value="remove" />
                         <button
                           type="submit"
-                          className="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500"
+                          className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500"
                           aria-label="Remover"
                         >
                           ×
@@ -205,7 +205,7 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
               <input type="hidden" name="action" value="add" />
               <select
                 name="marca_id"
-                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 defaultValue=""
               >
                 <option value="" disabled>
@@ -229,11 +229,13 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
       </div>
 
       {/* Fases */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">Fases</h2>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-sm font-semibold text-foreground uppercase tracking-wide">
+          Fases
+        </h2>
 
         {!fases || fases.length === 0 ? (
-          <p className="text-sm text-gray-500 mb-4">Nenhuma fase cadastrada.</p>
+          <p className="text-sm text-muted-foreground mb-4">Nenhuma fase cadastrada.</p>
         ) : (
           <div className="mb-6 divide-y divide-gray-100">
             {fases.map((f) => (
@@ -243,12 +245,14 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
                     {f.ordem}
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{f.nome}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">{f.nome}</p>
+                    <p className="text-xs text-muted-foreground">
                       {TIPO_FASE_LABELS[f.tipo] ?? f.tipo} · {formatDate(f.data_inicio)} –{" "}
                       {formatDate(f.data_fim)}
                     </p>
-                    {f.observacoes && <p className="text-xs text-gray-400">{f.observacoes}</p>}
+                    {f.observacoes && (
+                      <p className="text-xs text-muted-foreground">{f.observacoes}</p>
+                    )}
                   </div>
                 </div>
                 {canUpdate && (
@@ -269,8 +273,8 @@ export default async function OlimpiadaDetailPage({ params }: { params: Promise<
         )}
 
         {canUpdate && (
-          <div className="border-t border-gray-100 pt-4">
-            <h3 className="mb-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <div className="border-t border-border pt-4">
+            <h3 className="mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Adicionar fase
             </h3>
             <FaseForm olimpiadaId={id} proximaOrdem={(fases?.length ?? 0) + 1} />

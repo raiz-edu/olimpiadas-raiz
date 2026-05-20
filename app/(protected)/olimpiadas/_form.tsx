@@ -71,7 +71,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
 
       {/* Informações básicas */}
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
           Informações básicas
         </h3>
 
@@ -82,7 +82,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
             type="text"
             defaultValue={olimpiada?.nome ?? ""}
             placeholder="Ex.: Olimpíada Brasileira de Matemática"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
 
@@ -92,7 +92,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               id="area_conhecimento"
               name="area_conhecimento"
               defaultValue={olimpiada?.area_conhecimento ?? ""}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="" disabled>
                 Selecione…
@@ -110,7 +110,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               id="classificacao"
               name="classificacao"
               defaultValue={olimpiada?.classificacao ?? ""}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="" disabled>
                 Selecione…
@@ -127,7 +127,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               id="ano_letivo"
               name="ano_letivo"
               defaultValue={olimpiada?.ano_letivo ?? ANO_ATUAL}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {ANOS.map((a) => (
                 <option key={a} value={a}>
@@ -144,7 +144,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               type="text"
               defaultValue={olimpiada?.organizacao_promotora ?? ""}
               placeholder="Ex.: IMPA, OBMEP"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </FormField>
         </div>
@@ -152,7 +152,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
 
       {/* Séries elegíveis */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
           Séries elegíveis
         </h3>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -163,9 +163,9 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
                 name="series_elegiveis"
                 value={s}
                 defaultChecked={olimpiada?.series_elegiveis?.includes(s) ?? false}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-blue-500"
               />
-              <span className="text-xs text-gray-700">{s}</span>
+              <span className="text-xs text-foreground">{s}</span>
             </label>
           ))}
         </div>
@@ -173,7 +173,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
 
       {/* Detalhes adicionais */}
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
           Detalhes adicionais
         </h3>
 
@@ -187,7 +187,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               max={99}
               defaultValue={olimpiada?.faixa_etaria_min ?? ""}
               placeholder="Ex.: 10"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </FormField>
 
@@ -200,7 +200,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               max={99}
               defaultValue={olimpiada?.faixa_etaria_max ?? ""}
               placeholder="Ex.: 18"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </FormField>
         </div>
@@ -214,7 +214,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               min={1}
               defaultValue={olimpiada?.limite_vagas_total ?? ""}
               placeholder="Sem limite se vazio"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </FormField>
 
@@ -225,7 +225,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               type="url"
               defaultValue={olimpiada?.regulamento_link_externo ?? ""}
               placeholder="https://…"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </FormField>
         </div>
@@ -237,7 +237,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
             type="text"
             defaultValue={olimpiada?.premiacao ?? ""}
             placeholder="Ex.: Medalhas, certificados, bolsas"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FormField>
       </div>
@@ -251,9 +251,9 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
               type="checkbox"
               defaultChecked={olimpiada?.ativo ?? true}
               value="true"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">Olimpíada ativa</span>
+            <span className="text-sm text-foreground">Olimpíada ativa</span>
           </label>
         </FormField>
       )}
@@ -274,7 +274,7 @@ export function OlimpiadaForm({ olimpiada }: OlimpiadaFormProps) {
         </button>
         <a
           href={isEdit ? `/olimpiadas/${olimpiada!.id}` : "/olimpiadas"}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
         >
           Cancelar
         </a>

@@ -59,7 +59,7 @@ export default async function AceitarConvitePage({ searchParams }: PageProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-700">
@@ -78,17 +78,17 @@ export default async function AceitarConvitePage({ searchParams }: PageProps) {
               <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Criar sua conta</h1>
-          <p className="mt-1 text-sm text-gray-500">Olimpíadas do Conhecimento · Raiz Educação</p>
+          <h1 className="text-xl font-bold text-foreground">Criar sua conta</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Olimpíadas do Conhecimento · Raiz Educação
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
           <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
-              Convite para
-            </p>
-            <p className="mt-0.5 text-sm font-semibold text-gray-900">{convite.email}</p>
-            <p className="text-sm text-gray-600">{ROLE_LABELS[convite.role]}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-primary">Convite para</p>
+            <p className="mt-0.5 text-sm font-semibold text-foreground">{convite.email}</p>
+            <p className="text-sm text-muted-foreground">{ROLE_LABELS[convite.role]}</p>
           </div>
 
           <AceitarConviteForm token={token} email={convite.email} />
@@ -108,7 +108,7 @@ function ErrorPage({
   cta: { label: string; href: string };
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <svg
@@ -123,9 +123,9 @@ function ErrorPage({
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        <p className="mt-2 text-sm text-gray-500">{message}</p>
-        <a href={cta.href} className="mt-6 inline-block text-sm text-blue-600 hover:underline">
+        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+        <a href={cta.href} className="mt-6 inline-block text-sm text-primary hover:underline">
           {cta.label}
         </a>
       </div>

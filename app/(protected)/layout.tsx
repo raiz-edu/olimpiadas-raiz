@@ -15,7 +15,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     <UserProvider user={user}>
       <div className="flex min-h-screen flex-col">
         {/* Top navbar */}
-        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white">
+        <header className="sticky top-0 z-30 border-b border-border bg-card">
           <div className="flex h-14 items-center justify-between px-4">
             {/* Logo */}
             <div className="flex items-center gap-2.5">
@@ -35,16 +35,16 @@ export default async function ProtectedLayout({ children }: { children: React.Re
                   <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
                 </svg>
               </div>
-              <span className="text-sm font-semibold text-gray-900">Olimpíadas</span>
+              <span className="text-sm font-semibold text-foreground">Olimpíadas</span>
             </div>
 
             {/* User info + logout */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900 leading-tight">{user.nome}</p>
-                <p className="text-xs text-gray-500">{ROLE_LABELS[user.role]}</p>
+                <p className="text-sm font-medium text-foreground leading-tight">{user.nome}</p>
+                <p className="text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</p>
               </div>
-              <LogoutButton className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors" />
+              <LogoutButton className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-background hover:text-foreground transition-colors" />
             </div>
           </div>
         </header>
@@ -52,12 +52,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         {/* Body: sidebar + content */}
         <div className="flex flex-1">
           {/* Sidebar (desktop) */}
-          <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-white lg:block">
+          <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
             <Sidebar />
           </aside>
 
           {/* Main content */}
-          <main className="flex-1 bg-gray-50">
+          <main className="flex-1 bg-background">
             <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">{children}</div>
           </main>
         </div>

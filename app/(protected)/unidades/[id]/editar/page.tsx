@@ -39,7 +39,7 @@ export default async function EditarUnidadePage({ params }: { params: Promise<{ 
         ]}
       />
       <PageHeader title="Editar Unidade" />
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <UnidadeForm marcas={marcas ?? []} unidade={unidade} />
       </div>
     </div>

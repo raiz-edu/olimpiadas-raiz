@@ -76,7 +76,7 @@ export default async function InscricoesPage({
         <select
           name="olimpiada"
           defaultValue={filterOlimpiada}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="">Todas as olimpíadas</option>
           {(olimpiadas ?? []).map((o) => (
@@ -89,7 +89,7 @@ export default async function InscricoesPage({
         <select
           name="status"
           defaultValue={filterStatus}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="">Todos os status</option>
           <option value="pendente">Pendente</option>
@@ -99,18 +99,18 @@ export default async function InscricoesPage({
 
         <button
           type="submit"
-          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:bg-gray-200"
         >
           Filtrar
         </button>
 
         {(filterOlimpiada || filterStatus) && (
-          <Link href="/inscricoes" className="text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/inscricoes" className="text-sm text-muted-foreground hover:text-foreground">
             Limpar filtros
           </Link>
         )}
 
-        <span className="ml-auto text-xs text-gray-400">
+        <span className="ml-auto text-xs text-muted-foreground">
           {inscricoes?.length ?? 0} {inscricoes?.length === 1 ? "inscrição" : "inscrições"}
         </span>
       </form>
@@ -142,43 +142,43 @@ export default async function InscricoesPage({
           action={{ label: "Nova inscrição", href: "/inscricoes/nova" }}
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full min-w-[680px] text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Aluno</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 hidden md:table-cell">
+              <tr className="border-b border-border bg-background">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Aluno</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                   Turma / Unidade
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 hidden sm:table-cell">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
                   Olimpíada
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 hidden lg:table-cell">
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
                   Inscrito em
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {inscricoes.map((i) => (
-                <tr key={i.inscricao_id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{i.aluno_nome}</td>
+                <tr key={i.inscricao_id} className="hover:bg-background/50">
+                  <td className="px-4 py-3 font-medium text-foreground">{i.aluno_nome}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-gray-700">{i.serie}</span>
-                    <span className="text-gray-400 mx-1">·</span>
-                    <span className="text-gray-500">{i.unidade_nome}</span>
+                    <span className="text-foreground">{i.serie}</span>
+                    <span className="text-muted-foreground mx-1">·</span>
+                    <span className="text-muted-foreground">{i.unidade_nome}</span>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="text-gray-700">{i.olimpiada_nome}</span>
-                    <span className="ml-1 text-xs text-gray-400">({i.ano_letivo})</span>
+                    <span className="text-foreground">{i.olimpiada_nome}</span>
+                    <span className="ml-1 text-xs text-muted-foreground">({i.ano_letivo})</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
+                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                     {formatDate(i.inscrito_em)}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[i.status] ?? "bg-gray-100 text-gray-600"}`}
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[i.status] ?? "bg-secondary text-muted-foreground"}`}
                     >
                       {STATUS_LABELS[i.status] ?? i.status}
                     </span>
