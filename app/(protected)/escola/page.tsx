@@ -191,13 +191,13 @@ export default async function EscolaPage({
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <table className="w-full table-fixed text-sm">
                 <colgroup>
-                  <col className="w-[12%]" />
-                  <col className="w-[22%]" />
-                  <col className="w-[14%]" />
-                  <col className="w-[9%] hidden sm:table-column" />
-                  <col className="w-[7%] hidden sm:table-column" />
-                  <col className="w-[17%] hidden sm:table-column" />
-                  <col className="w-[19%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[12%] hidden sm:table-column" />
+                  <col className="w-[8%] hidden sm:table-column" />
+                  <col className="w-[18%] hidden sm:table-column" />
+                  <col className="w-[17%]" />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-background">
