@@ -23,7 +23,26 @@ export default async function UnidadesPage() {
     .select("id, nome, cidade, estado, ativo, marca_id, marca:marca_id(nome, cor_primaria)")
     .order("nome");
 
-  type UnidadeRow = NonNullable<typeof unidades>[number];
+  // Ordena por marca → unidade e marca cada item com flag de primeiro do grupo
+  const sorted = [...(unidades ?? [])].sort((a, b) => {
+    const mA = (Array.isArray(a.marca) ? a.marca[0] : a.marca) as { nome: string } | null;
+    const mB = (Array.isArray(b.marca) ? b.marca[0] : b.marca) as { nome: string } | null;
+    return (mA?.nome ?? "").localeCompare(mB?.nome ?? "") || a.nome.localeCompare(b.nome);
+  });
+
+  const rows = sorted.map((u, i) => {
+    const marca = (Array.isArray(u.marca) ? u.marca[0] : u.marca) as { nome: string } | null;
+    const marcaNome = marca?.nome ?? "—";
+    const prevMarca =
+      i > 0
+        ? ((
+            (Array.isArray(sorted[i - 1].marca) ? sorted[i - 1].marca[0] : sorted[i - 1].marca) as {
+              nome: string;
+            } | null
+          )?.nome ?? "—")
+        : null;
+    return { ...u, marcaNome, isFirstInGroup: marcaNome !== prevMarca };
+  });
 
   return (
     <div className="space-y-6">
@@ -71,57 +90,57 @@ export default async function UnidadesPage() {
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {(unidades as UnidadeRow[]).map((u) => {
-                const marca = Array.isArray(u.marca) ? u.marca[0] : u.marca;
-                return (
-                  <tr key={u.id} className="hover:bg-background/50">
-                    <td className="px-4 py-3 font-medium text-foreground">
-                      {marca ? (marca as { nome: string }).nome : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{u.nome}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                      {u.cidade && u.estado
-                        ? `${u.cidade} / ${u.estado}`
-                        : (u.cidade ?? u.estado ?? "—")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge ativo={u.ativo} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Can role={user.role} perform="unidade:update">
-                          <Link
-                            href={`/unidades/${u.id}/editar`}
-                            className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
-                          >
-                            Editar
-                          </Link>
-                          <form action={toggleUnidadeAtivo}>
-                            <input type="hidden" name="id" value={u.id} />
-                            <input type="hidden" name="ativo" value={String(u.ativo)} />
-                            {u.ativo ? (
-                              <ConfirmButton
-                                message={`Desativar a unidade "${u.nome}"?`}
-                                className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
-                              >
-                                Desativar
-                              </ConfirmButton>
-                            ) : (
-                              <button
-                                type="submit"
-                                className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
-                              >
-                                Ativar
-                              </button>
-                            )}
-                          </form>
-                        </Can>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+            <tbody>
+              {rows.map((u) => (
+                <tr
+                  key={u.id}
+                  className={`hover:bg-background/50 border-b border-border ${u.isFirstInGroup ? "border-t-2 border-t-border/60" : ""}`}
+                >
+                  <td className="px-4 py-3 font-medium text-foreground">
+                    {u.isFirstInGroup ? u.marcaNome : ""}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{u.nome}</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    {u.cidade && u.estado
+                      ? `${u.cidade} / ${u.estado}`
+                      : (u.cidade ?? u.estado ?? "—")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge ativo={u.ativo} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Can role={user.role} perform="unidade:update">
+                        <Link
+                          href={`/unidades/${u.id}/editar`}
+                          className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
+                        >
+                          Editar
+                        </Link>
+                        <form action={toggleUnidadeAtivo}>
+                          <input type="hidden" name="id" value={u.id} />
+                          <input type="hidden" name="ativo" value={String(u.ativo)} />
+                          {u.ativo ? (
+                            <ConfirmButton
+                              message={`Desativar a unidade "${u.nome}"?`}
+                              className="rounded px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-secondary"
+                            >
+                              Desativar
+                            </ConfirmButton>
+                          ) : (
+                            <button
+                              type="submit"
+                              className="rounded px-2 py-1 text-sm font-bold text-foreground hover:text-primary transition-colors"
+                            >
+                              Ativar
+                            </button>
+                          )}
+                        </form>
+                      </Can>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
