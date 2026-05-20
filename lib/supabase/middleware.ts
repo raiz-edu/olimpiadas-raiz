@@ -30,7 +30,8 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthPage = request.nextUrl.pathname.startsWith("/login");
-  const isPublicPath = request.nextUrl.pathname === "/" || isAuthPage;
+  const isAcceptInvite = request.nextUrl.pathname.startsWith("/aceitar-convite");
+  const isPublicPath = request.nextUrl.pathname === "/" || isAuthPage || isAcceptInvite;
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();

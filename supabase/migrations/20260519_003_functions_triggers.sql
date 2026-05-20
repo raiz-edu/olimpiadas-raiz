@@ -155,7 +155,9 @@ CREATE TRIGGER trg_inscricao_cancelado_em
 --    Mascara PII (cpf, email, telefone) antes de salvar no log.
 -- ---------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION mask_pii(data jsonb)
+-- mask_pii aceita um segundo parâmetro (table_name) para extensibilidade futura.
+-- Atualmente mascara cpf, email_responsavel, telefone_responsavel em qualquer tabela.
+CREATE OR REPLACE FUNCTION mask_pii(data jsonb, table_name text DEFAULT '')
 RETURNS jsonb
 LANGUAGE sql IMMUTABLE
 AS $$
@@ -179,36 +181,42 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_antes  jsonb;
-  v_depois jsonb;
-  v_id     uuid;
+  _usuario_id   uuid;
+  _dados_antes  jsonb;
+  _dados_depois jsonb;
+  _acao         text;
 BEGIN
-  IF TG_OP = 'DELETE' THEN
-    v_antes := mask_pii(to_jsonb(OLD));
-    v_depois := NULL;
-    v_id    := OLD.id;
-  ELSIF TG_OP = 'INSERT' THEN
-    v_antes := NULL;
-    v_depois := mask_pii(to_jsonb(NEW));
-    v_id    := NEW.id;
-  ELSE -- UPDATE
-    v_antes := mask_pii(to_jsonb(OLD));
-    v_depois := mask_pii(to_jsonb(NEW));
-    v_id    := NEW.id;
+  _usuario_id := (SELECT auth.uid());
+
+  -- Map Postgres TG_OP → nosso enum: create | update | delete
+  -- NOTA: lower(TG_OP) retornaria 'insert', que viola o check constraint.
+  -- Por isso mapeamos explicitamente 'INSERT' → 'create'.
+  IF TG_OP = 'INSERT' THEN
+    _acao := 'create';
+  ELSIF TG_OP = 'UPDATE' THEN
+    _acao := 'update';
+  ELSE
+    _acao := 'delete';
   END IF;
 
-  INSERT INTO audit_log (
-    usuario_id, entidade, entidade_id, acao, dados_antes, dados_depois
-  ) VALUES (
-    auth.uid(),
-    TG_TABLE_NAME,
-    v_id,
-    lower(TG_OP),
-    v_antes,
-    v_depois
-  );
-
-  RETURN COALESCE(NEW, OLD);
+  -- TG_TABLE_NAME é tipo `name` em PL/pgSQL — cast ::text obrigatório
+  IF TG_OP = 'DELETE' THEN
+    _dados_antes := mask_pii(to_jsonb(OLD), TG_TABLE_NAME::text);
+    INSERT INTO audit_log (usuario_id, entidade, entidade_id, acao, dados_antes, dados_depois)
+    VALUES (_usuario_id, TG_TABLE_NAME::text, OLD.id, _acao, _dados_antes, NULL);
+    RETURN OLD;
+  ELSIF TG_OP = 'UPDATE' THEN
+    _dados_antes  := mask_pii(to_jsonb(OLD), TG_TABLE_NAME::text);
+    _dados_depois := mask_pii(to_jsonb(NEW), TG_TABLE_NAME::text);
+    INSERT INTO audit_log (usuario_id, entidade, entidade_id, acao, dados_antes, dados_depois)
+    VALUES (_usuario_id, TG_TABLE_NAME::text, NEW.id, _acao, _dados_antes, _dados_depois);
+    RETURN NEW;
+  ELSE -- INSERT
+    _dados_depois := mask_pii(to_jsonb(NEW), TG_TABLE_NAME::text);
+    INSERT INTO audit_log (usuario_id, entidade, entidade_id, acao, dados_antes, dados_depois)
+    VALUES (_usuario_id, TG_TABLE_NAME::text, NEW.id, _acao, NULL, _dados_depois);
+    RETURN NEW;
+  END IF;
 END;
 $$;
 

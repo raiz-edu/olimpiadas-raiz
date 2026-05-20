@@ -2,6 +2,10 @@
 // Tipos gerados manualmente a partir da migration 001.
 // Após provisionar o Supabase, regenerar com:
 //   npx supabase gen types typescript --project-id <id> > lib/types/database.ts
+//
+// NOTA: Todas as tabelas incluem `Relationships: []` — obrigatório para que
+// SupabaseClient<Database> infira corretamente os tipos das queries
+// (GenericTable de @supabase/supabase-js v2 exige este campo).
 // =============================================================================
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
@@ -57,6 +61,7 @@ export type Database = {
           ativo?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       unidade: {
         Row: {
@@ -86,6 +91,7 @@ export type Database = {
           ativo?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       turma: {
         Row: {
@@ -115,6 +121,7 @@ export type Database = {
           ativo?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       aluno: {
         Row: {
@@ -165,6 +172,7 @@ export type Database = {
           ativo?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       usuario: {
         Row: {
@@ -194,21 +202,25 @@ export type Database = {
           ativo?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       usuario_marca: {
         Row: { usuario_id: string; marca_id: string };
         Insert: { usuario_id: string; marca_id: string };
         Update: { usuario_id?: string; marca_id?: string };
+        Relationships: [];
       };
       usuario_unidade: {
         Row: { usuario_id: string; unidade_id: string };
         Insert: { usuario_id: string; unidade_id: string };
         Update: { usuario_id?: string; unidade_id?: string };
+        Relationships: [];
       };
       usuario_turma: {
         Row: { usuario_id: string; turma_id: string };
         Insert: { usuario_id: string; turma_id: string };
         Update: { usuario_id?: string; turma_id?: string };
+        Relationships: [];
       };
       convite: {
         Row: {
@@ -247,6 +259,7 @@ export type Database = {
           aceito_em?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       olimpiada: {
         Row: {
@@ -312,11 +325,13 @@ export type Database = {
           created_by?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       olimpiada_marca: {
         Row: { olimpiada_id: string; marca_id: string };
         Insert: { olimpiada_id: string; marca_id: string };
         Update: { olimpiada_id?: string; marca_id?: string };
+        Relationships: [];
       };
       olimpiada_fase: {
         Row: {
@@ -352,6 +367,7 @@ export type Database = {
           observacoes?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       inscricao: {
         Row: {
@@ -387,6 +403,7 @@ export type Database = {
           cancelado_em?: string | null;
           cancelado_motivo?: string | null;
         };
+        Relationships: [];
       };
       resultado: {
         Row: {
@@ -422,6 +439,7 @@ export type Database = {
           registrado_em?: string;
           registrado_por?: string | null;
         };
+        Relationships: [];
       };
       audit_log: {
         Row: {
@@ -460,6 +478,7 @@ export type Database = {
           user_agent?: string | null;
           ocorreu_em?: string;
         };
+        Relationships: [];
       };
     };
     Views: {
@@ -483,6 +502,7 @@ export type Database = {
           status: StatusInscricao;
           inscrito_em: string;
         };
+        Relationships: [];
       };
     };
     Functions: {
@@ -521,6 +541,9 @@ export type Database = {
       tipo_resultado: TipoResultado;
       role_usuario: RoleUsuario;
       tipo_fase: TipoFase;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 };

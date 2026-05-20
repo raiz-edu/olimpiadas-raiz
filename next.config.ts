@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  typedRoutes: true,
+  // typedRoutes: true — desabilitado: não suporta query params em hrefs dinâmicos
   images: {
     remotePatterns: [],
   },
