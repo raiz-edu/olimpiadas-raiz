@@ -52,7 +52,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         {/* Body: sidebar + content */}
         <div className="flex flex-1">
           {/* Sidebar (desktop) */}
-          <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
+          <aside className="hidden w-56 shrink-0 border-r border-border/40 bg-background lg:block">
             <Sidebar />
           </aside>
 

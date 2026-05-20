@@ -115,7 +115,7 @@ export function Sidebar() {
   }
 
   return (
-    <nav className="flex flex-col gap-0.5 px-3 py-4">
+    <nav className="flex flex-col py-4">
       {items.map((item) => {
         const isActive =
           item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
@@ -125,18 +125,18 @@ export function Sidebar() {
             key={item.href}
             href={item.soon ? "#" : item.href}
             aria-disabled={item.soon}
-            className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+            className={`flex items-center gap-2.5 border-l-2 px-4 py-2 text-sm transition-colors ${
               isActive
-                ? "bg-blue-50 font-medium text-blue-700"
+                ? "border-primary bg-white/[0.06] font-medium text-foreground"
                 : item.soon
-                  ? "cursor-not-allowed text-gray-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "cursor-not-allowed border-transparent text-muted-foreground/40"
+                  : "border-transparent text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
             }`}
           >
             {item.icon}
             <span className="flex-1">{item.label}</span>
             {item.soon && (
-              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-400">
+              <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
                 Em breve
               </span>
             )}
