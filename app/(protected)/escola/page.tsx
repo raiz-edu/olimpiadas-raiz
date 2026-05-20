@@ -191,19 +191,25 @@ export default async function EscolaPage({
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <table className="w-full table-fixed text-sm">
                 <colgroup>
+                  <col className="w-[15%]" />
+                  <col className="w-[20%]" />
                   <col className="w-[18%]" />
-                  <col className="w-[32%]" />
-                  <col className="w-[28%] hidden sm:table-column" />
-                  <col className="w-[22%]" />
+                  <col className="w-[10%] hidden sm:table-column" />
+                  <col className="w-[17%] hidden sm:table-column" />
+                  <col className="w-[20%]" />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-background">
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Marca</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                      Unidade / Turma
+                      Unidade
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Turma</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                      Série
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
-                      Detalhe
+                      Localização
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
                   </tr>
@@ -220,6 +226,8 @@ export default async function EscolaPage({
                           {u.isFirstInGroup ? u.marcaNome : ""}
                         </td>
                         <td className="px-4 py-3 font-medium text-foreground">{u.nome}</td>
+                        <td className="px-4 py-3" />
+                        <td className="px-4 py-3 hidden sm:table-cell" />
                         <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                           {u.cidade && u.estado
                             ? `${u.cidade} / ${u.estado}`
@@ -265,12 +273,13 @@ export default async function EscolaPage({
                           className="border-b border-border/50 bg-background/20 hover:bg-background/40"
                         >
                           <td className="px-4 py-2" />
-                          <td className="px-4 py-2 text-muted-foreground">
-                            <span className="mr-1.5 text-border">↳</span>
-                            {t.nome}
+                          <td className="px-4 py-2" />
+                          <td className="px-4 py-2 text-muted-foreground">{t.nome}</td>
+                          <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
+                            {t.serie ?? "—"}
                           </td>
                           <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
-                            {[t.serie, t.ano_letivo].filter(Boolean).join(" · ") || "—"}
+                            {t.ano_letivo ?? "—"}
                           </td>
                           <td className="px-4 py-2">
                             {can(user.role, "turma:update") && (
