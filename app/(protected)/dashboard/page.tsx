@@ -173,7 +173,7 @@ export default async function DashboardPage() {
         <StatCard
           label={`Inscrições ${anoAtual}`}
           value={totalInscricoes}
-          sub={`${porStatus["confirmada"] ?? 0} confirmadas`}
+          sub={`${(inscricoes ?? []).filter((i) => i.status === "confirmada").length} confirmadas`}
           href="/inscricoes"
           color="amber"
         />
