@@ -52,12 +52,6 @@ const getMarcaNome = (m: unknown): string => {
   return obj?.nome ?? "—";
 };
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  const [y, mo, d] = iso.split("-");
-  return `${d}/${mo}/${y}`;
-}
-
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -101,7 +95,7 @@ export default async function EscolaPage({
     let q = supabase
       .from("aluno")
       .select(
-        "id, nome, data_nascimento, ativo, turma_id, turma:turma_id(nome, unidade:unidade_id(nome))",
+        "id, nome, data_nascimento, ativo, turma_id, turma:turma_id(nome, serie, ano_letivo, unidade:unidade_id(nome, marca:marca_id(nome)))",
       )
       .order("nome");
     if (busca) q = q.ilike("nome", `%${busca}%`);
@@ -372,19 +366,27 @@ export default async function EscolaPage({
             <div className="overflow-hidden rounded-xl border border-border bg-card">
               <table className="w-full table-fixed text-sm">
                 <colgroup>
-                  <col className="w-[30%]" />
-                  <col className="w-[30%]" />
-                  <col className="w-[20%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[15%] hidden md:table-column" />
+                  <col className="w-[13%]" />
+                  <col className="w-[9%] hidden sm:table-column" />
+                  <col className="w-[8%] hidden sm:table-column" />
                   <col className="w-[20%]" />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-background">
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Aluno</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Marca</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                      Turma
+                      Unidade
                     </th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                      Nascimento
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Turma</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                      Série
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">
+                      Ano
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
                   </tr>
@@ -396,25 +398,37 @@ export default async function EscolaPage({
                       turma &&
                       (Array.isArray((turma as { unidade: unknown }).unidade)
                         ? (
-                            (turma as { unidade: { nome: string }[] }).unidade as { nome: string }[]
+                            (turma as { unidade: unknown[] }).unidade as {
+                              nome: string;
+                              marca: unknown;
+                            }[]
                           )[0]
-                        : (turma as { unidade: { nome: string } | null }).unidade);
+                        : (turma as { unidade: { nome: string; marca: unknown } | null }).unidade);
+                    const marca =
+                      unidade &&
+                      (Array.isArray((unidade as { marca: unknown }).marca)
+                        ? ((unidade as { marca: unknown[] }).marca as { nome: string }[])[0]
+                        : (unidade as { marca: { nome: string } | null }).marca);
 
                     return (
                       <tr key={a.id} className="hover:bg-background/50">
                         <td className="px-4 py-3 font-medium text-foreground">{a.nome}</td>
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          {turma ? (
-                            <span className="text-muted-foreground">
-                              {(turma as { nome: string }).nome}
-                              {unidade && <span> · {(unidade as { nome: string }).nome}</span>}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {marca ? (marca as { nome: string }).nome : "—"}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                          {formatDate(a.data_nascimento)}
+                        <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                          {unidade ? (unidade as { nome: string }).nome : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {turma ? (turma as { nome: string }).nome : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                          {turma ? ((turma as { serie?: string | null }).serie ?? "—") : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                          {turma
+                            ? ((turma as { ano_letivo?: number | null }).ano_letivo ?? "—")
+                            : "—"}
                         </td>
                         <td className="px-4 py-3">
                           {can(user.role, "aluno:update") && (
