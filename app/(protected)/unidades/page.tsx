@@ -23,25 +23,24 @@ export default async function UnidadesPage() {
     .select("id, nome, cidade, estado, ativo, marca_id, marca:marca_id(nome, cor_primaria)")
     .order("nome");
 
-  // Ordena por marca → unidade e marca cada item com flag de primeiro do grupo
-  const sorted = [...(unidades ?? [])].sort((a, b) => {
-    const mA = (Array.isArray(a.marca) ? a.marca[0] : a.marca) as { nome: string } | null;
-    const mB = (Array.isArray(b.marca) ? b.marca[0] : b.marca) as { nome: string } | null;
-    return (mA?.nome ?? "").localeCompare(mB?.nome ?? "") || a.nome.localeCompare(b.nome);
-  });
+  function getMarcaNome(
+    m: typeof unidades extends null | undefined
+      ? never
+      : NonNullable<typeof unidades>[number]["marca"],
+  ): string {
+    const obj = (Array.isArray(m) ? m[0] : m) as unknown as { nome: string } | null;
+    return obj?.nome ?? "—";
+  }
+
+  const sorted = [...(unidades ?? [])].sort(
+    (a, b) =>
+      getMarcaNome(a.marca).localeCompare(getMarcaNome(b.marca)) || a.nome.localeCompare(b.nome),
+  );
 
   const rows = sorted.map((u, i) => {
-    const marca = (Array.isArray(u.marca) ? u.marca[0] : u.marca) as { nome: string } | null;
-    const marcaNome = marca?.nome ?? "—";
-    const prevMarca =
-      i > 0
-        ? ((
-            (Array.isArray(sorted[i - 1].marca) ? sorted[i - 1].marca[0] : sorted[i - 1].marca) as {
-              nome: string;
-            } | null
-          )?.nome ?? "—")
-        : null;
-    return { ...u, marcaNome, isFirstInGroup: marcaNome !== prevMarca };
+    const marcaNome = getMarcaNome(u.marca);
+    const prevMarcaNome = i > 0 ? getMarcaNome(sorted[i - 1].marca) : null;
+    return { ...u, marcaNome, isFirstInGroup: marcaNome !== prevMarcaNome };
   });
 
   return (
