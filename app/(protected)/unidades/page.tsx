@@ -68,7 +68,7 @@ export default async function UnidadesPage() {
                   Localização
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -89,7 +89,7 @@ export default async function UnidadesPage() {
                       <StatusBadge ativo={u.ativo} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center gap-2">
                         <Can role={user.role} perform="unidade:update">
                           <Link
                             href={`/unidades/${u.id}/editar`}
