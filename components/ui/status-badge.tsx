@@ -10,7 +10,7 @@ export function StatusBadge({
   labelInativo = "Inativo",
 }: StatusBadgeProps) {
   return (
-    <span className={`text-xs font-medium ${ativo ? "text-foreground" : "text-muted-foreground"}`}>
+    <span className={`text-xs ${ativo ? "text-foreground" : "text-muted-foreground"}`}>
       {ativo ? labelAtivo : labelInativo}
     </span>
   );
