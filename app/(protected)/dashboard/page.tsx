@@ -120,6 +120,16 @@ export default async function DashboardPage({
     };
   });
 
+  // Ordenação olímpica: ouro → prata → bronze → alfabético
+  brandRows.sort((a, b) => {
+    if (b.ouro !== a.ouro) return b.ouro - a.ouro;
+    if (b.prata !== a.prata) return b.prata - a.prata;
+    if (b.bronze !== a.bronze) return b.bronze - a.bronze;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  });
+
+  const maxTotal = Math.max(...brandRows.map((b) => b.totalResultado), 0);
+
   // KPIs agregados
   const totalInscritos = brandRows.reduce((s, b) => s + b.numAlunos, 0);
   const totalParticipantes = brandRows.reduce((s, b) => s + b.numInscritos, 0);
@@ -200,14 +210,15 @@ export default async function DashboardPage({
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <table className="w-full table-fixed text-sm">
           <colgroup>
-            <col className="w-[18%]" />
-            <col className="w-[11%]" />
-            <col className="w-[11%]" />
-            <col className="w-[11%]" />
+            <col className="w-[15%]" />
             <col className="w-[9%]" />
+            <col className="w-[10%]" />
             <col className="w-[9%]" />
-            <col className="w-[9%]" />
-            <col className="w-[12%]" />
+            <col className="w-[8%]" />
+            <col className="w-[8%]" />
+            <col className="w-[8%]" />
+            <col className="w-[10%]" />
+            <col className="w-[15%]" />
           </colgroup>
           <thead>
             <tr className="border-b border-border/50 bg-background">
@@ -228,7 +239,7 @@ export default async function DashboardPage({
               <th
                 className="px-4 py-3 text-center font-medium"
                 style={{ color: "rgb(91,184,193)" }}
-                colSpan={4}
+                colSpan={5}
               >
                 Resultados
               </th>
@@ -276,6 +287,12 @@ export default async function DashboardPage({
               >
                 Menção Honrosa
               </th>
+              <th
+                className="px-4 py-2 text-center text-xs font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+              >
+                Total
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -289,6 +306,28 @@ export default async function DashboardPage({
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.prata}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.bronze}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.mencao_honrosa}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 shrink-0 text-right text-xs text-muted-foreground">
+                      {b.totalResultado}
+                    </span>
+                    <div
+                      className="flex-1 overflow-hidden rounded-full"
+                      style={{ height: 6, backgroundColor: "rgba(255,255,255,0.08)" }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width:
+                            maxTotal > 0
+                              ? `${Math.round((b.totalResultado / maxTotal) * 100)}%`
+                              : "0%",
+                          backgroundColor: "rgb(91,184,193)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
