@@ -136,8 +136,8 @@ export default async function DashboardPage({
     if (i === 0) {
       ranks.push(1);
     } else {
-      const prev = brandRows[i - 1];
-      const curr = brandRows[i];
+      const prev = brandRows[i - 1]!;
+      const curr = brandRows[i]!;
       if (curr.ouro === prev.ouro && curr.prata === prev.prata && curr.bronze === prev.bronze) {
         ranks.push(ranks[i - 1]);
       } else {
