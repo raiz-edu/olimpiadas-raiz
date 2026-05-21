@@ -1,5 +1,6 @@
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { MarcaMultiSelect } from "@/components/olimpiadas/marca-multi-select";
 
 export const metadata = { title: "Olimpíadas — Olimpíadas" };
 
@@ -51,8 +52,10 @@ export default async function OlimpiadasPage({
   const supabase = createAdminClient();
   const sp = await searchParams;
 
-  const marcaFilter = sp.marca ?? "todas";
+  const marcaParam = sp.marca ?? "todas";
   const olimpiadaFilter = sp.olimpiada ?? "todas";
+  const marcaTodosMode = marcaParam === "todas";
+  const selectedMarcas = marcaTodosMode ? [] : marcaParam.split(",").filter(Boolean);
 
   const { data: marcas } = await supabase.from("marca").select("id, nome").order("nome");
 
@@ -64,8 +67,8 @@ export default async function OlimpiadasPage({
     .order("inscrito_em", { ascending: false })
     .limit(200);
 
-  if (marcaFilter !== "todas") {
-    query = query.eq("marca_nome", marcaFilter);
+  if (!marcaTodosMode && selectedMarcas.length > 0) {
+    query = query.in("marca_nome", selectedMarcas);
   }
   if (olimpiadaFilter !== "todas") {
     query = query.ilike("olimpiada_nome", `%${olimpiadaFilter}%`);
@@ -84,8 +87,8 @@ export default async function OlimpiadasPage({
       </div>
 
       {/* Filtros */}
-      <form method="GET" className="flex flex-wrap items-end gap-3">
-        {/* Marca */}
+      <div className="flex flex-wrap items-end gap-4">
+        {/* Marca — multi-seleção */}
         <div className="flex flex-col gap-1.5">
           <p
             className="text-xs font-semibold uppercase tracking-wider"
@@ -93,52 +96,47 @@ export default async function OlimpiadasPage({
           >
             Marca
           </p>
-          <select
-            name="marca"
-            defaultValue={marcaFilter}
-            className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
-            style={{ minWidth: 160 }}
-          >
-            <option value="todas">Todas as marcas</option>
-            {(marcas ?? []).map((m) => (
-              <option key={m.id} value={m.nome}>
-                {m.nome}
-              </option>
-            ))}
-          </select>
+          <MarcaMultiSelect
+            marcas={marcas ?? []}
+            selected={selectedMarcas}
+            todosMode={marcaTodosMode}
+          />
         </div>
 
-        {/* Olimpíada */}
-        <div className="flex flex-col gap-1.5">
+        {/* Olimpíada — seleção única via form */}
+        <form method="GET" className="flex flex-col gap-1.5">
+          {/* Preservar seleção de marca ao trocar olimpíada */}
+          <input type="hidden" name="marca" value={marcaParam} />
           <p
             className="text-xs font-semibold uppercase tracking-wider"
             style={{ color: "rgb(91,184,193)" }}
           >
             Olimpíada
           </p>
-          <select
-            name="olimpiada"
-            defaultValue={olimpiadaFilter}
-            className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
-            style={{ minWidth: 280 }}
-          >
-            <option value="todas">Todas as olimpíadas</option>
-            {OLIMPIADAS_NACIONAIS.map((o) => (
-              <option key={o.sigla} value={o.sigla}>
-                {o.sigla} — {o.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ backgroundColor: "rgb(91,184,193)" }}
-        >
-          Filtrar
-        </button>
-      </form>
+          <div className="flex items-center gap-2">
+            <select
+              name="olimpiada"
+              defaultValue={olimpiadaFilter}
+              className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
+              style={{ minWidth: 280 }}
+            >
+              <option value="todas">Todas as olimpíadas</option>
+              {OLIMPIADAS_NACIONAIS.map((o) => (
+                <option key={o.sigla} value={o.sigla}>
+                  {o.sigla} — {o.nome}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: "rgb(91,184,193)" }}
+            >
+              Filtrar
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* Referência das olimpíadas nacionais */}
       <details className="group rounded-xl border border-border bg-card">
