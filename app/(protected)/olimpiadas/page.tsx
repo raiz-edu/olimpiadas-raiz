@@ -1,33 +1,12 @@
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MarcaMultiSelect } from "@/components/olimpiadas/marca-multi-select";
+import {
+  OlimpiadaMultiSelect,
+  OLIMPIADAS_NACIONAIS,
+} from "@/components/olimpiadas/olimpiada-multi-select";
 
 export const metadata = { title: "Olimpíadas — Olimpíadas" };
-
-const OLIMPIADAS_NACIONAIS = [
-  {
-    sigla: "OBMEP",
-    nome: "Olimpíada Brasileira de Matemática das Escolas Públicas",
-    nivel: "EF II · EM",
-  },
-  { sigla: "OBM", nome: "Olimpíada Brasileira de Matemática", nivel: "EF II · EM" },
-  {
-    sigla: "OBA",
-    nome: "Olimpíada Brasileira de Astronomia e Astronáutica",
-    nivel: "EF I · EF II · EM",
-  },
-  { sigla: "OBF", nome: "Olimpíada Brasileira de Física", nivel: "EF II · EM" },
-  { sigla: "OBQ", nome: "Olimpíada Brasileira de Química", nivel: "EM" },
-  { sigla: "OBB", nome: "Olimpíada Brasileira de Biologia", nivel: "EM" },
-  { sigla: "OBL", nome: "Olimpíada Brasileira de Linguística", nivel: "EM" },
-  { sigla: "OBG", nome: "Olimpíada Brasileira de Geografia", nivel: "EF II · EM" },
-  { sigla: "ONHB", nome: "Olimpíada Nacional em História do Brasil", nivel: "EF II · EM" },
-  { sigla: "OBI", nome: "Olimpíada Brasileira de Informática", nivel: "EF · EM" },
-  { sigla: "OBR", nome: "Olimpíada Brasileira de Robótica", nivel: "EF · EM" },
-  { sigla: "ONC", nome: "Olimpíada Nacional de Ciências", nivel: "EF · EM" },
-  { sigla: "OP", nome: "Olimpíada de Português — Escrevendo o Futuro", nivel: "EF II" },
-  { sigla: "OBEF", nome: "Olimpíada Brasileira de Educação Financeira", nivel: "EF II · EM" },
-];
 
 const STATUS_LABELS: Record<string, string> = {
   pendente: "Pendente",
@@ -53,9 +32,13 @@ export default async function OlimpiadasPage({
   const sp = await searchParams;
 
   const marcaParam = sp.marca ?? "todas";
-  const olimpiadaFilter = sp.olimpiada ?? "todas";
+  const olimpiadaParam = sp.olimpiada ?? "todas";
+
   const marcaTodosMode = marcaParam === "todas";
+  const olimpiadaTodosMode = olimpiadaParam === "todas";
+
   const selectedMarcas = marcaTodosMode ? [] : marcaParam.split(",").filter(Boolean);
+  const selectedOlimpiadas = olimpiadaTodosMode ? [] : olimpiadaParam.split(",").filter(Boolean);
 
   const { data: marcas } = await supabase.from("marca").select("id, nome").order("nome");
 
@@ -70,12 +53,12 @@ export default async function OlimpiadasPage({
   if (!marcaTodosMode && selectedMarcas.length > 0) {
     query = query.in("marca_nome", selectedMarcas);
   }
-  if (olimpiadaFilter !== "todas") {
-    query = query.ilike("olimpiada_nome", `%${olimpiadaFilter}%`);
+  if (!olimpiadaTodosMode && selectedOlimpiadas.length > 0) {
+    const conditions = selectedOlimpiadas.map((s) => `olimpiada_nome.ilike.%${s}%`).join(",");
+    query = query.or(conditions);
   }
 
   const { data: inscricoes } = await query;
-
   const total = inscricoes?.length ?? 0;
 
   return (
@@ -88,7 +71,7 @@ export default async function OlimpiadasPage({
 
       {/* Filtros */}
       <div className="flex flex-wrap items-end gap-4">
-        {/* Marca — multi-seleção */}
+        {/* Marca */}
         <div className="flex flex-col gap-1.5">
           <p
             className="text-xs font-semibold uppercase tracking-wider"
@@ -103,45 +86,24 @@ export default async function OlimpiadasPage({
           />
         </div>
 
-        {/* Olimpíada — seleção única via form */}
-        <form method="GET" className="flex flex-col gap-1.5">
-          {/* Preservar seleção de marca ao trocar olimpíada */}
-          <input type="hidden" name="marca" value={marcaParam} />
+        {/* Olimpíada */}
+        <div className="flex flex-col gap-1.5">
           <p
             className="text-xs font-semibold uppercase tracking-wider"
             style={{ color: "rgb(91,184,193)" }}
           >
             Olimpíada
           </p>
-          <div className="flex items-center gap-2">
-            <select
-              name="olimpiada"
-              defaultValue={olimpiadaFilter}
-              className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
-              style={{ minWidth: 280 }}
-            >
-              <option value="todas">Todas as olimpíadas</option>
-              {OLIMPIADAS_NACIONAIS.map((o) => (
-                <option key={o.sigla} value={o.sigla}>
-                  {o.sigla} — {o.nome}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "rgb(91,184,193)" }}
-            >
-              Filtrar
-            </button>
-          </div>
-        </form>
+          <OlimpiadaMultiSelect selected={selectedOlimpiadas} todosMode={olimpiadaTodosMode} />
+        </div>
       </div>
 
-      {/* Referência das olimpíadas nacionais */}
+      {/* Referência */}
       <details className="group rounded-xl border border-border bg-card">
         <summary className="flex cursor-pointer items-center justify-between px-5 py-3 text-sm font-medium text-muted-foreground hover:text-foreground">
-          <span>Olimpíadas do conhecimento — referência nacional</span>
+          <span>
+            Olimpíadas do conhecimento — referência nacional ({OLIMPIADAS_NACIONAIS.length})
+          </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"
@@ -202,31 +164,31 @@ export default async function OlimpiadasPage({
                   Aluno
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-medium hidden sm:table-cell"
+                  className="hidden px-4 py-3 text-left font-medium sm:table-cell"
                   style={{ color: "rgb(91,184,193)" }}
                 >
                   Olimpíada
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-medium hidden md:table-cell"
+                  className="hidden px-4 py-3 text-left font-medium md:table-cell"
                   style={{ color: "rgb(91,184,193)" }}
                 >
                   Marca
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-medium hidden lg:table-cell"
+                  className="hidden px-4 py-3 text-left font-medium lg:table-cell"
                   style={{ color: "rgb(91,184,193)" }}
                 >
                   Unidade
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-medium hidden sm:table-cell"
+                  className="hidden px-4 py-3 text-left font-medium sm:table-cell"
                   style={{ color: "rgb(91,184,193)" }}
                 >
                   Série
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-medium hidden sm:table-cell"
+                  className="hidden px-4 py-3 text-left font-medium sm:table-cell"
                   style={{ color: "rgb(91,184,193)" }}
                 >
                   Ano
@@ -243,19 +205,19 @@ export default async function OlimpiadasPage({
               {(inscricoes ?? []).map((i) => (
                 <tr key={i.inscricao_id} className="hover:bg-background/50">
                   <td className="px-4 py-3 font-medium text-foreground">{i.aluno_nome}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                  <td className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
                     {i.olimpiada_nome}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                  <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
                     {i.marca_nome}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                  <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
                     {i.unidade_nome}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                  <td className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
                     {i.serie ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                  <td className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
                     {i.ano_letivo}
                   </td>
                   <td className="px-4 py-3">
