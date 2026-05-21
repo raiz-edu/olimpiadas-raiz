@@ -105,6 +105,7 @@ export default async function DashboardPage() {
       id: m.id,
       nome: m.nome,
       numUnidades,
+      numAlunos,
       numTurmas,
       numInscritos,
       adesao,
@@ -148,36 +149,72 @@ export default async function DashboardPage() {
           </colgroup>
           <thead>
             <tr className="border-b border-border/50 bg-background">
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground" rowSpan={2}>
+              <th
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+                rowSpan={2}
+              >
                 Marca
               </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground" rowSpan={2}>
+              <th
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+                rowSpan={2}
+              >
                 Unidades
               </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground" rowSpan={2}>
+              <th
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+                rowSpan={2}
+              >
                 Inscritos
               </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground" rowSpan={2}>
+              <th
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+                rowSpan={2}
+              >
                 Adesão
               </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground" rowSpan={2}>
+              <th
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+                rowSpan={2}
+              >
                 Engajamento
               </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground" colSpan={4}>
+              <th
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+                colSpan={4}
+              >
                 Resultado
               </th>
             </tr>
             <tr className="border-b border-border bg-background">
-              <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground/70">
+              <th
+                className="px-4 py-2 text-center text-xs font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+              >
                 Ouro
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground/70">
+              <th
+                className="px-4 py-2 text-center text-xs font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+              >
                 Prata
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground/70">
+              <th
+                className="px-4 py-2 text-center text-xs font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+              >
                 Bronze
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground/70">
+              <th
+                className="px-4 py-2 text-center text-xs font-medium"
+                style={{ color: "rgb(91,184,193)" }}
+              >
                 Menção Honrosa
               </th>
             </tr>
@@ -188,7 +225,7 @@ export default async function DashboardPage() {
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.nome}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.numUnidades}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.numInscritos}</td>
-                <td className="px-4 py-3 text-center text-muted-foreground">{b.adesao}%</td>
+                <td className="px-4 py-3 text-center text-muted-foreground">{b.numAlunos}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.engajamento}%</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.ouro}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.prata}</td>
