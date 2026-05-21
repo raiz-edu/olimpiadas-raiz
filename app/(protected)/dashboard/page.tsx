@@ -110,6 +110,18 @@ export default async function DashboardPage() {
     mencao_honrosa: b.mencao_honrosa,
   }));
 
+  // KPIs agregados
+  const totalInscritos = brandRows.reduce((s, b) => s + b.numAlunos, 0);
+  const totalParticipantes = brandRows.reduce((s, b) => s + b.numInscritos, 0);
+  const totalConfirmados = brandRows.reduce((s, b) => s + b.numConfirmados, 0);
+  const mediaEngajamento =
+    totalParticipantes > 0 ? Math.round((totalConfirmados / totalParticipantes) * 100) : 0;
+  const totalOuro = brandRows.reduce((s, b) => s + b.ouro, 0);
+  const totalPrata = brandRows.reduce((s, b) => s + b.prata, 0);
+  const totalBronze = brandRows.reduce((s, b) => s + b.bronze, 0);
+  const totalMencao = brandRows.reduce((s, b) => s + b.mencao_honrosa, 0);
+  const totalResultados = brandRows.reduce((s, b) => s + b.totalResultado, 0);
+
   return (
     <div className="space-y-8">
       {/* Boas-vindas */}
@@ -118,6 +130,59 @@ export default async function DashboardPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {ROLE_LABELS[user.role]} · {anoAtual}
         </p>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="space-y-4">
+        {/* Grupo: Alunos */}
+        <div>
+          <p
+            className="mb-2 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: "rgb(91,184,193)" }}
+          >
+            Alunos
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: "Inscritos", value: totalInscritos.toLocaleString("pt-BR") },
+              { label: "Participantes", value: totalParticipantes.toLocaleString("pt-BR") },
+              { label: "Engajamento", value: `${mediaEngajamento}%` },
+            ].map(({ label, value }) => (
+              <div key={label} className="rounded-xl border border-border bg-card px-5 py-4">
+                <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                <p className="mt-1 text-2xl font-bold" style={{ color: "rgb(91,184,193)" }}>
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Grupo: Resultados */}
+        <div>
+          <p
+            className="mb-2 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: "rgb(91,184,193)" }}
+          >
+            Resultados
+          </p>
+          <div className="grid grid-cols-5 gap-4">
+            {[
+              { label: "Ouro", value: totalOuro },
+              { label: "Prata", value: totalPrata },
+              { label: "Bronze", value: totalBronze },
+              { label: "Menção Honrosa", value: totalMencao },
+              { label: "Total", value: totalResultados },
+            ].map(({ label, value }) => (
+              <div key={label} className="rounded-xl border border-border bg-card px-5 py-4">
+                <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                <p className="mt-1 text-2xl font-bold" style={{ color: "rgb(91,184,193)" }}>
+                  {value.toLocaleString("pt-BR")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tabela por marca */}
