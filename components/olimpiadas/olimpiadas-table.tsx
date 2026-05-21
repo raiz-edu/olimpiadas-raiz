@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   BarChart,
   Bar,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -158,12 +159,12 @@ function GroupedBar({
   series: string[];
   isPercent: boolean;
 }) {
-  const height = series.length > 3 ? 220 : 180;
-  const maxBarSize = series.length <= 1 ? 52 : series.length <= 3 ? 32 : 20;
+  const height = series.length > 3 ? 240 : 200;
+  const maxBarSize = series.length <= 1 ? 52 : series.length <= 3 ? 36 : 24;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+      <BarChart data={data} barGap={0} margin={{ top: 20, right: 8, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis
           dataKey="name"
@@ -198,7 +199,17 @@ function GroupedBar({
             fill={SERIES_COLORS[i % SERIES_COLORS.length]}
             radius={[3, 3, 0, 0]}
             maxBarSize={maxBarSize}
-          />
+          >
+            <LabelList
+              dataKey={s}
+              position="top"
+              style={{ fill: "rgb(203,213,225)", fontSize: 10 }}
+              formatter={(v: unknown) => {
+                const n = Number(v ?? 0);
+                return n === 0 ? "" : isPercent ? `${n}%` : n.toLocaleString("pt-BR");
+              }}
+            />
+          </Bar>
         ))}
       </BarChart>
     </ResponsiveContainer>
