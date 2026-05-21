@@ -107,13 +107,13 @@ function OlimpiadaMultiSelectInner({
                   className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-background"
                 >
                   <Checkbox checked={checked} />
-                  <div className="min-w-0 text-left">
+                  <div className="min-w-0 truncate text-left">
                     <span
                       className={`font-medium ${checked ? "text-foreground" : "text-muted-foreground"}`}
                     >
                       {o.sigla}
                     </span>
-                    <span className="ml-1.5 truncate text-xs text-muted-foreground">{o.nome}</span>
+                    <span className="ml-1.5 text-xs text-muted-foreground">{o.nome}</span>
                   </div>
                 </button>
               );
