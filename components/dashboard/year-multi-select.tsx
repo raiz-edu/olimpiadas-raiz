@@ -3,60 +3,40 @@
 import { Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
-function YearMultiSelectInner({ anos, selected }: { anos: number[]; selected: number[] }) {
+function YearSelectInner({ anos, selected }: { anos: number[]; selected: number }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  function toggle(ano: number) {
-    const next = selected.includes(ano)
-      ? selected.filter((a) => a !== ano)
-      : [...selected, ano].sort((a, b) => a - b);
-
+  function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const params = new URLSearchParams(searchParams.toString());
-    if (next.length === 0) {
-      params.delete("anos");
-    } else {
-      params.set("anos", next.join(","));
-    }
+    params.set("ano", e.target.value);
     router.push(`${pathname}?${params.toString()}`);
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {anos.map((ano) => {
-        const active = selected.includes(ano);
-        return (
-          <button
-            key={ano}
-            onClick={() => toggle(ano)}
-            className="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-            style={
-              active
-                ? {
-                    backgroundColor: "rgb(91,184,193)",
-                    borderColor: "rgb(91,184,193)",
-                    color: "#0f172a",
-                  }
-                : {
-                    backgroundColor: "transparent",
-                    borderColor: "var(--border)",
-                    color: "var(--muted-foreground)",
-                  }
-            }
-          >
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground">Ano</span>
+      <select
+        value={selected}
+        onChange={onChange}
+        className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-background focus:outline-none"
+        style={{ color: "rgb(91,184,193)" }}
+      >
+        {anos.map((ano) => (
+          <option key={ano} value={ano} style={{ color: "inherit", backgroundColor: "#1e293b" }}>
             {ano}
-          </button>
-        );
-      })}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
 
-export function YearMultiSelect({ anos, selected }: { anos: number[]; selected: number[] }) {
+export function YearMultiSelect({ anos, selected }: { anos: number[]; selected: number }) {
   return (
     <Suspense fallback={null}>
-      <YearMultiSelectInner anos={anos} selected={selected} />
+      <YearSelectInner anos={anos} selected={selected} />
     </Suspense>
   );
 }
