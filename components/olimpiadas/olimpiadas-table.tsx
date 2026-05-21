@@ -114,8 +114,8 @@ function cellValue(row: OlimpiadaStats, col: ColKey): number {
 
 type ChartPoint = Record<string, string | number>;
 
-// X = olimpíada, one bar per marca
-function toGroupedByOlimp(
+// X = marca, one bar per olimpíada — marca name visible on axis, olimpíadas in legend
+function toGroupedByMarca(
   rows: OlimpiadaStats[],
   col: ColKey,
 ): { data: ChartPoint[]; series: string[] } {
@@ -124,16 +124,16 @@ function toGroupedByOlimp(
     a.localeCompare(b, "pt-BR"),
   );
 
-  const data = olimps.map((olimp) => {
-    const entry: ChartPoint = { name: olimp };
-    for (const marca of marcas) {
+  const data = marcas.map((marca) => {
+    const entry: ChartPoint = { name: marca };
+    for (const olimp of olimps) {
       const row = rows.find((r) => r.marca === marca && sigla(r.nome) === olimp);
-      entry[marca] = row ? cellValue(row, col) : 0;
+      entry[olimp] = row ? cellValue(row, col) : 0;
     }
     return entry;
   });
 
-  return { data, series: marcas };
+  return { data, series: olimps };
 }
 
 // ─── sub-components ────────────────────────────────────────────────────────
@@ -191,7 +191,9 @@ function GroupedBar({
           }}
         />
         <Legend
+          verticalAlign="bottom"
           iconSize={8}
+          wrapperStyle={{ paddingTop: 12 }}
           formatter={(value) => (
             <span style={{ color: "rgb(148,163,184)", fontSize: 10 }}>{value}</span>
           )}
@@ -394,18 +396,18 @@ export function OlimpiadasTable({ statsRows, totals }: Props) {
         </table>
       </div>
 
-      {/* Charts — X = olimpíada, one bar per marca */}
+      {/* Charts — X = marca, one bar per olimpíada, legend at bottom */}
       {COLUMNS.filter((c) => visible[c.key]).map((col) => {
         const color = COL_COLOR[col.key];
         const isPercent = col.key === "engajamento";
-        const byOlimp = toGroupedByOlimp(statsRows, col.key);
+        const byMarca = toGroupedByMarca(statsRows, col.key);
 
         return (
           <div key={col.key} className="rounded-xl border border-border bg-card p-5">
             <p className="mb-4 text-sm font-semibold" style={{ color }}>
               {col.label}
             </p>
-            <GroupedBar data={byOlimp.data} series={byOlimp.series} isPercent={isPercent} />
+            <GroupedBar data={byMarca.data} series={byMarca.series} isPercent={isPercent} />
           </div>
         );
       })}
