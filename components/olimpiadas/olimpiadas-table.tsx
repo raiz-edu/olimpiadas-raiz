@@ -160,11 +160,15 @@ function GroupedBar({
   isPercent: boolean;
 }) {
   const height = series.length > 3 ? 240 : 200;
-  const maxBarSize = series.length <= 1 ? 52 : series.length <= 3 ? 36 : 24;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} barGap={0} margin={{ top: 20, right: 8, left: -20, bottom: 0 }}>
+      <BarChart
+        data={data}
+        barGap={0}
+        barCategoryGap="20%"
+        margin={{ top: 20, right: 8, left: -20, bottom: 0 }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis
           dataKey="name"
@@ -198,7 +202,6 @@ function GroupedBar({
             dataKey={s}
             fill={SERIES_COLORS[i % SERIES_COLORS.length]}
             radius={[3, 3, 0, 0]}
-            maxBarSize={maxBarSize}
           >
             <LabelList
               dataKey={s}
