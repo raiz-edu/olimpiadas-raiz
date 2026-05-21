@@ -132,18 +132,18 @@ export default async function DashboardPage({
 
   // Ranking com empate olímpico (mesma posição para ouro+prata+bronze iguais)
   const ranks: number[] = [];
+  let currentRank = 0;
   for (let i = 0; i < brandRows.length; i++) {
+    const curr = brandRows[i]!;
     if (i === 0) {
-      ranks.push(1);
+      currentRank = 1;
     } else {
       const prev = brandRows[i - 1]!;
-      const curr = brandRows[i]!;
-      if (curr.ouro === prev.ouro && curr.prata === prev.prata && curr.bronze === prev.bronze) {
-        ranks.push(ranks[i - 1]!);
-      } else {
-        ranks.push(i + 1);
+      if (curr.ouro !== prev.ouro || curr.prata !== prev.prata || curr.bronze !== prev.bronze) {
+        currentRank = i + 1;
       }
     }
+    ranks.push(currentRank);
   }
 
   // KPIs agregados
