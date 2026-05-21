@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export type OlimpiadaStats = {
   nome: string;
@@ -67,6 +76,17 @@ const COL_COLOR: Record<ColKey, string> = {
   mencao: "rgb(91,184,193)",
 };
 
+const SERIES_COLORS = [
+  "rgb(91,184,193)",
+  "rgb(249,115,22)",
+  "rgb(168,85,247)",
+  "rgb(34,197,94)",
+  "rgb(234,179,8)",
+  "rgb(239,68,68)",
+  "rgb(59,130,246)",
+  "rgb(236,72,153)",
+];
+
 // ─── helpers ───────────────────────────────────────────────────────────────
 
 function sigla(nome: string) {
@@ -83,47 +103,58 @@ function engajamento(participantes: number, inscritos: number) {
   return `${Math.round((participantes / inscritos) * 100)}%`;
 }
 
-// ─── chart aggregation ─────────────────────────────────────────────────────
-
-type AggRow = {
-  inscritos: number;
-  participantes: number;
-  ouro: number;
-  prata: number;
-  bronze: number;
-  mencao: number;
-};
-
-function aggregateBy(
-  rows: OlimpiadaStats[],
-  getKey: (r: OlimpiadaStats) => string,
-): Map<string, AggRow> {
-  const map = new Map<string, AggRow>();
-  for (const row of rows) {
-    const k = getKey(row);
-    if (!map.has(k))
-      map.set(k, { inscritos: 0, participantes: 0, ouro: 0, prata: 0, bronze: 0, mencao: 0 });
-    const a = map.get(k)!;
-    a.inscritos += row.inscritos;
-    a.participantes += row.participantes;
-    a.ouro += row.ouro;
-    a.prata += row.prata;
-    a.bronze += row.bronze;
-    a.mencao += row.mencao;
-  }
-  return map;
-}
-
-function aggValue(a: AggRow, col: ColKey): number {
+function cellValue(row: OlimpiadaStats, col: ColKey): number {
   if (col === "engajamento")
-    return a.inscritos === 0 ? 0 : Math.round((a.participantes / a.inscritos) * 100);
-  return a[col as keyof AggRow];
+    return row.inscritos === 0 ? 0 : Math.round((row.participantes / row.inscritos) * 100);
+  return row[col as keyof OlimpiadaStats] as number;
 }
 
-function toChartPoints(agg: Map<string, AggRow>, col: ColKey) {
-  return Array.from(agg.entries())
-    .map(([name, vals]) => ({ name, value: aggValue(vals, col) }))
-    .sort((a, b) => b.value - a.value);
+// ─── chart data builders ───────────────────────────────────────────────────
+
+type ChartPoint = Record<string, string | number>;
+
+// X = marca, one bar per olimpíada
+function toGroupedByMarca(
+  rows: OlimpiadaStats[],
+  col: ColKey,
+): { data: ChartPoint[]; series: string[] } {
+  const marcas = [...new Set(rows.map((r) => r.marca))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const olimps = [...new Set(rows.map((r) => sigla(r.nome)))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"),
+  );
+
+  const data = marcas.map((marca) => {
+    const entry: ChartPoint = { name: marca };
+    for (const olimp of olimps) {
+      const row = rows.find((r) => r.marca === marca && sigla(r.nome) === olimp);
+      entry[olimp] = row ? cellValue(row, col) : 0;
+    }
+    return entry;
+  });
+
+  return { data, series: olimps };
+}
+
+// X = olimpíada, one bar per marca
+function toGroupedByOlimp(
+  rows: OlimpiadaStats[],
+  col: ColKey,
+): { data: ChartPoint[]; series: string[] } {
+  const marcas = [...new Set(rows.map((r) => r.marca))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const olimps = [...new Set(rows.map((r) => sigla(r.nome)))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"),
+  );
+
+  const data = olimps.map((olimp) => {
+    const entry: ChartPoint = { name: olimp };
+    for (const marca of marcas) {
+      const row = rows.find((r) => r.marca === marca && sigla(r.nome) === olimp);
+      entry[marca] = row ? cellValue(row, col) : 0;
+    }
+    return entry;
+  });
+
+  return { data, series: marcas };
 }
 
 // ─── sub-components ────────────────────────────────────────────────────────
@@ -140,24 +171,25 @@ const TOOLTIP_STYLE = {
   cursor: { fill: "rgba(255,255,255,0.03)" },
 };
 
-function MiniBar({
+function GroupedBar({
   data,
-  color,
+  series,
   isPercent,
-  colLabel,
 }: {
-  data: { name: string; value: number }[];
-  color: string;
+  data: ChartPoint[];
+  series: string[];
   isPercent: boolean;
-  colLabel: string;
 }) {
+  const height = series.length > 3 ? 220 : 180;
+  const maxBarSize = series.length <= 1 ? 52 : series.length <= 3 ? 32 : 20;
+
   return (
-    <ResponsiveContainer width="100%" height={180}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 11, fill: "rgb(148,163,184)" }}
+          tick={{ fontSize: 10, fill: "rgb(148,163,184)" }}
           axisLine={false}
           tickLine={false}
         />
@@ -170,12 +202,26 @@ function MiniBar({
         />
         <Tooltip
           {...TOOLTIP_STYLE}
-          formatter={(v) => {
+          formatter={(v, name) => {
             const n = Number(v ?? 0);
-            return [isPercent ? `${n}%` : n.toLocaleString("pt-BR"), colLabel];
+            return [isPercent ? `${n}%` : n.toLocaleString("pt-BR"), name as string];
           }}
         />
-        <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={52} />
+        <Legend
+          iconSize={8}
+          formatter={(value) => (
+            <span style={{ color: "rgb(148,163,184)", fontSize: 10 }}>{value}</span>
+          )}
+        />
+        {series.map((s, i) => (
+          <Bar
+            key={s}
+            dataKey={s}
+            fill={SERIES_COLORS[i % SERIES_COLORS.length]}
+            radius={[3, 3, 0, 0]}
+            maxBarSize={maxBarSize}
+          />
+        ))}
       </BarChart>
     </ResponsiveContainer>
   );
@@ -201,9 +247,6 @@ export function OlimpiadasTable({ statsRows, totals }: Props) {
   if (statsRows.length === 0) {
     return <p className="text-sm text-muted-foreground">Nenhuma inscrição encontrada.</p>;
   }
-
-  const aggByMarca = aggregateBy(statsRows, (r) => r.marca);
-  const aggByOlimp = aggregateBy(statsRows, (r) => sigla(r.nome));
 
   return (
     <div className="space-y-4">
@@ -359,12 +402,12 @@ export function OlimpiadasTable({ statsRows, totals }: Props) {
         </table>
       </div>
 
-      {/* Charts — one card per active metric, each with marca + olimpíada breakdown */}
+      {/* Charts — grouped bars: Por marca (series=olimpíadas) + Por olimpíada (series=marcas) */}
       {COLUMNS.filter((c) => visible[c.key]).map((col) => {
         const color = COL_COLOR[col.key];
         const isPercent = col.key === "engajamento";
-        const byMarca = toChartPoints(aggByMarca, col.key);
-        const byOlimp = toChartPoints(aggByOlimp, col.key);
+        const byMarca = toGroupedByMarca(statsRows, col.key);
+        const byOlimp = toGroupedByOlimp(statsRows, col.key);
 
         return (
           <div key={col.key} className="rounded-xl border border-border bg-card p-5">
@@ -376,13 +419,13 @@ export function OlimpiadasTable({ statsRows, totals }: Props) {
                 <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Por marca
                 </p>
-                <MiniBar data={byMarca} color={color} isPercent={isPercent} colLabel={col.label} />
+                <GroupedBar data={byMarca.data} series={byMarca.series} isPercent={isPercent} />
               </div>
               <div>
                 <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Por olimpíada
                 </p>
-                <MiniBar data={byOlimp} color={color} isPercent={isPercent} colLabel={col.label} />
+                <GroupedBar data={byOlimp.data} series={byOlimp.series} isPercent={isPercent} />
               </div>
             </div>
           </div>
