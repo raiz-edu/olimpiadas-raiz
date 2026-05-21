@@ -1,21 +1,42 @@
 ﻿import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ROLE_LABELS } from "@/lib/auth/roles";
-import { getAnoAnalise } from "@/lib/auth/ano-analise";
+import { YearMultiSelect } from "@/components/dashboard/year-multi-select";
 
 export const metadata = { title: "Painel — Olimpíadas" };
+
+const ANO_INICIO = 2021;
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ anos?: string }>;
+}) {
   const session = await getServerSession();
   if (!session) return null;
 
   const { user } = session;
   const supabase = createAdminClient();
-  const anoAtual = await getAnoAnalise();
+
+  // Lista fixa de anos disponíveis: 2021 → ano atual
+  const anoCorrente = new Date().getFullYear();
+  const anosDisponiveis = Array.from(
+    { length: anoCorrente - ANO_INICIO + 1 },
+    (_, i) => ANO_INICIO + i,
+  ).reverse();
+
+  // Anos selecionados via searchParams (padrão: ano corrente)
+  const sp = await searchParams;
+  const selectedYears: number[] = sp.anos
+    ? sp.anos
+        .split(",")
+        .map(Number)
+        .filter((n) => !isNaN(n) && anosDisponiveis.includes(n))
+    : [anoCorrente];
 
   // Queries paralelas
   const [
@@ -27,7 +48,7 @@ export default async function DashboardPage() {
     supabase
       .from("v_dashboard_inscricoes")
       .select("inscricao_id, status, marca_nome, olimpiada_nome")
-      .eq("ano_letivo", anoAtual),
+      .in("ano_letivo", selectedYears),
     supabase
       .from("unidade")
       .select(
@@ -67,7 +88,7 @@ export default async function DashboardPage() {
       return (
         acc +
         turmas
-          .filter((t) => t.ano_letivo === anoAtual)
+          .filter((t) => t.ano_letivo !== null && selectedYears.includes(t.ano_letivo))
           .reduce((a2, t) => {
             const alunos = (Array.isArray(t.alunos) ? t.alunos : []) as {
               id: string;
@@ -116,11 +137,12 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Boas-vindas */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Painel</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {ROLE_LABELS[user.role]} · {anoAtual}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Painel</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{ROLE_LABELS[user.role]}</p>
+        </div>
+        <YearMultiSelect anos={anosDisponiveis} selected={selectedYears} />
       </div>
 
       {/* KPI Cards */}
