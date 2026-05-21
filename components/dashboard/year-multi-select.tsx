@@ -16,7 +16,6 @@ function YearSelectInner({ anos, selected }: { anos: number[]; selected: number 
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground">Ano</span>
       <select
         value={selected}
         onChange={onChange}
