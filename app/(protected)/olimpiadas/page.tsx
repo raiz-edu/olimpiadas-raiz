@@ -178,7 +178,7 @@ export default async function OlimpiadasPage({
           >
             Olimpíada
           </p>
-          <OlimpiadaMultiSelect selected={selectedOlimpiadas} todosMode={olimpiadaTodosMode} />
+          <OlimpiadaMultiSelect />
         </div>
 
         <div className="flex flex-col gap-1.5">

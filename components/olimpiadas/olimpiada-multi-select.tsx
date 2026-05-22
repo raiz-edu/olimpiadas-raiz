@@ -6,20 +6,17 @@ import { OLIMPIADAS_NACIONAIS, type OlimpiadaNacional } from "@/lib/olimpiadas/n
 
 type Olimpiada = OlimpiadaNacional;
 
-function OlimpiadaMultiSelectInner({
-  olimpiadas,
-  selected,
-  todosMode,
-}: {
-  olimpiadas: readonly Olimpiada[];
-  selected: string[];
-  todosMode: boolean;
-}) {
+function OlimpiadaMultiSelectInner({ olimpiadas }: { olimpiadas: readonly Olimpiada[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Deriva o estado diretamente da URL — nunca fica desatualizado durante navegação
+  const olimpiadaParam = searchParams.get("olimpiada") ?? "todas";
+  const todosMode = olimpiadaParam === "todas";
+  const selected = todosMode ? [] : olimpiadaParam.split(",").filter(Boolean);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -36,7 +33,8 @@ function OlimpiadaMultiSelectInner({
   }
 
   function toggleTodos() {
-    navigate(todosMode ? (olimpiadas[0]?.sigla ?? "todas") : "todas");
+    if (!todosMode) navigate("todas");
+    // Se já está em "todas", não faz nada
   }
 
   function toggleOlimpiada(sigla: string) {
@@ -84,7 +82,6 @@ function OlimpiadaMultiSelectInner({
 
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 w-[480px] rounded-xl border border-border bg-card p-1.5 shadow-lg">
-          {/* Opção Todas */}
           <button
             onClick={toggleTodos}
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-background"
@@ -154,20 +151,10 @@ function Checkbox({ checked }: { checked: boolean }) {
   );
 }
 
-export function OlimpiadaMultiSelect({
-  selected,
-  todosMode,
-}: {
-  selected: string[];
-  todosMode: boolean;
-}) {
+export function OlimpiadaMultiSelect() {
   return (
     <Suspense fallback={null}>
-      <OlimpiadaMultiSelectInner
-        olimpiadas={OLIMPIADAS_NACIONAIS}
-        selected={selected}
-        todosMode={todosMode}
-      />
+      <OlimpiadaMultiSelectInner olimpiadas={OLIMPIADAS_NACIONAIS} />
     </Suspense>
   );
 }
