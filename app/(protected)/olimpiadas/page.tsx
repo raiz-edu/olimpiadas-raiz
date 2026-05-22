@@ -168,11 +168,7 @@ export default async function OlimpiadasPage({
           >
             Marca
           </p>
-          <MarcaMultiSelect
-            marcas={marcas ?? []}
-            selected={selectedMarcas}
-            todosMode={marcaTodosMode}
-          />
+          <MarcaMultiSelect marcas={marcas ?? []} />
         </div>
 
         <div className="flex flex-col gap-1.5">

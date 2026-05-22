@@ -3,20 +3,17 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
-function MarcaMultiSelectInner({
-  marcas,
-  selected,
-  todosMode,
-}: {
-  marcas: { id: string; nome: string }[];
-  selected: string[];
-  todosMode: boolean;
-}) {
+function MarcaMultiSelectInner({ marcas }: { marcas: { id: string; nome: string }[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Deriva o estado diretamente da URL — nunca fica desatualizado durante navegação
+  const marcaParam = searchParams.get("marca") ?? "todas";
+  const todosMode = marcaParam === "todas";
+  const selected = todosMode ? [] : marcaParam.split(",").filter(Boolean);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -33,7 +30,8 @@ function MarcaMultiSelectInner({
   }
 
   function toggleTodos() {
-    navigate(todosMode ? (marcas[0]?.nome ?? "todas") : "todas");
+    if (!todosMode) navigate("todas");
+    // Se já está em "todas", não faz nada
   }
 
   function toggleMarca(nome: string) {
@@ -43,11 +41,7 @@ function MarcaMultiSelectInner({
     } else {
       next = selected.includes(nome) ? selected.filter((n) => n !== nome) : [...selected, nome];
     }
-    if (next.length === 0) {
-      navigate("todas");
-    } else {
-      navigate(next.join(","));
-    }
+    navigate(next.length === 0 ? "todas" : next.join(","));
   }
 
   const label = todosMode
@@ -85,7 +79,6 @@ function MarcaMultiSelectInner({
 
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 min-w-[180px] rounded-xl border border-border bg-card p-1.5 shadow-lg">
-          {/* Opção Todas */}
           <button
             onClick={toggleTodos}
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-background"
@@ -148,18 +141,10 @@ function Checkbox({ checked }: { checked: boolean }) {
   );
 }
 
-export function MarcaMultiSelect({
-  marcas,
-  selected,
-  todosMode,
-}: {
-  marcas: { id: string; nome: string }[];
-  selected: string[];
-  todosMode: boolean;
-}) {
+export function MarcaMultiSelect({ marcas }: { marcas: { id: string; nome: string }[] }) {
   return (
     <Suspense fallback={null}>
-      <MarcaMultiSelectInner marcas={marcas} selected={selected} todosMode={todosMode} />
+      <MarcaMultiSelectInner marcas={marcas} />
     </Suspense>
   );
 }
