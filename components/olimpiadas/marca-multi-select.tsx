@@ -30,8 +30,12 @@ function MarcaMultiSelectInner({ marcas }: { marcas: { id: string; nome: string 
   }
 
   function toggleTodos() {
-    if (!todosMode) navigate("todas");
-    // Se já está em "todas", não faz nada
+    if (todosMode) {
+      const first = marcas[0]?.nome;
+      if (first) navigate(first);
+    } else {
+      navigate("todas");
+    }
   }
 
   function toggleMarca(nome: string) {
