@@ -55,11 +55,12 @@ export default async function OlimpiadasPage({
 
   const { data: marcas } = await supabase.from("marca").select("id, nome").order("nome");
 
-  // Query 1: inscrições filtradas
+  // Query 1: inscrições filtradas (limite alto para pegar todos os registros)
   let inscricoesQuery = supabase
     .from("v_dashboard_inscricoes")
     .select("inscricao_id, olimpiada_nome, marca_nome, status")
-    .in("ano_letivo", selectedYears);
+    .in("ano_letivo", selectedYears)
+    .limit(50000);
 
   if (!marcaTodosMode && selectedMarcas.length > 0) {
     inscricoesQuery = inscricoesQuery.in("marca_nome", selectedMarcas);
@@ -71,18 +72,28 @@ export default async function OlimpiadasPage({
 
   const { data: inscricoes } = await inscricoesQuery;
 
-  // Query 2: resultados para as inscrições encontradas
+  // Query 2: resultados em lotes paralelos para evitar URLs longas demais
+  // (PostgREST tem limite de URL ~8KB; 1 UUID = 36 chars)
   const inscricaoIds = (inscricoes ?? []).map((i) => i.inscricao_id);
   const resultadoMap = new Map<string, TipoResultado>();
 
   if (inscricaoIds.length > 0) {
-    const { data: resultados } = await supabase
-      .from("resultado")
-      .select("inscricao_id, tipo")
-      .in("inscricao_id", inscricaoIds);
+    const BATCH = 200;
+    const batches: string[][] = [];
+    for (let i = 0; i < inscricaoIds.length; i += BATCH) {
+      batches.push(inscricaoIds.slice(i, i + BATCH));
+    }
+
+    const batchResults = await Promise.all(
+      batches.map((chunk) =>
+        supabase.from("resultado").select("inscricao_id, tipo").in("inscricao_id", chunk),
+      ),
+    );
+
+    const todosResultados = batchResults.flatMap((r) => r.data ?? []);
 
     // Por inscrição, guarda o melhor resultado (ouro > prata > bronze > menção)
-    for (const r of resultados ?? []) {
+    for (const r of todosResultados) {
       const current = resultadoMap.get(r.inscricao_id);
       const currentPrio = current ? (MEDAL_PRIORITY[current] ?? 0) : 0;
       const newPrio = MEDAL_PRIORITY[r.tipo] ?? 0;
