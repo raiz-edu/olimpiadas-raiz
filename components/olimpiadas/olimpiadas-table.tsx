@@ -110,9 +110,13 @@ function toGroupedByMarca(
   col: ColKey,
 ): { data: ChartPoint[]; series: string[] } {
   const marcas = [...new Set(rows.map((r) => r.marca))].sort((a, b) => a.localeCompare(b, "pt-BR"));
-  const olimps = [...new Set(rows.map((r) => sigla(r.nome)))].sort((a, b) =>
-    a.localeCompare(b, "pt-BR"),
-  );
+  // Ordena: ano primeiro (2024 → 2025 → 2026), depois alfabético dentro do mesmo ano
+  const olimps = [...new Set(rows.map((r) => sigla(r.nome)))].sort((a, b) => {
+    const yearA = a.match(/\b(20\d\d)\b/)?.[1] ?? "0";
+    const yearB = b.match(/\b(20\d\d)\b/)?.[1] ?? "0";
+    if (yearA !== yearB) return yearA.localeCompare(yearB);
+    return a.localeCompare(b, "pt-BR");
+  });
 
   const data = marcas.map((marca) => {
     const entry: ChartPoint = { name: marca };
