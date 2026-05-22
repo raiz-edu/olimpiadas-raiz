@@ -534,6 +534,23 @@ export type Database = {
         Args: { p_olimpiada_id: string; p_motivo?: string };
         Returns: number;
       };
+      get_olimpiadas_stats: {
+        Args: {
+          p_anos: number[];
+          p_marcas?: string[] | null;
+          p_siglas?: string[] | null;
+        };
+        Returns: {
+          olimpiada_nome: string;
+          marca_nome: string;
+          inscritos: number;
+          participantes: number;
+          ouro: number;
+          prata: number;
+          bronze: number;
+          mencao: number;
+        }[];
+      };
     };
     Enums: {
       classificacao_olimpiada: ClassificacaoOlimpiada;

@@ -5,19 +5,11 @@ import { OlimpiadaMultiSelect } from "@/components/olimpiadas/olimpiada-multi-se
 import { YearMultiSelect } from "@/components/dashboard/year-multi-select";
 import { OlimpiadasTable } from "@/components/olimpiadas/olimpiadas-table";
 import type { OlimpiadaStats } from "@/components/olimpiadas/olimpiadas-table";
-import type { TipoResultado } from "@/lib/types/database";
 import { OLIMPIADAS_NACIONAIS } from "@/lib/olimpiadas/nacionais";
 
 const ANO_INICIO = 2021;
 
 export const metadata = { title: "Olimpíadas — Olimpíadas" };
-
-const MEDAL_PRIORITY: Partial<Record<TipoResultado, number>> = {
-  ouro: 4,
-  prata: 3,
-  bronze: 2,
-  mencao_honrosa: 1,
-};
 
 export default async function OlimpiadasPage({
   searchParams,
@@ -54,13 +46,18 @@ export default async function OlimpiadasPage({
           .filter((n) => !isNaN(n) && anosDisponiveis.includes(n))
       : [anoCorrente];
 
-  const [{ data: marcas }, { data: olimpiadasDb }] = await Promise.all([
+  const [{ data: marcas }, { data: olimpiadasDb }, { data: statsData }] = await Promise.all([
     supabase.from("marca").select("id, nome").order("nome"),
     supabase.from("olimpiada").select("nome").eq("ativo", true),
+    // RPC agrega tudo no banco — sem limite de linhas e sem múltiplas queries
+    supabase.rpc("get_olimpiadas_stats", {
+      p_anos: selectedYears,
+      p_marcas: marcaTodosMode ? [] : selectedMarcas,
+      p_siglas: olimpiadaTodosMode ? [] : selectedOlimpiadas,
+    }),
   ]);
 
   // Determina quais siglas de OLIMPIADAS_NACIONAIS têm dados no banco
-  // Matching: nome da olimpíada começa com a sigla (ex: "OBA 2025 —" → "OBA")
   const siglasComDados = new Set<string>();
   for (const o of olimpiadasDb ?? []) {
     const upper = o.nome.toUpperCase();
@@ -79,87 +76,22 @@ export default async function OlimpiadasPage({
   }
   const olimpiadasDisponiveis = OLIMPIADAS_NACIONAIS.filter((o) => siglasComDados.has(o.sigla));
 
-  // Query 1: inscrições filtradas (limite alto para pegar todos os registros)
-  let inscricoesQuery = supabase
-    .from("v_dashboard_inscricoes")
-    .select("inscricao_id, olimpiada_nome, marca_nome, status")
-    .in("ano_letivo", selectedYears)
-    .limit(50000);
-
-  if (!marcaTodosMode && selectedMarcas.length > 0) {
-    inscricoesQuery = inscricoesQuery.in("marca_nome", selectedMarcas);
-  }
-  if (!olimpiadaTodosMode && selectedOlimpiadas.length > 0) {
-    const conditions = selectedOlimpiadas.map((s) => `olimpiada_nome.ilike.%${s}%`).join(",");
-    inscricoesQuery = inscricoesQuery.or(conditions);
-  }
-
-  const { data: inscricoes } = await inscricoesQuery;
-
-  // Query 2: resultados em lotes paralelos para evitar URLs longas demais
-  // (PostgREST tem limite de URL ~8KB; 1 UUID = 36 chars)
-  const inscricaoIds = (inscricoes ?? []).map((i) => i.inscricao_id);
-  const resultadoMap = new Map<string, TipoResultado>();
-
-  if (inscricaoIds.length > 0) {
-    const BATCH = 200;
-    const batches: string[][] = [];
-    for (let i = 0; i < inscricaoIds.length; i += BATCH) {
-      batches.push(inscricaoIds.slice(i, i + BATCH));
-    }
-
-    const batchResults = await Promise.all(
-      batches.map((chunk) =>
-        supabase.from("resultado").select("inscricao_id, tipo").in("inscricao_id", chunk),
-      ),
-    );
-
-    const todosResultados = batchResults.flatMap((r) => r.data ?? []);
-
-    // Por inscrição, guarda o melhor resultado (ouro > prata > bronze > menção)
-    for (const r of todosResultados) {
-      const current = resultadoMap.get(r.inscricao_id);
-      const currentPrio = current ? (MEDAL_PRIORITY[current] ?? 0) : 0;
-      const newPrio = MEDAL_PRIORITY[r.tipo] ?? 0;
-      if (newPrio > currentPrio) {
-        resultadoMap.set(r.inscricao_id, r.tipo);
-      }
-    }
-  }
-
-  // Agregação por (marca × olimpíada)
-  const statsMap = new Map<string, OlimpiadaStats>();
-  for (const row of inscricoes ?? []) {
-    const nome = row.olimpiada_nome ?? "—";
-    const marca = row.marca_nome ?? "—";
-    const key = `${marca}::${nome}`;
-    if (!statsMap.has(key)) {
-      statsMap.set(key, {
-        nome,
-        marca,
-        inscritos: 0,
-        participantes: 0,
-        ouro: 0,
-        prata: 0,
-        bronze: 0,
-        mencao: 0,
-      });
-    }
-    const s = statsMap.get(key)!;
-    s.inscritos++;
-    if (row.status === "confirmada") s.participantes++;
-
-    const tipo = resultadoMap.get(row.inscricao_id);
-    if (tipo === "ouro") s.ouro++;
-    else if (tipo === "prata") s.prata++;
-    else if (tipo === "bronze") s.bronze++;
-    else if (tipo === "mencao_honrosa") s.mencao++;
-  }
-
-  const statsRows = Array.from(statsMap.values()).sort((a, b) => {
-    const marcaCmp = a.marca.localeCompare(b.marca, "pt-BR");
-    return marcaCmp !== 0 ? marcaCmp : a.nome.localeCompare(b.nome, "pt-BR");
-  });
+  // Mapeia resultado do RPC para OlimpiadaStats
+  const statsRows: OlimpiadaStats[] = (statsData ?? [])
+    .map((row) => ({
+      nome: row.olimpiada_nome ?? "—",
+      marca: row.marca_nome ?? "—",
+      inscritos: Number(row.inscritos),
+      participantes: Number(row.participantes),
+      ouro: Number(row.ouro),
+      prata: Number(row.prata),
+      bronze: Number(row.bronze),
+      mencao: Number(row.mencao),
+    }))
+    .sort((a, b) => {
+      const marcaCmp = a.marca.localeCompare(b.marca, "pt-BR");
+      return marcaCmp !== 0 ? marcaCmp : a.nome.localeCompare(b.nome, "pt-BR");
+    });
 
   const totals = statsRows.reduce(
     (acc, r) => ({
