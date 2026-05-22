@@ -35,67 +35,24 @@ export default async function ResultadosPainelPage({
           .filter((n) => !isNaN(n) && anosDisponiveis.includes(n))
       : [anoCorrente];
 
-  const [
-    { data: inscricoes },
-    { data: unidadesData },
-    { data: marcasListData },
-    { data: resultadosData },
-  ] = await Promise.all([
-    supabase
-      .from("v_dashboard_inscricoes")
-      .select("inscricao_id, status, marca_nome, olimpiada_nome")
-      .in("ano_letivo", selectedYears),
-    supabase
-      .from("unidade")
-      .select(
-        "id, marca_id, marca:marca_id(id, nome), turmas:turma(id, ano_letivo, alunos:aluno(id, ativo))",
-      )
-      .order("nome"),
-    supabase.from("marca").select("id, nome").order("nome"),
-    supabase.from("resultado").select("inscricao_id, tipo"),
-  ]);
+  const [{ data: inscricoes }, { data: marcasListData }, { data: resultadosData }] =
+    await Promise.all([
+      supabase
+        .from("v_dashboard_inscricoes")
+        .select("inscricao_id, status, marca_nome, olimpiada_nome")
+        .in("ano_letivo", selectedYears),
+      supabase.from("marca").select("id, nome").order("nome"),
+      supabase.from("resultado").select("inscricao_id, tipo"),
+    ]);
 
   const inscricaoMarcaMap = new Map((inscricoes ?? []).map((i) => [i.inscricao_id, i.marca_nome]));
 
-  type TurmaRaw = {
-    id: string;
-    ano_letivo: number | null;
-    alunos: { id: string; ativo: boolean }[] | null;
-  };
-  type UnidadeRaw = {
-    id: string;
-    marca_id: string;
-    marca: { id: string; nome: string } | { id: string; nome: string }[] | null;
-    turmas: TurmaRaw[] | null;
-  };
-
-  const unidadeList = (unidadesData ?? []) as unknown as UnidadeRaw[];
-
   const brandRows = (marcasListData ?? []).map((m) => {
-    const minhas = unidadeList.filter((u) => {
-      const marcaObj = Array.isArray(u.marca) ? u.marca[0] : u.marca;
-      return (marcaObj as { id: string } | null)?.id === m.id;
-    });
-
-    const numAlunos = minhas.reduce((acc, u) => {
-      const turmas = (Array.isArray(u.turmas) ? u.turmas : []) as TurmaRaw[];
-      return (
-        acc +
-        turmas
-          .filter((t) => t.ano_letivo !== null && selectedYears.includes(t.ano_letivo))
-          .reduce((a2, t) => {
-            const alunos = (Array.isArray(t.alunos) ? t.alunos : []) as {
-              id: string;
-              ativo: boolean;
-            }[];
-            return a2 + alunos.filter((a) => a.ativo).length;
-          }, 0)
-      );
-    }, 0);
-
     const inscricoesM = (inscricoes ?? []).filter((i) => i.marca_nome === m.nome);
+    // Inscritos = total de inscrições (qualquer status)
     const numInscritos = inscricoesM.length;
-    const numConfirmados = inscricoesM.filter((i) => i.status === "confirmada").length;
+    // Participantes = inscrições confirmadas (subconjunto dos inscritos)
+    const numParticipantes = inscricoesM.filter((i) => i.status === "confirmada").length;
 
     const tipos = { ouro: 0, prata: 0, bronze: 0, mencao_honrosa: 0 };
     for (const r of resultadosData ?? []) {
@@ -108,9 +65,8 @@ export default async function ResultadosPainelPage({
     return {
       id: m.id,
       nome: m.nome,
-      numAlunos,
       numInscritos,
-      numConfirmados,
+      numParticipantes,
       totalResultado: totalResultadoM,
       ...tipos,
     };
@@ -140,11 +96,10 @@ export default async function ResultadosPainelPage({
     ranks.push(currentRank);
   }
 
-  const totalInscritos = brandRows.reduce((s, b) => s + b.numAlunos, 0);
-  const totalParticipantes = brandRows.reduce((s, b) => s + b.numInscritos, 0);
-  const totalConfirmados = brandRows.reduce((s, b) => s + b.numConfirmados, 0);
+  const totalInscritos = brandRows.reduce((s, b) => s + b.numInscritos, 0);
+  const totalParticipantes = brandRows.reduce((s, b) => s + b.numParticipantes, 0);
   const mediaEngajamento =
-    totalParticipantes > 0 ? Math.round((totalConfirmados / totalParticipantes) * 100) : 0;
+    totalInscritos > 0 ? Math.round((totalParticipantes / totalInscritos) * 100) : 0;
   const totalOuro = brandRows.reduce((s, b) => s + b.ouro, 0);
   const totalPrata = brandRows.reduce((s, b) => s + b.prata, 0);
   const totalBronze = brandRows.reduce((s, b) => s + b.bronze, 0);
@@ -284,11 +239,13 @@ export default async function ResultadosPainelPage({
                   {ranks[i]}
                 </td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.nome}</td>
-                <td className="px-4 py-3 text-center text-muted-foreground">{b.numAlunos}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.numInscritos}</td>
                 <td className="px-4 py-3 text-center text-muted-foreground">
+                  {b.numParticipantes}
+                </td>
+                <td className="px-4 py-3 text-center text-muted-foreground">
                   {b.numInscritos > 0
-                    ? `${Math.round((b.numConfirmados / b.numInscritos) * 100)}%`
+                    ? `${Math.round((b.numParticipantes / b.numInscritos) * 100)}%`
                     : "—"}
                 </td>
                 <td className="px-4 py-3 text-center text-muted-foreground">{b.ouro}</td>
