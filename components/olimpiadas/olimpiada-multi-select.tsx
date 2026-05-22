@@ -33,8 +33,13 @@ function OlimpiadaMultiSelectInner({ olimpiadas }: { olimpiadas: readonly Olimpi
   }
 
   function toggleTodos() {
-    if (!todosMode) navigate("todas");
-    // Se já está em "todas", não faz nada
+    if (todosMode) {
+      // Sai do modo "todas": começa com a primeira olimpíada selecionada
+      const first = olimpiadas[0]?.sigla;
+      if (first) navigate(first);
+    } else {
+      navigate("todas");
+    }
   }
 
   function toggleOlimpiada(sigla: string) {
