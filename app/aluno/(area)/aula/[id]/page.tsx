@@ -123,7 +123,7 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
         {aula.descricao && <p className="mt-2 text-sm text-muted-foreground">{aula.descricao}</p>}
       </div>
 
-      {aula.link_aula && (isLive || aula.tipo !== "online" || !aula.data_hora) && (
+      {aula.link_aula && !waitingForLive && (
         <AulaPlayer url={aula.link_aula} titulo={aula.titulo} isLive={isLive} />
       )}
 
