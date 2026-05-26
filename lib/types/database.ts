@@ -130,6 +130,7 @@ export type Database = {
           nome: string;
           data_nascimento: string;
           cpf: string | null;
+          email: string | null;
           email_responsavel: string | null;
           telefone_responsavel: string | null;
           consentimento_responsavel: boolean;
@@ -137,6 +138,7 @@ export type Database = {
           consentimento_documento_url: string | null;
           consentimento_responsavel_nome: string | null;
           consentimento_responsavel_documento: string | null;
+          supabase_auth_id: string | null;
           ativo: boolean;
           created_at: string;
         };
@@ -146,6 +148,7 @@ export type Database = {
           nome: string;
           data_nascimento: string;
           cpf?: string | null;
+          email?: string | null;
           email_responsavel?: string | null;
           telefone_responsavel?: string | null;
           consentimento_responsavel?: boolean;
@@ -153,6 +156,7 @@ export type Database = {
           consentimento_documento_url?: string | null;
           consentimento_responsavel_nome?: string | null;
           consentimento_responsavel_documento?: string | null;
+          supabase_auth_id?: string | null;
           ativo?: boolean;
           created_at?: string;
         };
@@ -162,6 +166,7 @@ export type Database = {
           nome?: string;
           data_nascimento?: string;
           cpf?: string | null;
+          email?: string | null;
           email_responsavel?: string | null;
           telefone_responsavel?: string | null;
           consentimento_responsavel?: boolean;
@@ -169,6 +174,7 @@ export type Database = {
           consentimento_documento_url?: string | null;
           consentimento_responsavel_nome?: string | null;
           consentimento_responsavel_documento?: string | null;
+          supabase_auth_id?: string | null;
           ativo?: boolean;
           created_at?: string;
         };
@@ -487,27 +493,33 @@ export type Database = {
         Row: {
           id: string;
           olimpiada_sigla: string;
+          olimpiada_id: string | null;
           nome: string;
           descricao: string | null;
           ano_letivo: number;
+          publicado: boolean;
           ativo: boolean;
           criado_em: string;
         };
         Insert: {
           id?: string;
           olimpiada_sigla: string;
+          olimpiada_id?: string | null;
           nome: string;
           descricao?: string | null;
           ano_letivo?: number;
+          publicado?: boolean;
           ativo?: boolean;
           criado_em?: string;
         };
         Update: {
           id?: string;
           olimpiada_sigla?: string;
+          olimpiada_id?: string | null;
           nome?: string;
           descricao?: string | null;
           ano_letivo?: number;
+          publicado?: boolean;
           ativo?: boolean;
           criado_em?: string;
         };
@@ -518,12 +530,13 @@ export type Database = {
           id: string;
           projeto_id: string;
           titulo: string;
-          tipo: string;
+          tipo: "online" | "presencial" | "simulado";
           data_hora: string | null;
           duracao_minutos: number | null;
           link_aula: string | null;
           polos: string | null;
           descricao: string | null;
+          publicada: boolean;
           ordem: number;
           criado_em: string;
         };
@@ -531,12 +544,13 @@ export type Database = {
           id?: string;
           projeto_id: string;
           titulo: string;
-          tipo: string;
+          tipo: "online" | "presencial" | "simulado";
           data_hora?: string | null;
           duracao_minutos?: number | null;
           link_aula?: string | null;
           polos?: string | null;
           descricao?: string | null;
+          publicada?: boolean;
           ordem?: number;
           criado_em?: string;
         };
@@ -544,12 +558,13 @@ export type Database = {
           id?: string;
           projeto_id?: string;
           titulo?: string;
-          tipo?: string;
+          tipo?: "online" | "presencial" | "simulado";
           data_hora?: string | null;
           duracao_minutos?: number | null;
           link_aula?: string | null;
           polos?: string | null;
           descricao?: string | null;
+          publicada?: boolean;
           ordem?: number;
           criado_em?: string;
         };
@@ -570,6 +585,57 @@ export type Database = {
           nome?: string;
           arquivo_path?: string;
           criado_em?: string;
+        };
+        Relationships: [];
+      };
+      aluno_progresso: {
+        Row: {
+          id: string;
+          aluno_id: string;
+          aula_id: string;
+          assistido: boolean;
+          progresso_segundos: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          aluno_id: string;
+          aula_id: string;
+          assistido?: boolean;
+          progresso_segundos?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          aluno_id?: string;
+          aula_id?: string;
+          assistido?: boolean;
+          progresso_segundos?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      meta_marca: {
+        Row: {
+          id: string;
+          marca_id: string;
+          ano_letivo: number;
+          tipo: "inscricoes" | "participantes" | "premiados" | "vendas";
+          valor: number;
+        };
+        Insert: {
+          id?: string;
+          marca_id: string;
+          ano_letivo: number;
+          tipo: "inscricoes" | "participantes" | "premiados" | "vendas";
+          valor?: number;
+        };
+        Update: {
+          id?: string;
+          marca_id?: string;
+          ano_letivo?: number;
+          tipo?: "inscricoes" | "participantes" | "premiados" | "vendas";
+          valor?: number;
         };
         Relationships: [];
       };
@@ -626,6 +692,10 @@ export type Database = {
       cancelar_inscricoes_olimpiada: {
         Args: { p_olimpiada_id: string; p_motivo?: string };
         Returns: number;
+      };
+      current_aluno_id: {
+        Args: Record<never, never>;
+        Returns: string | null;
       };
       get_olimpiadas_stats: {
         Args: {
@@ -689,3 +759,8 @@ export type Inscricao = Tables<"inscricao">;
 export type Resultado = Tables<"resultado">;
 export type Convite = Tables<"convite">;
 export type DashboardInscricao = Views<"v_dashboard_inscricoes">;
+export type PreparacaoProjeto = Tables<"preparacao_projeto">;
+export type PreparacaoAula = Tables<"preparacao_aula">;
+export type PreparacaoMaterial = Tables<"preparacao_material">;
+export type AlunoProgresso = Tables<"aluno_progresso">;
+export type MetaMarca = Tables<"meta_marca">;

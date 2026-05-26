@@ -81,7 +81,7 @@ export async function criarAula(
   if (!session) return { error: "Não autorizado" };
 
   const titulo = (formData.get("titulo") as string)?.trim();
-  const tipo = formData.get("tipo") as string;
+  const tipoRaw = formData.get("tipo") as string;
   const dataHora = (formData.get("data_hora") as string) || null;
   const duracao = Number(formData.get("duracao_minutos")) || null;
   const link = (formData.get("link_aula") as string)?.trim() || null;
@@ -89,7 +89,8 @@ export async function criarAula(
   const descricao = (formData.get("descricao") as string)?.trim() || null;
 
   if (!titulo) return { error: "Título é obrigatório" };
-  if (!["online", "presencial", "simulado"].includes(tipo)) return { error: "Tipo inválido" };
+  if (!["online", "presencial", "simulado"].includes(tipoRaw)) return { error: "Tipo inválido" };
+  const tipo = tipoRaw as "online" | "presencial" | "simulado";
 
   const supabase = createAdminClient();
 
@@ -125,7 +126,7 @@ export async function atualizarAula(
   if (!session) return { error: "Não autorizado" };
 
   const titulo = (formData.get("titulo") as string)?.trim();
-  const tipo = formData.get("tipo") as string;
+  const tipoRaw = formData.get("tipo") as string;
   const dataHora = (formData.get("data_hora") as string) || null;
   const duracao = Number(formData.get("duracao_minutos")) || null;
   const link = (formData.get("link_aula") as string)?.trim() || null;
@@ -133,7 +134,8 @@ export async function atualizarAula(
   const descricao = (formData.get("descricao") as string)?.trim() || null;
 
   if (!titulo) return { error: "Título é obrigatório" };
-  if (!["online", "presencial", "simulado"].includes(tipo)) return { error: "Tipo inválido" };
+  if (!["online", "presencial", "simulado"].includes(tipoRaw)) return { error: "Tipo inválido" };
+  const tipo = tipoRaw as "online" | "presencial" | "simulado";
 
   const supabase = createAdminClient();
   const { error } = await supabase
