@@ -37,20 +37,21 @@ const MARCA_UUID: Record<string, string> = Object.fromEntries(
 //    é uma unidade distinta e deve ser incluída individualmente.
 //    Marcas elegíveis: americano, apogeu, uniao, unificado, qi-bilingue, matriz-educacao
 //
-// 2. STATUS DE MATRÍCULA ATIVA (por filial — COL=10 tem status diferentes)
-//    A definição de "ativo" varia por (CODCOLIGADA, CODFILIAL):
-//    - COL=10, FIL=1 (Qi Recreio)     → CODSTATUS IN (2, 3)
-//    - COL=10, FIL=3,4,6 (Sá Pereira) → CODSTATUS IN (14, 15)
-//    - COL=10, FIL=7 (SAP)            → CODSTATUS IN (25, 32)
-//    - Demais coligadas               → CODSTATUS padrão de matrícula ativa
-//    Recomendação: JOIN com tabela de status_validos_por_filial ou usar
-//    a lógica do PBI_RAIZ que já tem as regras decodificadas.
+// 2. EXCLUSÕES EXPLÍCITAS — NÃO sincronizar:
+//    - COL=10, FIL=3,4,6 → Sá Pereira  (fora do escopo)
+//    - COL=10, FIL=7     → SAP          (fora do escopo)
+//    De COL=10, incluir APENAS FIL=1 (Qi Recreio = QI Bilíngue).
 //
-// 3. RANGE DE SÉRIE (1º ano EFAI → 3ª série EM)
+// 3. STATUS DE MATRÍCULA ATIVA (por filial elegível)
+//    - COL=10, FIL=1 (Qi Recreio / QI Bilíngue) → CODSTATUS IN (2, 3)
+//    - Demais coligadas elegíveis               → CODSTATUS padrão de matrícula ativa
+//    Recomendação: usar a lógica do PBI_RAIZ que já tem as regras decodificadas.
+//
+// 4. RANGE DE SÉRIE (1º ano EFAI → 3ª série EM)
 //    Inclui: 1ANO a 5ANO (EFAI) + 6ANO a 9ANO (EFAF) + 1EM a 3EM
 //    Excluir: Educação Infantil, EJA, cursos técnicos, pós-graduação.
 //
-// 4. FONTE DE DADOS
+// 5. FONTE DE DADOS
 //    TOTVS Mirror (Neon) — JOINs entre s_aluno, p_pessoa, s_matricula,
 //    marca_coligada. Período letivo corrente (IDPERLET ativo).
 export type AlunoDataEngine = {
