@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database, RoleUsuario, Usuario } from "@/lib/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ServerSession = {
   user: Usuario;
@@ -38,7 +39,10 @@ export async function getServerSession(): Promise<ServerSession> {
 
   if (!authUser) return null;
 
-  const { data: usuario, error } = await supabase
+  // Admin client bypassa RLS para garantir que a leitura do usuario funcione
+  // tanto em Server Components quanto em Server Actions
+  const admin = createAdminClient();
+  const { data: usuario, error } = await admin
     .from("usuario")
     .select("*")
     .eq("id", authUser.id)
