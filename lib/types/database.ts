@@ -126,7 +126,7 @@ export type Database = {
       aluno: {
         Row: {
           id: string;
-          turma_id: string;
+          turma_id: string | null;
           nome: string;
           data_nascimento: string;
           cpf: string | null;
@@ -142,10 +142,14 @@ export type Database = {
           consentimento_responsavel_tipo: "pedagogico" | "financeiro" | null;
           ativo: boolean;
           created_at: string;
+          marca_id: string | null;
+          serie: string | null;
+          ra_totvs: string | null;
+          codcoligada_totvs: number | null;
         };
         Insert: {
           id?: string;
-          turma_id: string;
+          turma_id?: string | null;
           nome: string;
           data_nascimento: string;
           cpf?: string | null;
@@ -161,10 +165,14 @@ export type Database = {
           consentimento_responsavel_tipo?: "pedagogico" | "financeiro" | null;
           ativo?: boolean;
           created_at?: string;
+          marca_id?: string | null;
+          serie?: string | null;
+          ra_totvs?: string | null;
+          codcoligada_totvs?: number | null;
         };
         Update: {
           id?: string;
-          turma_id?: string;
+          turma_id?: string | null;
           nome?: string;
           data_nascimento?: string;
           cpf?: string | null;
@@ -180,6 +188,10 @@ export type Database = {
           consentimento_responsavel_tipo?: "pedagogico" | "financeiro" | null;
           ativo?: boolean;
           created_at?: string;
+          marca_id?: string | null;
+          serie?: string | null;
+          ra_totvs?: string | null;
+          codcoligada_totvs?: number | null;
         };
         Relationships: [];
       };
