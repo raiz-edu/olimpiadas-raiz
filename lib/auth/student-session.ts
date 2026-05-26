@@ -39,9 +39,8 @@ export async function getStudentSession(): Promise<StudentSession> {
 
   if (!authUser) return null;
 
-  // Admin client bypassa RLS para lookup do aluno e verificação de staff
+  // Verificação de staff via adminClient (bypassa RLS de usuario)
   const admin = createAdminClient();
-
   const { data: staff } = await admin
     .from("usuario")
     .select("id")
@@ -50,7 +49,8 @@ export async function getStudentSession(): Promise<StudentSession> {
 
   if (staff) return null;
 
-  const { data: aluno, error } = await admin
+  // Leitura do aluno via cliente autenticado (policy aluno_read_own: supabase_auth_id = auth.uid())
+  const { data: aluno, error } = await supabase
     .from("aluno")
     .select("*")
     .eq("supabase_auth_id", authUser.id)

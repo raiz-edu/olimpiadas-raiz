@@ -39,7 +39,8 @@ export async function loginAluno(
   } = await supabase.auth.getUser();
 
   if (existingUser) {
-    const { data: aluno } = await adminClient
+    // Usa o cliente autenticado — a policy aluno_read_own permite leitura própria
+    const { data: aluno } = await supabase
       .from("aluno")
       .select("id, consentimento_responsavel")
       .eq("supabase_auth_id", existingUser.id)
@@ -96,11 +97,19 @@ export async function loginAluno(
     };
   }
 
-  const { data: aluno } = await adminClient
+  // Usa cliente autenticado — após signIn, auth.uid() = data.user.id
+  // A policy aluno_read_own permite: supabase_auth_id = auth.uid()
+  const { data: aluno, error: alunoError } = await supabase
     .from("aluno")
     .select("id, consentimento_responsavel")
     .eq("supabase_auth_id", data.user.id)
     .maybeSingle();
+
+  if (alunoError) {
+    console.error("Erro ao buscar aluno:", alunoError.message, alunoError.code);
+    await supabase.auth.signOut();
+    return { error: "Não foi possível verificar o acesso. Tente novamente." };
+  }
 
   if (!aluno) {
     await supabase.auth.signOut();
