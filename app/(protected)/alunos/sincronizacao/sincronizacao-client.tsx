@@ -37,10 +37,12 @@ export function SincronizacaoClient() {
           {MARCAS_SYNC.map((m) => (
             <span
               key={m.slug}
-              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white"
               style={{ background: TEAL }}
+              title={`COL=${m.coligadas.join(", ")}`}
             >
               {m.nome}
+              <span className="opacity-70 text-[10px]">COL={m.coligadas.join("+")}</span>
             </span>
           ))}
         </div>
@@ -114,16 +116,17 @@ export function SincronizacaoClient() {
 
       {isSuccess &&
         (() => {
-          const r = resultado as Exclude<SyncResult, { error: string }>;
+          const r = resultado as Exclude<SyncResult, { error: string }> & { fora_serie: number };
           return (
             <div className="rounded-xl border border-border bg-card p-5 space-y-4">
               <h3 className="text-sm font-semibold text-foreground">Resultado da sincronização</h3>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                 {[
                   { label: "Processados", value: r.total, color: "text-foreground" },
                   { label: "Novos", value: r.novos, color: "text-emerald-400" },
                   { label: "Atualizados", value: r.atualizados, color: "text-blue-400" },
                   { label: "Sem e-mail", value: r.sem_email, color: "text-yellow-400" },
+                  { label: "Fora da série", value: r.fora_serie, color: "text-muted-foreground" },
                 ].map((s) => (
                   <div key={s.label} className="rounded-lg bg-muted/40 p-3 text-center">
                     <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>

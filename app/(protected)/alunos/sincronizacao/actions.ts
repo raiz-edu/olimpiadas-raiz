@@ -3,74 +3,113 @@
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// ─── Marcas elegíveis para o portal olímpico ──────────────────────────────────
-// Alinhado com o requisito: do 1º ano EFAI à 3ª série do EM.
-// O data engine filtra internamente pelo CODCOLIGADA correspondente a cada slug.
+// ─── Coligadas elegíveis para o portal olímpico ───────────────────────────────
+// Fonte: /matriculas/por-marca no raiz-data-engine (ciclo 2026).
+// Cada entrada: CODCOLIGADA → marca + filiais a excluir dentro dessa coligada.
+//
+// COL=10 (Qi): inclui Qi Recreio (FIL=1) e, dentro da mesma coligada,
+//              Sá Pereira (FIL=3,4,6) e SAP (FIL=7) — estes últimos EXCLUÍDOS.
+const COLIGADAS_SYNC = [
+  { cod: 2, marca_slug: "qi-bilingue", filiais_excluir: [] as number[] },
+  { cod: 6, marca_slug: "qi-bilingue", filiais_excluir: [] as number[] },
+  { cod: 8, marca_slug: "matriz-educacao", filiais_excluir: [] as number[] },
+  { cod: 10, marca_slug: "qi-bilingue", filiais_excluir: [3, 4, 6, 7] }, // Sá Pereira + SAP
+  { cod: 11, marca_slug: "unificado", filiais_excluir: [] as number[] },
+  { cod: 18, marca_slug: "apogeu", filiais_excluir: [] as number[] },
+  { cod: 29, marca_slug: "americano", filiais_excluir: [] as number[] },
+  { cod: 30, marca_slug: "uniao", filiais_excluir: [] as number[] },
+] as const;
+
+// Exportado para uso na UI
 export const MARCAS_SYNC = [
-  { slug: "americano", nome: "Americano", supabase_id: "11111111-0000-0000-0000-000000000006" },
-  { slug: "apogeu", nome: "Apogeu", supabase_id: "11111111-0000-0000-0000-000000000001" },
-  { slug: "uniao", nome: "União", supabase_id: "11111111-0000-0000-0000-000000000004" },
-  { slug: "unificado", nome: "Unificado", supabase_id: "11111111-0000-0000-0000-000000000005" },
-  { slug: "qi-bilingue", nome: "QI Bilíngue", supabase_id: "11111111-0000-0000-0000-000000000003" },
+  {
+    slug: "americano",
+    nome: "Americano",
+    supabase_id: "11111111-0000-0000-0000-000000000006",
+    coligadas: [29],
+  },
+  {
+    slug: "apogeu",
+    nome: "Apogeu",
+    supabase_id: "11111111-0000-0000-0000-000000000001",
+    coligadas: [18],
+  },
+  {
+    slug: "uniao",
+    nome: "União",
+    supabase_id: "11111111-0000-0000-0000-000000000004",
+    coligadas: [30],
+  },
+  {
+    slug: "unificado",
+    nome: "Unificado",
+    supabase_id: "11111111-0000-0000-0000-000000000005",
+    coligadas: [11],
+  },
+  {
+    slug: "qi-bilingue",
+    nome: "QI Bilíngue",
+    supabase_id: "11111111-0000-0000-0000-000000000003",
+    coligadas: [2, 6, 10],
+  },
   {
     slug: "matriz-educacao",
     nome: "Matriz Educação",
     supabase_id: "11111111-0000-0000-0000-000000000002",
+    coligadas: [8],
   },
 ] as const;
 
-// Mapa slug → UUID para lookup rápido durante o upsert
 const MARCA_UUID: Record<string, string> = Object.fromEntries(
   MARCAS_SYNC.map((m) => [m.slug, m.supabase_id]),
 );
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+// Segmentos incluídos: do 1º ano EFAI à 3ª série EM.
+// Exclui: Infantil, Berçário, Pré-Escola, Pré-Militar, Medicina, Curso Livre.
+const CICLOS_ELEGIVEIS = new Set(["FundI", "FundII", "Medio"]);
 
-// Contrato esperado do endpoint GET /educacional/alunos-olimpiadas
-// Implementado no raiz-data-engine (Railway).
-//
-// REQUISITOS DE FILTRAGEM — o data engine é responsável por:
-//
-// 1. MARCAS E FILIAIS (cobertura total)
-//    Usar marca_coligada (Neon) para obter TODOS os pares (CODCOLIGADA, CODFILIAL)
-//    das 6 marcas elegíveis. NÃO filtrar apenas por CODCOLIGADA — cada filial
-//    é uma unidade distinta e deve ser incluída individualmente.
-//    Marcas elegíveis: americano, apogeu, uniao, unificado, qi-bilingue, matriz-educacao
-//
-// 2. EXCLUSÕES EXPLÍCITAS — NÃO sincronizar:
-//    - COL=10, FIL=3,4,6 → Sá Pereira  (fora do escopo)
-//    - COL=10, FIL=7     → SAP          (fora do escopo)
-//    De COL=10, incluir APENAS FIL=1 (Qi Recreio = QI Bilíngue).
-//
-// 3. STATUS DE MATRÍCULA ATIVA (por filial elegível)
-//    - COL=10, FIL=1 (Qi Recreio / QI Bilíngue) → CODSTATUS IN (2, 3)
-//    - Demais coligadas elegíveis               → CODSTATUS padrão de matrícula ativa
-//    Recomendação: usar a lógica do PBI_RAIZ que já tem as regras decodificadas.
-//
-// 4. RANGE DE SÉRIE (1º ano EFAI → 3ª série EM)
-//    Inclui: 1ANO a 5ANO (EFAI) + 6ANO a 9ANO (EFAF) + 1EM a 3EM
-//    Excluir: Educação Infantil, EJA, cursos técnicos, pós-graduação.
-//
-// 5. FONTE DE DADOS
-//    TOTVS Mirror (Neon) — JOINs entre s_aluno, p_pessoa, s_matricula,
-//    marca_coligada. Período letivo corrente (IDPERLET ativo).
-export type AlunoDataEngine = {
-  nome: string;
-  email: string | null;
-  cpf: string | null;
-  data_nascimento: string; // YYYY-MM-DD
-  serie: string; // ex: "5EF1", "9EF2", "1EM"
-  marca_slug: string; // slug da marca (americano, apogeu, …)
-  ra: string; // RA no TOTVS
-  codcoligada: number; // CODCOLIGADA no TOTVS
-  codfilial: number; // CODFILIAL no TOTVS — obrigatório para rastrear unidade
-};
+// Termos de segmento que correspondem aos ciclos elegíveis
+// (fallback quando ciclo_pedagogico não estiver disponível)
+const SEGMENTOS_ELEGIVEIS = new Set([
+  "1º Ano",
+  "2º Ano",
+  "3º Ano",
+  "4º Ano",
+  "5º Ano",
+  "6º Ano",
+  "7º Ano",
+  "8º Ano",
+  "9º Ano",
+  "1ª Série",
+  "2ª Série",
+  "3ª Série",
+]);
 
-type DataEngineResponse = {
-  data: AlunoDataEngine[];
-  total: number;
-  page: number;
-  hasMore: boolean;
+// ─── Contrato do endpoint /educacional/alunos ──────────────────────────────────
+// GET /educacional/alunos?coligada={cod}&ciclo=2026
+// Header: X-API-Key: rde_live_... (requer scope pii:read)
+// Fonte: TOTVS Mirror (Neon) via PALUNO + SMATRICPL
+//
+// Campos esperados na resposta (snake_case do data engine):
+//   ra, nome, email, cpf, data_nascimento, cod_filial, serie, segmento,
+//   ciclo_pedagogico [FundI|FundII|Medio|Infantil|Outro]
+type AlunoRDE = {
+  ra?: string;
+  RA?: string;
+  nome?: string;
+  NOME?: string;
+  email?: string;
+  EMAIL?: string;
+  cpf?: string;
+  CPF?: string;
+  data_nascimento?: string;
+  DTNASCIMENTO?: string;
+  cod_filial?: number;
+  CODFILIAL?: number;
+  serie?: string;
+  SERIE?: string;
+  segmento?: string;
+  ciclo_pedagogico?: string;
 };
 
 export type SyncResult =
@@ -79,11 +118,12 @@ export type SyncResult =
       novos: number;
       atualizados: number;
       sem_email: number;
+      fora_serie: number;
       erros: string[];
     }
   | { error: string };
 
-// ─── Action principal ─────────────────────────────────────────────────────────
+// ─── Action principal ──────────────────────────────────────────────────────────
 
 export async function sincronizarAlunosTOTVS(): Promise<SyncResult> {
   const session = await getServerSession();
@@ -104,132 +144,137 @@ export async function sincronizarAlunosTOTVS(): Promise<SyncResult> {
   let novos = 0;
   let atualizados = 0;
   let sem_email = 0;
+  let fora_serie = 0;
   const erros: string[] = [];
   let totalFetched = 0;
-  let page = 0;
-  const limit = 500;
 
-  while (true) {
-    let resp: DataEngineResponse;
+  for (const col of COLIGADAS_SYNC) {
+    const url = `${baseUrl}/educacional/alunos?coligada=${col.cod}&ciclo=2026`;
+    let alunos: AlunoRDE[];
 
     try {
-      const url = `${baseUrl}/educacional/alunos-olimpiadas?page=${page}&limit=${limit}`;
       const res = await fetch(url, {
-        headers: {
-          "X-API-Key": apiKey,
-          "Content-Type": "application/json",
-        },
+        headers: { "X-API-Key": apiKey },
         next: { revalidate: 0 },
       });
 
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        return { error: `Data Engine retornou ${res.status}: ${body.slice(0, 200)}` };
+        erros.push(`COL=${col.cod}: ${res.status} — ${body.slice(0, 200)}`);
+        continue;
       }
 
-      resp = await res.json();
+      const json = await res.json();
+      alunos = Array.isArray(json) ? json : (json.data ?? json.alunos ?? []);
     } catch (err) {
-      return { error: `Falha na conexão com raiz-data-engine: ${String(err)}` };
+      erros.push(`COL=${col.cod}: falha de conexão — ${String(err)}`);
+      continue;
     }
 
-    const alunos = Array.isArray(resp) ? (resp as AlunoDataEngine[]) : (resp.data ?? []);
-    if (alunos.length === 0) break;
-    totalFetched += alunos.length;
-
     for (const a of alunos) {
-      if (!a.nome) continue;
+      const ra = String(a.ra ?? a.RA ?? "").trim();
+      const nome = (a.nome ?? a.NOME ?? "").trim();
+      const email = (a.email ?? a.EMAIL ?? "").trim().toLowerCase() || null;
+      const cpf = a.cpf ?? a.CPF ?? null;
+      const nascimento = a.data_nascimento ?? a.DTNASCIMENTO ?? null;
+      const codFilial = a.cod_filial ?? a.CODFILIAL ?? null;
+      const serie = a.serie ?? a.SERIE ?? null;
+      const ciclo = a.ciclo_pedagogico ?? null;
+      const segmento = a.segmento ?? null;
 
-      // Alunos sem e-mail não podem receber link de acesso — pular
-      if (!a.email) {
+      if (!nome || !ra) continue;
+
+      // Excluir filiais Sá Pereira e SAP dentro de COL=10
+      if (col.filiais_excluir.length > 0 && codFilial !== null) {
+        if ((col.filiais_excluir as number[]).includes(Number(codFilial))) continue;
+      }
+
+      // Filtrar por série elegível (1º EFAI → 3ª EM)
+      const cicloElegivel = ciclo ? CICLOS_ELEGIVEIS.has(ciclo) : null;
+      const segmentoElegivel = segmento ? SEGMENTOS_ELEGIVEIS.has(segmento) : null;
+      if (cicloElegivel === false || (cicloElegivel === null && segmentoElegivel === false)) {
+        fora_serie++;
+        continue;
+      }
+
+      totalFetched++;
+
+      if (!email) {
         sem_email++;
         continue;
       }
 
-      const marcaUuid = MARCA_UUID[a.marca_slug];
-      if (!marcaUuid) {
-        erros.push(`Marca desconhecida "${a.marca_slug}" para ${a.nome}`);
-        continue;
-      }
+      const marcaUuid = MARCA_UUID[col.marca_slug];
 
       // Deduplicação: RA+CODCOLIGADA+CODFILIAL (primário) ou e-mail (secundário)
       const { data: existente } = await supabase
         .from("aluno")
-        .select("id, supabase_auth_id, email")
+        .select("id")
         .or(
-          `and(ra_totvs.eq.${a.ra},codcoligada_totvs.eq.${a.codcoligada},codfilial_totvs.eq.${a.codfilial}),email.eq.${a.email}`,
+          `and(ra_totvs.eq.${ra},codcoligada_totvs.eq.${col.cod},codfilial_totvs.eq.${codFilial ?? 0}),email.eq.${email}`,
         )
         .maybeSingle();
 
       if (existente) {
-        // Atualiza dados acadêmicos e de contato
         await supabase
           .from("aluno")
           .update({
-            nome: a.nome,
-            email: a.email,
-            serie: a.serie,
+            nome,
+            email,
+            serie,
             marca_id: marcaUuid,
-            ra_totvs: a.ra,
-            codcoligada_totvs: a.codcoligada,
-            codfilial_totvs: a.codfilial,
+            ra_totvs: ra,
+            codcoligada_totvs: col.cod,
+            codfilial_totvs: codFilial,
           })
           .eq("id", existente.id);
         atualizados++;
         continue;
       }
 
-      // ── Aluno novo: criar conta no Supabase Auth ──────────────────────────
+      // Aluno novo — criar conta Supabase Auth
       const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
-        email: a.email,
+        email,
         email_confirm: true,
-        user_metadata: { nome: a.nome, tipo: "aluno" },
+        user_metadata: { nome, tipo: "aluno" },
       });
 
       if (authErr || !authData.user) {
-        erros.push(`Erro ao criar auth para ${a.email}: ${authErr?.message ?? "desconhecido"}`);
+        erros.push(`Erro ao criar auth para ${email}: ${authErr?.message ?? "desconhecido"}`);
         continue;
       }
 
-      // Inserir na tabela aluno
       const { error: insertErr } = await supabase.from("aluno").insert({
-        nome: a.nome,
-        email: a.email,
-        cpf: a.cpf ?? null,
-        data_nascimento: a.data_nascimento,
+        nome,
+        email,
+        cpf: cpf ?? null,
+        data_nascimento: nascimento ?? "2000-01-01",
         supabase_auth_id: authData.user.id,
         consentimento_responsavel: false,
         ativo: true,
-        serie: a.serie,
+        serie,
         marca_id: marcaUuid,
-        ra_totvs: a.ra,
-        codcoligada_totvs: a.codcoligada,
-        codfilial_totvs: a.codfilial,
-        // turma_id: null (agora opcional — mapeamento futuro)
+        ra_totvs: ra,
+        codcoligada_totvs: col.cod,
+        codfilial_totvs: codFilial,
       });
 
       if (insertErr) {
         await supabase.auth.admin.deleteUser(authData.user.id);
-        erros.push(`Erro ao inserir ${a.email}: ${insertErr.message}`);
+        erros.push(`Erro ao inserir ${email}: ${insertErr.message}`);
         continue;
       }
 
-      // Enviar link de primeiro acesso (criação de senha)
+      // Enviar link de primeiro acesso
       await supabase.auth.admin.generateLink({
         type: "recovery",
-        email: a.email,
-        options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/aluno/login`,
-        },
+        email,
+        options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/aluno/login` },
       });
 
       novos++;
     }
-
-    // Fim da paginação
-    const hasMore = Array.isArray(resp) ? alunos.length === limit : resp.hasMore;
-    if (!hasMore) break;
-    page++;
   }
 
-  return { total: totalFetched, novos, atualizados, sem_email, erros };
+  return { total: totalFetched, novos, atualizados, sem_email, fora_serie, erros };
 }
