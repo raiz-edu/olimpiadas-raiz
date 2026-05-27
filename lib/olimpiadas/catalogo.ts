@@ -13,7 +13,10 @@ export type AreaSlug =
   | "portugues"
   | "ciencias"
   | "stem"
-  | "ambiente";
+  | "ambiente"
+  | "economia"
+  | "robotica"
+  | "filosofia";
 
 export type Fase = {
   nome: string;
@@ -128,6 +131,24 @@ export const AREA_CONFIG: Record<
     text: "text-lime-400",
     border: "border-lime-400/30",
   },
+  economia: {
+    label: "Economia",
+    bg: "bg-yellow-400/10",
+    text: "text-yellow-400",
+    border: "border-yellow-400/30",
+  },
+  robotica: {
+    label: "Robótica",
+    bg: "bg-cyan-400/10",
+    text: "text-cyan-400",
+    border: "border-cyan-400/30",
+  },
+  filosofia: {
+    label: "Filosofia",
+    bg: "bg-fuchsia-400/10",
+    text: "text-fuchsia-400",
+    border: "border-fuchsia-400/30",
+  },
 };
 
 export const SEGMENTO_CONFIG: Record<Segmento, { label: string; bg: string; text: string }> = {
@@ -154,7 +175,7 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     inscricoes: {
       periodo: "23/02 a 01/05/2026 (encerradas)",
       descricao:
-        "Inscrições encerradas em 01/05/2026. Mais de 1,5 milhão de participantes em 2025 (8,2% acima de 2024). Inclui automaticamente a OBAFOG (Olimpíada de Foguetes).",
+        "Inscrições encerradas em 01/05/2026. Mais de 1,5 milhão de participantes em 2025 (8,2% acima de 2024).",
       como: "Professor/escola cadastra-se em app.oba.org.br e inscreve as turmas. Não há lista nominal de alunos — a escola informa o total por nível.",
     },
     fases: [
@@ -184,7 +205,48 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
       "Certificados digitais para todos os participantes",
     ],
     notas:
-      "A OBAFOG (lançamento de foguetes PET) é realizada junto com a OBA no mesmo dia (15/05). Equipes de até 3 alunos — as 3 melhores por escola (6º ao 9º ou EM) são convidadas para as Jornadas de Foguetes em Barra do Piraí (RJ).",
+      "29ª edição em 2026. Mais de 1,5 milhão de participantes em 2025 (8,2% acima de 2024). Seleciona os melhores para a IOAA (Olimpíada Internacional de Astronomia e Astrofísica).",
+  },
+  {
+    sigla: "OBAFOG",
+    nome: "Olimpíada Brasileira de Foguetes",
+    edicao: "Edição 2026",
+    area: "Astronomia",
+    areaSlug: "astronomia",
+    organizador: "Sociedade Astronômica Brasileira (SAB) / Agência Espacial Brasileira (AEB)",
+    site: "http://www.oba.org.br",
+    portalInscricao: "https://app.oba.org.br",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "6º ao 9º EF e Ensino Médio — equipes de até 3 alunos",
+    custo: "Gratuita (registro unificado com a OBA)",
+    gratuita: true,
+    inscricoes: {
+      periodo: "23/02 a 01/05/2026 (encerradas) — mesmo prazo da OBA",
+      descricao:
+        "Competição experimental realizada no mesmo dia da OBA (15/05). Registro unificado — escola inscrita na OBA participa automaticamente da OBAFOG.",
+      como: "Inscrição via app.oba.org.br junto com a OBA. Equipes de até 3 alunos constroem e lançam foguetes com garrafa PET e materiais recicláveis.",
+    },
+    fases: [
+      {
+        nome: "Fase Escolar",
+        formato: "Construção e lançamento de foguete PET na escola",
+        data: "15/05/2026",
+        local: "Na própria escola",
+      },
+      {
+        nome: "Jornadas de Foguetes (Final Nacional)",
+        formato: "As 3 melhores equipes por escola competem presencialmente",
+        data: "Após divulgação dos resultados OBA",
+        local: "Barra do Piraí (RJ)",
+      },
+    ],
+    premiacao: [
+      "As 3 melhores equipes por escola são convidadas para as Jornadas de Foguetes",
+      "Certificados de participação para todas as equipes",
+    ],
+    notas:
+      "Competição inteiramente experimental; alunos constroem foguetes com garrafas PET e materiais recicláveis. Incentiva engenharia, física aplicada e trabalho em equipe.",
   },
   {
     sigla: "OBMEP",
@@ -287,6 +349,47 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "Olimpíada especialmente desenhada para os anos iniciais do EF. 5ª edição em 2026. Excelente porta de entrada para a cultura olímpica desde cedo.",
+  },
+  {
+    sigla: "OBM",
+    nome: "Olimpíada Brasileira de Matemática",
+    edicao: "47ª edição (2025/2026)",
+    area: "Matemática",
+    areaSlug: "matematica",
+    organizador: "Associação Olimpíada Brasileira de Matemática (AOBM) / SBM",
+    site: "https://www.obm.org.br",
+    portalInscricao: "https://www.obm.org.br",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "Nível 1: 6º–7º EF · Nível 2: 8º–9º EF · Nível 3: Ensino Médio",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Inscrição por convite, baseada em desempenho na OBMEP e em competições regionais. Competição discursiva de alto nível — prepara os melhores alunos brasileiros para olimpíadas internacionais.",
+      como: "Alunos são convocados pelas comissões estaduais com base em resultados da OBMEP e de olimpíadas regionais. Não há inscrição direta.",
+    },
+    fases: [
+      {
+        nome: "Fase Estadual",
+        formato: "Provas discursivas aplicadas pelos estados",
+        data: "Ao longo do ano letivo",
+        local: "Polos estaduais",
+      },
+      {
+        nome: "Fase Nacional",
+        formato: "Provas discursivas de alto nível",
+        data: "Final do ano letivo",
+        local: "Sede nacional (itinerante)",
+      },
+    ],
+    premiacao: [
+      "Medalhas ouro, prata, bronze",
+      "Melhores integram a seleção para a IMO (Olimpíada Internacional de Matemática)",
+      "Bolsas e prêmios acadêmicos",
+    ],
+    notas:
+      "A OBM é a principal seletiva para a IMO. Diferente da OBMEP (escolas públicas, múltipla escolha), a OBM é aberta a todos e usa provas discursivas de maior dificuldade.",
   },
   {
     sigla: "Canguru",
@@ -476,6 +579,99 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
       "Modalidade Iniciação: ideal para alunos sem experiência com computação — exige apenas lógica e raciocínio. CF-OBI é a competição feminina, com inscrições em setembro.",
   },
   {
+    sigla: "OBR",
+    nome: "Olimpíada Brasileira de Robótica",
+    edicao: "Edição 2026",
+    area: "Robótica",
+    areaSlug: "robotica",
+    organizador: "RoboCup Brasil — apoio MCTI/CNPq",
+    site: "https://obr.robocup.org.br",
+    portalInscricao: "https://obr.robocup.org.br",
+    usaPlanilha: false,
+    segmentos: ["EFAI", "EFAF", "EM"],
+    series: "Categoria 1 (6–10 anos), Categoria 2 (11–14 anos), Categoria 3 (15–19 anos)",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Mais de 220 mil participantes em 2025. Duas modalidades: Teórica (prova individual) e Prática (equipe constrói robô de resgate ou dança). Fases regional/estadual e final nacional.",
+      como: "Inscrição via obr.robocup.org.br por professor responsável. Modalidade teórica: individual. Modalidade prática: equipes de 2–4 alunos.",
+    },
+    fases: [
+      {
+        nome: "Fase Regional/Estadual",
+        formato: "Prova teórica + eliminatórias práticas",
+        data: "Primeiro semestre",
+        local: "Polos regionais",
+      },
+      {
+        nome: "Final Nacional",
+        formato: "Competição prática presencial",
+        data: "Segundo semestre",
+        local: "Sede nacional (itinerante)",
+      },
+    ],
+    premiacao: [
+      "Medalhas e troféus por modalidade e categoria",
+      "Melhor equipe prática representa o Brasil na RoboCup (competição internacional)",
+      "Certificados para todos os participantes",
+    ],
+    notas:
+      "Uma das maiores olimpíadas de STEM do Brasil. Modalidade Prática inclui Robótica de Resgate (robô autônomo em labirinto) e Robótica Artística (dança coreografada).",
+  },
+  {
+    sigla: "ONIA",
+    nome: "Olimpíada Nacional de Inteligência Artificial",
+    edicao: "2ª edição (2025/2026)",
+    area: "Informática",
+    areaSlug: "informatica",
+    organizador: "EduSpace / H2IA UFPel / Instituto IA LNCC",
+    site: "https://www.oniabrasil.com.br",
+    portalInscricao: "https://www.oniabrasil.com.br",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "Categoria Junior: 5º ao 9º EF · Categoria Sênior: Ensino Médio",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Seleciona os representantes do Brasil para a IOAI (Olimpíada Internacional de Inteligência Artificial). Quatro fases totalmente online e gratuitas.",
+      como: "Inscrição individual via oniabrasil.com.br. Não é necessário conhecimento prévio de programação — a olimpíada ensina os conceitos ao longo das fases.",
+    },
+    fases: [
+      {
+        nome: "1ª Fase — Conceitos de IA",
+        formato: "Prova online de múltipla escolha",
+        data: "Primeiro semestre",
+        local: "Online",
+      },
+      {
+        nome: "2ª Fase — Aplicações de IA",
+        formato: "Prova online com problemas práticos",
+        data: "Primeiro semestre",
+        local: "Online",
+      },
+      {
+        nome: "3ª Fase — Final Nacional",
+        formato: "Prova avançada online",
+        data: "Segundo semestre",
+        local: "Online",
+      },
+      {
+        nome: "Seletiva Internacional (IOAI)",
+        formato: "Prova presencial",
+        data: "Segundo semestre",
+        local: "A definir",
+      },
+    ],
+    premiacao: [
+      "Medalhas ouro, prata, bronze",
+      "Melhores integram a seleção para a IOAI (Olimpíada Internacional de IA)",
+    ],
+    notas:
+      "Única seletiva brasileira para a IOAI. Foco em conceitos de machine learning, redes neurais e ética em IA — sem exigir programação avançada.",
+  },
+  {
     sigla: "OBQ",
     nome: "Olimpíada Brasileira de Química",
     edicao: "Edição 2026 (novo regulamento)",
@@ -619,6 +815,83 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
       "Uma das maiores olimpíadas do Brasil. Foco exclusivo no Ensino Médio. A 3ª Fase usa software especializado e o formato de questões V/F simula o padrão da IBO (internacional).",
   },
   {
+    sigla: "OBBiotec",
+    nome: "Olimpíada Brasileira de Biotecnologia",
+    edicao: "4ª edição (2026)",
+    area: "Biologia",
+    areaSlug: "biologia",
+    organizador: "UFVJM — apoio CNPq",
+    site: "https://www.obbiotec.com.br",
+    portalInscricao: "https://www.obbiotec.com.br",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "8º e 9º ano do EF e Ensino Médio",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Aborda biotecnologia, biologia molecular e suas aplicações na saúde, agropecuária e meio ambiente. Organizada pela UFVJM com apoio do CNPq.",
+      como: "Inscrição via obbiotec.com.br por professor responsável ou individualmente.",
+    },
+    fases: [
+      {
+        nome: "1ª Fase — Online",
+        formato: "Prova objetiva online",
+        data: "Primeiro semestre",
+        local: "Online",
+      },
+      {
+        nome: "2ª Fase — Online",
+        formato: "Prova objetiva avançada",
+        data: "Segundo semestre",
+        local: "Online",
+      },
+    ],
+    premiacao: ["Medalhas ouro, prata, bronze", "Certificados de participação"],
+    notas:
+      "Olimpíada focada em biotecnologia aplicada — DNA recombinante, transgênicos, biocombustíveis, terapia gênica. Incentiva vocações para as ciências biológicas e da saúde.",
+  },
+  {
+    sigla: "OBN",
+    nome: "Olimpíada Brasileira de Neurociências",
+    edicao: "14ª edição (2026)",
+    area: "Ciências",
+    areaSlug: "ciencias",
+    organizador: "Sociedade Brasileira de Neurociências (SBNeC) e afiliadas",
+    site: "https://brazilianbrainbee.org",
+    portalInscricao: "https://brazilianbrainbee.org",
+    usaPlanilha: false,
+    segmentos: ["EM"],
+    series: "Ensino Médio (14 a 19 anos)",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Seleciona o campeão brasileiro para a International Brain Bee (IBB). Modelo baseado na competição mundial; aborda neuroanatomia, neurologia clínica, fisiologia e neurociência comportamental.",
+      como: "Inscrição via brazilianbrainbee.org. Fases local (em polos universitários) e final nacional.",
+    },
+    fases: [
+      {
+        nome: "Fase Local",
+        formato: "Prova teórica em polo universitário parceiro",
+        data: "Primeiro semestre",
+        local: "Polos universitários em diversas cidades",
+      },
+      {
+        nome: "Final Nacional",
+        formato: "Prova teórica presencial",
+        data: "Segundo semestre",
+        local: "Sede nacional",
+      },
+    ],
+    premiacao: [
+      "Campeão nacional representa o Brasil na International Brain Bee",
+      "Medalhas e certificados",
+    ],
+    notas:
+      "A única olimpíada brasileira de neurociências para o EM. Seletiva para a IBB (International Brain Bee), competição realizada anualmente em diferentes países.",
+  },
+  {
     sigla: "OBG",
     nome: "Olimpíada Brasileira de Geografia",
     edicao: "11ª edição (2026)",
@@ -677,6 +950,46 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "Modalidade em equipes de 3 alunos — diferente da maioria das olimpíadas. As fases online ocorrem em janelas de datas, e a equipe resolve junto remotamente.",
+  },
+  {
+    sigla: "OBCT",
+    nome: "Olimpíada Brasileira de Ciências da Terra",
+    edicao: "Edição 2025/2026",
+    area: "Ciências",
+    areaSlug: "ciencias",
+    organizador: "UNIFAL-MG / UNICAMP — realizada em conjunto com a OBG",
+    site: "https://obgeografia.org",
+    portalInscricao: "https://obgeografia.org",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "9º ano do EF e Ensino Médio",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Realizada em conjunto com a OBG (Olimpíada Brasileira de Geografia). Foca em geologia, pedologia, paleontologia, meteorologia e ciências ambientais.",
+      como: "Inscrição via obgeografia.org junto com a OBG. Escola inscrita na OBG pode participar da OBCT no mesmo processo.",
+    },
+    fases: [
+      {
+        nome: "1ª Fase — Online",
+        formato: "Prova objetiva online",
+        data: "Primeiro semestre",
+        local: "Online",
+      },
+      {
+        nome: "2ª Fase — Presencial",
+        formato: "Prova discursiva presencial",
+        data: "Segundo semestre",
+        local: "Sede nacional",
+      },
+    ],
+    premiacao: [
+      "Medalhas ouro, prata, bronze",
+      "Melhores integram a seleção para a IESO (Olimpíada Internacional de Ciências da Terra)",
+    ],
+    notas:
+      "Seletiva para a IESO (International Earth Science Olympiad). Realizada em conjunto com a OBG no mesmo portal e calendário.",
   },
   {
     sigla: "ONHB",
@@ -805,6 +1118,98 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "Olimpíada única: não exige conhecimento específico de Português ou outras línguas — avalia raciocínio sobre estruturas linguísticas. Qualquer aluno, de qualquer área, pode participar. A 15ª edição será anunciada no site oficial.",
+  },
+  {
+    sigla: "ONFIL",
+    nome: "Olimpíada Nacional de Filosofia",
+    edicao: "3ª edição (2025/2026)",
+    area: "Filosofia",
+    areaSlug: "filosofia",
+    organizador: "UFSM — financiamento MCTI/CNPq; rede de universidades parceiras",
+    site: "https://onfilbr.org",
+    portalInscricao: "https://onfilbr.org",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "EF Anos Finais e Ensino Médio (até 19 anos)",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Única seletiva brasileira para a IPO (Olimpíada Internacional de Filosofia). Prova de redação filosófica em português. Fases escolar, regional e nacional.",
+      como: "Inscrição via onfilbr.org por professor responsável ou individualmente.",
+    },
+    fases: [
+      {
+        nome: "Fase Escolar",
+        formato: "Redação filosófica (tema dado no dia)",
+        data: "Primeiro semestre",
+        local: "Na escola",
+      },
+      {
+        nome: "Fase Regional",
+        formato: "Redação filosófica",
+        data: "Segundo semestre",
+        local: "Polos regionais",
+      },
+      {
+        nome: "Final Nacional",
+        formato: "Redação filosófica de alto nível",
+        data: "Final do ano",
+        local: "Sede nacional",
+      },
+    ],
+    premiacao: [
+      "Medalhas ouro, prata, bronze",
+      "Melhores representam o Brasil na IPO (Olimpíada Internacional de Filosofia)",
+    ],
+    notas:
+      "A ONFIL é a única competição nacional de filosofia com vínculo institucional universitário e seletiva para olimpíada internacional.",
+  },
+  {
+    sigla: "OBS",
+    nome: "Olimpíada Brasileira de Sociologia",
+    edicao: "1ª edição (2026)",
+    area: "História",
+    areaSlug: "historia",
+    organizador: "Sociedade Brasileira de Sociologia (SBS) e parceiros",
+    site: "https://olimpiadadesociologia.com.br",
+    portalInscricao: "https://olimpiadadesociologia.com.br",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "8º e 9º ano do EF e Ensino Médio",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "1ª edição em 2026. Competição em equipes de três alunos + professor orientador. Cinco fases (três virtuais + duas presenciais no RJ). Inclui vídeos, jogos de tabuleiro e projetos de intervenção social.",
+      como: "Inscrição via olimpiadadesociologia.com.br por professor responsável. Equipes de 3 alunos.",
+    },
+    fases: [
+      {
+        nome: "Fases Virtuais (1ª a 3ª)",
+        formato: "Vídeo, jogo de tabuleiro, projeto de intervenção social",
+        data: "Primeiro e segundo semestre",
+        local: "Online",
+      },
+      {
+        nome: "Semifinal Presencial",
+        formato: "Apresentação de projeto",
+        data: "Segundo semestre",
+        local: "Rio de Janeiro (RJ)",
+      },
+      {
+        nome: "Final Presencial",
+        formato: "Apresentação final + cerimônia",
+        data: "Final do ano",
+        local: "Rio de Janeiro (RJ)",
+      },
+    ],
+    premiacao: [
+      "Medalhas e troféus para os finalistas",
+      "Certificados para todos os participantes",
+    ],
+    notas:
+      "1ª olimpíada brasileira de sociologia com abrangência nacional. Aborda sociologia, antropologia e ciência política por meio de projetos de impacto social.",
   },
   {
     sigla: "ONC",
@@ -997,5 +1402,87 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "Formato único: baseada em projeto (não em prova). Inscrições ainda abertas até 30/06/2026. O Programa Mentoria nas Escolas é uma novidade de 2026 — ex-vencedores de escolas públicas recebem bolsas para iniciação científica na Fiocruz.",
+  },
+  {
+    sigla: "OBECON",
+    nome: "Olimpíada Brasileira de Economia",
+    edicao: "7ª edição (2024/2026)",
+    area: "Economia",
+    areaSlug: "economia",
+    organizador: "OBECON — parceiros: FGV, Insper, BTG Pactual",
+    site: "https://obecon.org",
+    portalInscricao: "https://obecon.org",
+    usaPlanilha: false,
+    segmentos: ["EM"],
+    series: "Ensino Médio e 9º ano do EF",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Maior olimpíada de Economia do Brasil para o EM. 34 medalhas internacionais acumuladas. Seleciona representantes para a IEO (Olimpíada Internacional de Economia).",
+      como: "Inscrição individual via obecon.org. Três fases: online, nacional e presencial em SP.",
+    },
+    fases: [
+      {
+        nome: "1ª Fase — Online",
+        formato: "Prova objetiva online",
+        data: "Primeiro semestre",
+        local: "Online",
+      },
+      {
+        nome: "2ª Fase — Nacional",
+        formato: "Prova objetiva avançada",
+        data: "Segundo semestre",
+        local: "Online",
+      },
+      {
+        nome: "Final Presencial",
+        formato: "Prova discursiva presencial",
+        data: "Final do ano",
+        local: "São Paulo (SP)",
+      },
+    ],
+    premiacao: [
+      "Medalhas ouro, prata, bronze",
+      "Melhores integram a seleção para a IEO (Olimpíada Internacional de Economia)",
+      "Prêmios e bolsas de parceiros (FGV, Insper)",
+    ],
+    notas:
+      "A OBECON é a principal seletiva para a IEO. Aborda microeconomia, macroeconomia, economia internacional e pensamento econômico.",
+  },
+  {
+    sigla: "OLITEF",
+    nome: "Olimpíada do Tesouro Direto de Educação Financeira",
+    edicao: "Edição 2026",
+    area: "Economia",
+    areaSlug: "economia",
+    organizador: "Secretaria do Tesouro Nacional / B3 — apoio MEC",
+    site: "https://www.olitef.com.br",
+    portalInscricao: "https://www.olitef.com.br",
+    usaPlanilha: false,
+    segmentos: ["EFAF", "EM"],
+    series: "6º ao 9º ano do EF e Ensino Médio",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      descricao:
+        "Maior olimpíada de educação financeira do Brasil por participação — 1,75 milhão de participantes em 2025. Fase única online. Premia com títulos do Tesouro Selic e bolsas.",
+      como: "Inscrição via olitef.com.br individualmente ou pela escola. Fase única com prova objetiva online.",
+    },
+    fases: [
+      {
+        nome: "Fase Única — Online",
+        formato: "Prova objetiva online",
+        data: "A definir (segundo semestre)",
+        local: "Online",
+      },
+    ],
+    premiacao: [
+      "Títulos do Tesouro Selic para os melhores classificados",
+      "Bolsas de estudo e prêmios de parceiros",
+      "Certificados digitais para todos os participantes",
+    ],
+    notas:
+      "Maior olimpíada de educação financeira do Brasil. Aborda orçamento pessoal, investimentos, juros, planejamento financeiro e consumo consciente.",
   },
 ];

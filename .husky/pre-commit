@@ -1,2 +1,3 @@
+#!/bin/sh
 npx secretlint --secretlintrc .secretlintrc.json "**/*"
 npx lint-staged
