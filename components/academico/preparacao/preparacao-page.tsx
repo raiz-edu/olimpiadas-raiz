@@ -826,8 +826,8 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
           <p className="text-[11px] text-muted-foreground/70">
             {projeto.ano_letivo} · {projeto.aulas.length} aula
             {projeto.aulas.length !== 1 ? "s" : ""}
-            {projeto.series_elegiveis.length > 0 && (
-              <span className="ml-1">· {projeto.series_elegiveis.join(", ")}</span>
+            {(projeto.series_elegiveis ?? []).length > 0 && (
+              <span className="ml-1">· {(projeto.series_elegiveis ?? []).join(", ")}</span>
             )}
           </p>
         </div>
