@@ -347,6 +347,7 @@ function NovaAulaForm({ projetoId, onClose }: { projetoId: string; onClose: () =
 function NovoSimuladoForm({ projetoId, onClose }: { projetoId: string; onClose: () => void }) {
   const bound = criarAula.bind(null, projetoId);
   const [state, formAction, isPending] = useActionState(bound, null);
+  const [modalidade, setModalidade] = useState<"online" | "presencial">("online");
   if (state && "ok" in state) onClose();
 
   return (
@@ -370,6 +371,24 @@ function NovoSimuladoForm({ projetoId, onClose }: { projetoId: string; onClose: 
           />
         </div>
         <div>
+          <label className="text-xs font-medium text-muted-foreground">Modalidade *</label>
+          <div className="mt-1 flex gap-3">
+            {(["online", "presencial"] as const).map((m) => (
+              <label key={m} className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="_modalidade"
+                  value={m}
+                  checked={modalidade === m}
+                  onChange={() => setModalidade(m)}
+                  className="accent-indigo-400"
+                />
+                <span className="text-sm text-foreground capitalize">{m}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
           <label className="text-xs font-medium text-muted-foreground">Data e hora</label>
           <input
             name="data_hora"
@@ -388,6 +407,29 @@ function NovoSimuladoForm({ projetoId, onClose }: { projetoId: string; onClose: 
             placeholder="120"
           />
         </div>
+        {modalidade === "online" ? (
+          <div className="sm:col-span-2">
+            <label className="text-xs font-medium text-muted-foreground">Link do simulado</label>
+            <input
+              name="link_aula"
+              type="url"
+              className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+              placeholder="https://..."
+            />
+          </div>
+        ) : (
+          <div className="sm:col-span-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Polo(s) de realização
+            </label>
+            <textarea
+              name="polos"
+              rows={2}
+              className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none resize-none"
+              placeholder="Ex: Centro Raiz SP — Rua X, nº 10"
+            />
+          </div>
+        )}
         <div className="sm:col-span-2">
           <label className="text-xs font-medium text-muted-foreground">
             Descrição / instruções
@@ -426,6 +468,9 @@ function NovoSimuladoForm({ projetoId, onClose }: { projetoId: string; onClose: 
 function EditarSimuladoForm({ aula, onClose }: { aula: Aula; onClose: () => void }) {
   const bound = atualizarAula.bind(null, aula.id);
   const [state, formAction, isPending] = useActionState(bound, null);
+  const [modalidade, setModalidade] = useState<"online" | "presencial">(
+    aula.polos ? "presencial" : "online",
+  );
   if (state && "ok" in state) onClose();
 
   return (
@@ -449,6 +494,24 @@ function EditarSimuladoForm({ aula, onClose }: { aula: Aula; onClose: () => void
           />
         </div>
         <div>
+          <label className="text-xs font-medium text-muted-foreground">Modalidade *</label>
+          <div className="mt-1 flex gap-3">
+            {(["online", "presencial"] as const).map((m) => (
+              <label key={m} className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="_modalidade"
+                  value={m}
+                  checked={modalidade === m}
+                  onChange={() => setModalidade(m)}
+                  className="accent-indigo-400"
+                />
+                <span className="text-sm text-foreground capitalize">{m}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
           <label className="text-xs font-medium text-muted-foreground">Data e hora</label>
           <input
             name="data_hora"
@@ -469,6 +532,31 @@ function EditarSimuladoForm({ aula, onClose }: { aula: Aula; onClose: () => void
             placeholder="120"
           />
         </div>
+        {modalidade === "online" ? (
+          <div className="sm:col-span-2">
+            <label className="text-xs font-medium text-muted-foreground">Link do simulado</label>
+            <input
+              name="link_aula"
+              type="url"
+              defaultValue={aula.link_aula ?? ""}
+              className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+              placeholder="https://..."
+            />
+          </div>
+        ) : (
+          <div className="sm:col-span-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Polo(s) de realização
+            </label>
+            <textarea
+              name="polos"
+              rows={2}
+              defaultValue={aula.polos ?? ""}
+              className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none resize-none"
+              placeholder="Ex: Centro Raiz SP — Rua X, nº 10"
+            />
+          </div>
+        )}
         <div className="sm:col-span-2">
           <label className="text-xs font-medium text-muted-foreground">
             Descrição / instruções
@@ -671,7 +759,7 @@ function AulaCard({ aula }: { aula: Aula }) {
           <p className="text-xs text-muted-foreground">
             {fmtDateTime(aula.data_hora)}
             {aula.duracao_minutos ? ` · ${aula.duracao_minutos} min` : ""}
-            {aula.tipo === "online" && aula.link_aula && (
+            {(aula.tipo === "online" || aula.tipo === "simulado") && aula.link_aula && (
               <>
                 {" · "}
                 <a
@@ -682,11 +770,11 @@ function AulaCard({ aula }: { aula: Aula }) {
                   style={{ color: TEAL }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  Acessar aula
+                  {aula.tipo === "simulado" ? "Acessar simulado" : "Acessar aula"}
                 </a>
               </>
             )}
-            {aula.tipo === "presencial" && aula.polos && (
+            {(aula.tipo === "presencial" || aula.tipo === "simulado") && aula.polos && (
               <>
                 {" "}
                 ·{" "}
