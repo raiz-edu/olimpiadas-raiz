@@ -486,34 +486,26 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     site: "https://obquimica.org",
     portalInscricao: "https://inscricoes.obquimica.org",
     usaPlanilha: false,
-    segmentos: ["EFAF", "EM"],
-    series:
-      "OBQJr: 6º ao 9º EF · OBQ Modalidade A: 1ª e 2ª série EM · OBQ Modalidade B: 3ª série EM",
+    segmentos: ["EM"],
+    series: "Modalidade A: 1ª e 2ª série EM · Modalidade B: 3ª série EM",
     custo:
       "Gratuita para inscrição · Recurso sobre gabarito: R$ 75/questão (isento para escolas públicas)",
     gratuita: true,
     inscricoes: {
-      periodo: "OBQ: até 29/05/2026 · OBQJr: maio a agosto",
+      periodo: "Até 29/05/2026",
       descricao:
         "Novo regulamento aprovado em novembro de 2025, em vigor a partir de 2026. Inscrição automática para medalhistas de ouro do ano anterior. Mínimo de 20 vagas para escolas públicas garantido por estado.",
-      como: "Professor responsável inscreve a escola e os alunos via site obquimica.org (OBQ) ou obqjr.obquimica.org (OBQJr). Inscrição coordenada por estado.",
+      como: "Professor responsável inscreve a escola e os alunos via site obquimica.org. Inscrição coordenada por estado.",
     },
     fases: [
       {
-        nome: "OBQJr — 1ª Fase",
-        formato: "Prova objetiva",
-        data: "Junho 2026",
-        local: "Na escola / polo estadual",
-      },
-      { nome: "OBQJr — 2ª Fase", formato: "Prova", data: "Agosto 2026", local: "Polo estadual" },
-      {
-        nome: "OBQ — Fase Estadual",
+        nome: "Fase Estadual",
         formato: "Seletiva estadual",
         data: "Antes de 29/05/2026",
         local: "Polo estadual",
       },
       {
-        nome: "OBQ — Prova Nacional",
+        nome: "Prova Nacional",
         formato: "Prova discursiva, 4 horas, presencial",
         data: "28/08/2026",
         local: "Polo nacional / universidade parceira",
@@ -526,7 +518,45 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
       "Melhores integram a seleção para a IChO (Olimpíada Internacional de Química)",
     ],
     notas:
-      "A OBQJr (obqjr.obquimica.org) é voltada para o EFAF (6º ao 9º ano) e tem calendário separado da OBQ. Novo regulamento 2026 inclui vagas garantidas para escolas públicas por estado.",
+      "Novo regulamento 2026 inclui vagas garantidas para escolas públicas por estado. Para alunos do EF, ver OBQJr.",
+  },
+  {
+    sigla: "OBQJr",
+    nome: "Olimpíada Brasileira de Química Júnior",
+    edicao: "Edição 2026",
+    area: "Química",
+    areaSlug: "quimica",
+    organizador: "ABQ (Associação Brasileira de Química) — mesma organização da OBQ",
+    site: "https://obqjr.obquimica.org",
+    portalInscricao: "https://obqjr.obquimica.org",
+    usaPlanilha: false,
+    segmentos: ["EFAF"],
+    series: "6º ao 9º ano do EF",
+    custo: "Gratuita",
+    gratuita: true,
+    inscricoes: {
+      periodo: "Maio a agosto de 2026",
+      descricao:
+        "Voltada exclusivamente para o Ensino Fundamental Anos Finais. Calendário separado da OBQ. Novo regulamento 2026 inclui vagas garantidas para escolas públicas por estado.",
+      como: "Professor responsável inscreve a escola e os alunos via obqjr.obquimica.org. Inscrição coordenada por estado.",
+    },
+    fases: [
+      {
+        nome: "1ª Fase",
+        formato: "Prova objetiva",
+        data: "Junho 2026",
+        local: "Na escola / polo estadual",
+      },
+      {
+        nome: "2ª Fase",
+        formato: "Prova",
+        data: "Agosto 2026",
+        local: "Polo estadual",
+      },
+    ],
+    premiacao: ["Medalhas ouro, prata, bronze", "Diploma de Honra ao Mérito (todos os aprovados)"],
+    notas:
+      "Olimpíada de Química voltada para o EFAF (6º ao 9º ano), com calendário independente da OBQ (Ensino Médio).",
   },
   {
     sigla: "OBBio",
