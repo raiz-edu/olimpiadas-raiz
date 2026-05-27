@@ -1,33 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { CATALOGO } from "@/lib/olimpiadas/catalogo";
 
-// ─── Tipos públicos (usados pela page.tsx) ────────────────────────────────────
+// ─── Tipos públicos ───────────────────────────────────────────────────────────
 
 export type FaseRow = {
   id: string;
   tipo: "inscricao" | "prova_1" | "prova_2" | "final" | "divulgacao";
   nome: string;
-  data_inicio: string; // "YYYY-MM-DD"
-  data_fim: string; // "YYYY-MM-DD"
+  data_inicio: string;
+  data_fim: string;
   observacoes: string | null;
   olimpiada_nome: string;
+  olimpiada_sigla: string;
   olimpiada_ano: number;
+  series_elegiveis: string[];
 };
 
 export type AulaRow = {
   id: string;
   titulo: string;
   tipo: "online" | "presencial" | "simulado";
-  data_hora: string; // ISO datetime
+  data_hora: string;
   duracao_minutos: number | null;
   link_aula: string | null;
   polos: string | null;
+  projeto_id: string | null;
   projeto_nome: string;
   olimpiada_sigla: string;
   projeto_ano: number;
+  series_elegiveis: string[];
 };
+
+export type ProjetoOpt = { id: string; nome: string };
+
+type Marca = { nome: string; slug: string };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -35,33 +44,75 @@ function parseLocalDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y!, m! - 1, d!);
 }
-
 function fmtDay(d: Date) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
-
 function fmtDayNum(d: Date) {
   return d.getDate().toString().padStart(2, "0");
 }
-
 function fmtWeekday(d: Date) {
   return d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
 }
-
 function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
-
 function fmtMonthYear(d: Date) {
   return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }
-
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
-
 function diffDays(a: Date, b: Date) {
   return Math.round((b.getTime() - a.getTime()) / 86400000) + 1;
+}
+
+// ─── Mapeamento série → segmento ──────────────────────────────────────────────
+
+const SERIES_TO_SEG: Record<string, "EFAI" | "EFAF" | "EM"> = {
+  "1º": "EFAI",
+  "2º": "EFAI",
+  "3º": "EFAI",
+  "4º": "EFAI",
+  "5º": "EFAI",
+  "6º": "EFAF",
+  "7º": "EFAF",
+  "8º": "EFAF",
+  "9º": "EFAF",
+  "1º EM": "EM",
+  "2º EM": "EM",
+  "3º EM": "EM",
+};
+
+const SERIES_POR_SEG: Record<"EFAI" | "EFAF" | "EM", string[]> = {
+  EFAI: ["1º", "2º", "3º", "4º", "5º"],
+  EFAF: ["6º", "7º", "8º", "9º"],
+  EM: ["1º EM", "2º EM", "3º EM"],
+};
+
+function eventSegmentos(series: string[], sigla?: string): ("EFAI" | "EFAF" | "EM")[] {
+  if (series.length > 0) {
+    const segs = [...new Set(series.map((s) => SERIES_TO_SEG[s]).filter(Boolean))] as (
+      | "EFAI"
+      | "EFAF"
+      | "EM"
+    )[];
+    if (segs.length) return segs;
+  }
+  // fallback: CATALOGO
+  if (sigla) {
+    const cat = CATALOGO.find((o) => o.sigla === sigla);
+    if (cat) return cat.segmentos as ("EFAI" | "EFAF" | "EM")[];
+  }
+  return ["EFAI", "EFAF", "EM"];
+}
+
+function matchSegmento(series: string[], sigla: string, sel: "EFAI" | "EFAF" | "EM"): boolean {
+  return eventSegmentos(series, sigla).includes(sel);
+}
+
+function matchSerie(series: string[], sel: string): boolean {
+  if (!series.length) return true; // evento universal
+  return series.includes(sel);
 }
 
 // ─── Configuração de tipos ────────────────────────────────────────────────────
@@ -111,6 +162,25 @@ const AULA_CONFIG: Record<
   },
 };
 
+const SEG_CONFIG: Record<
+  "EFAI" | "EFAF" | "EM",
+  { label: string; bg: string; text: string; ring: string }
+> = {
+  EFAI: {
+    label: "EFAI",
+    bg: "bg-emerald-400/10",
+    text: "text-emerald-400",
+    ring: "ring-emerald-400/40",
+  },
+  EFAF: { label: "EFAF", bg: "bg-blue-400/10", text: "text-blue-400", ring: "ring-blue-400/40" },
+  EM: {
+    label: "Ens. Médio",
+    bg: "bg-purple-400/10",
+    text: "text-purple-400",
+    ring: "ring-purple-400/40",
+  },
+};
+
 // ─── Badge ────────────────────────────────────────────────────────────────────
 
 function Badge({ bg, text, label }: { bg: string; text: string; label: string }) {
@@ -123,23 +193,95 @@ function Badge({ bg, text, label }: { bg: string; text: string; label: string })
   );
 }
 
-// ─── Card de fase olímpica ────────────────────────────────────────────────────
+// ─── Dropdown de marca (admin) ────────────────────────────────────────────────
+
+function MarcaCalendarioDropdown({
+  marcas,
+  buildUrl,
+}: {
+  marcas: Marca[];
+  buildUrl: (slug: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function h(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
+        title="Baixar calendário Word — escolher marca"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="h-3.5 w-3.5"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+            clipRule="evenodd"
+          />
+        </svg>
+        Doc
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="h-3 w-3 text-muted-foreground/60"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-xl border border-border bg-card p-1.5 shadow-lg">
+          <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Baixar por marca
+          </p>
+          {marcas.map((m) => (
+            <a
+              key={m.slug}
+              href={buildUrl(m.slug)}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-white/[0.06]"
+            >
+              {m.nome}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
 
 function FaseCard({ fase }: { fase: FaseRow }) {
   const cfg = FASE_CONFIG[fase.tipo];
   const inicio = parseLocalDate(fase.data_inicio);
   const fim = parseLocalDate(fase.data_fim);
   const dias = diffDays(inicio, fim);
-
   return (
     <div className="flex gap-4">
-      {/* Coluna de data */}
       <div className="w-12 shrink-0 text-center">
         <p className="text-lg font-bold leading-none text-foreground">{fmtDayNum(inicio)}</p>
         <p className="text-[10px] uppercase text-muted-foreground">{fmtWeekday(inicio)}</p>
       </div>
       <div className="h-full w-px shrink-0 bg-border self-stretch" />
-      {/* Conteúdo */}
       <div className="min-w-0 flex-1 pb-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge bg={cfg.bg} text={cfg.text} label={cfg.label} />
@@ -158,21 +300,16 @@ function FaseCard({ fase }: { fase: FaseRow }) {
   );
 }
 
-// ─── Card de aula de preparação ───────────────────────────────────────────────
-
 function AulaCard({ aula }: { aula: AulaRow }) {
   const cfg = AULA_CONFIG[aula.tipo];
   const dt = new Date(aula.data_hora);
-
   return (
     <div className="flex gap-4">
-      {/* Coluna de data */}
       <div className="w-12 shrink-0 text-center">
         <p className="text-lg font-bold leading-none text-foreground">{fmtDayNum(dt)}</p>
         <p className="text-[10px] uppercase text-muted-foreground">{fmtWeekday(dt)}</p>
       </div>
       <div className="h-full w-px shrink-0 bg-border self-stretch" />
-      {/* Conteúdo */}
       <div className="min-w-0 flex-1 pb-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge bg={cfg.bg} text={cfg.text} label={cfg.label} />
@@ -187,7 +324,8 @@ function AulaCard({ aula }: { aula: AulaRow }) {
           {aula.duracao_minutos && <> · {aula.duracao_minutos} min</>}
           {aula.tipo === "online" && aula.link_aula && (
             <>
-              {" · "}
+              {" "}
+              ·{" "}
               <a
                 href={aula.link_aula}
                 target="_blank"
@@ -222,11 +360,19 @@ export function CalendarioAcademicoPage({
   aulas,
   anos,
   anoParam,
+  projetos,
+  isAdmin,
+  marcaSlug,
+  todasMarcas,
 }: {
   fases: FaseRow[];
   aulas: AulaRow[];
   anos: number[];
   anoParam?: string;
+  projetos: ProjetoOpt[];
+  isAdmin: boolean;
+  marcaSlug: string | null;
+  todasMarcas: Marca[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -238,6 +384,9 @@ export function CalendarioAcademicoPage({
   const [showFases, setShowFases] = useState(true);
   const [showAulas, setShowAulas] = useState(true);
   const [showSimulados, setShowSimulados] = useState(true);
+  const [segmento, setSegmento] = useState<"todos" | "EFAI" | "EFAF" | "EM">("todos");
+  const [serie, setSerie] = useState<string>("todas");
+  const [projetoId, setProjetoId] = useState<string>("todos");
 
   function setAno(ano: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -245,23 +394,40 @@ export function CalendarioAcademicoPage({
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  // Filtra e normaliza eventos para o ano selecionado
+  // Séries disponíveis para o segmento selecionado
+  const seriesDisponiveis =
+    segmento === "todos"
+      ? [...SERIES_POR_SEG.EFAI, ...SERIES_POR_SEG.EFAF, ...SERIES_POR_SEG.EM]
+      : SERIES_POR_SEG[segmento];
+
+  // Reseta série se não está no segmento selecionado
+  const serieEfetiva =
+    segmento !== "todos" && serie !== "todas" && !seriesDisponiveis.includes(serie)
+      ? "todas"
+      : serie;
+
+  // Filtra eventos
   const eventos: Evento[] = [];
 
-  if (showFases) {
+  if (showFases && projetoId === "todos") {
     for (const f of fases) {
       if (f.olimpiada_ano !== selectedAno) continue;
+      if (segmento !== "todos" && !matchSegmento(f.series_elegiveis, f.olimpiada_sigla, segmento))
+        continue;
+      if (serieEfetiva !== "todas" && !matchSerie(f.series_elegiveis, serieEfetiva)) continue;
       eventos.push({ kind: "fase", sortKey: f.data_inicio, data: f });
     }
   }
 
   for (const a of aulas) {
     if (a.projeto_ano !== selectedAno) continue;
-    if (a.tipo === "simulado") {
-      if (showSimulados) eventos.push({ kind: "aula", sortKey: a.data_hora, data: a });
-    } else {
-      if (showAulas) eventos.push({ kind: "aula", sortKey: a.data_hora, data: a });
-    }
+    if (a.tipo === "simulado" && !showSimulados) continue;
+    if (a.tipo !== "simulado" && !showAulas) continue;
+    if (segmento !== "todos" && !matchSegmento(a.series_elegiveis, a.olimpiada_sigla, segmento))
+      continue;
+    if (serieEfetiva !== "todas" && !matchSerie(a.series_elegiveis, serieEfetiva)) continue;
+    if (projetoId !== "todos" && a.projeto_id !== projetoId) continue;
+    eventos.push({ kind: "aula", sortKey: a.data_hora, data: a });
   }
 
   eventos.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
@@ -274,19 +440,26 @@ export function CalendarioAcademicoPage({
         ? parseLocalDate((ev.data as FaseRow).data_inicio)
         : new Date((ev.data as AulaRow).data_hora);
     const key = monthKey(d);
-    if (!porMes.has(key)) {
-      porMes.set(key, { label: fmtMonthYear(d), eventos: [] });
-    }
+    if (!porMes.has(key)) porMes.set(key, { label: fmtMonthYear(d), eventos: [] });
     porMes.get(key)!.eventos.push(ev);
   }
-
   const meses = [...porMes.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+  // URL do doc (com filtros ativos)
+  function buildDocUrl(slug?: string) {
+    const p = new URLSearchParams();
+    p.set("ano", String(selectedAno));
+    if (slug) p.set("marca", slug);
+    if (segmento !== "todos") p.set("segmento", segmento);
+    if (serieEfetiva !== "todas") p.set("serie", serieEfetiva);
+    if (projetoId !== "todos") p.set("projeto", projetoId);
+    return `/api/academico/calendario/doc?${p.toString()}`;
+  }
 
   return (
     <>
-      {/* Controles — ocultos na impressão */}
+      {/* ── Controles linha 1: ano + tipo + doc ──── */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        {/* Seletor de ano */}
         <div className="flex flex-wrap gap-1.5">
           {anos.map((ano) => (
             <button
@@ -304,67 +477,175 @@ export function CalendarioAcademicoPage({
           ))}
         </div>
 
-        {/* Filtros de tipo + botão imprimir */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFases((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all border ${
-              showFases
-                ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/30"
-                : "border-border text-muted-foreground/40"
-            }`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Fases
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowAulas((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all border ${
-              showAulas
-                ? "bg-[rgb(91,184,193)]/10 text-[rgb(91,184,193)] border-[rgb(91,184,193)]/30"
-                : "border-border text-muted-foreground/40"
-            }`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[rgb(91,184,193)]" />
-            Aulas
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowSimulados((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all border ${
-              showSimulados
-                ? "bg-indigo-400/10 text-indigo-400 border-indigo-400/30"
-                : "border-border text-muted-foreground/40"
-            }`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-            Simulados
-          </button>
+          {/* Toggles de tipo */}
+          {[
+            {
+              label: "Fases",
+              dot: "bg-emerald-400",
+              active: showFases,
+              set: setShowFases,
+              activeCls: "bg-emerald-400/10 text-emerald-400 border-emerald-400/30",
+            },
+            {
+              label: "Aulas",
+              dot: "bg-[rgb(91,184,193)]",
+              active: showAulas,
+              set: setShowAulas,
+              activeCls:
+                "bg-[rgb(91,184,193)]/10 text-[rgb(91,184,193)] border-[rgb(91,184,193)]/30",
+            },
+            {
+              label: "Simulados",
+              dot: "bg-indigo-400",
+              active: showSimulados,
+              set: setShowSimulados,
+              activeCls: "bg-indigo-400/10 text-indigo-400 border-indigo-400/30",
+            },
+          ].map(({ label, dot, active, set, activeCls }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => set((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all border ${
+                active ? activeCls : "border-border text-muted-foreground/40"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+              {label}
+            </button>
+          ))}
 
           <div className="h-4 w-px bg-border" />
 
+          {/* Botão doc */}
+          {isAdmin ? (
+            <MarcaCalendarioDropdown marcas={todasMarcas} buildUrl={buildDocUrl} />
+          ) : (
+            <a
+              href={buildDocUrl(marcaSlug ?? undefined)}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
+              title="Baixar calendário Word (.docx)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-3.5 w-3.5"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Doc
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* ── Controles linha 2: segmento + série + projeto ── */}
+      <div className="no-print flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        {/* Segmento */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Segmento
+          </span>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setSegmento("todos");
+                setSerie("todas");
+              }}
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-all ${
+                segmento === "todos"
+                  ? "bg-[rgb(91,184,193)]/10 text-[rgb(91,184,193)] ring-1 ring-[rgb(91,184,193)]/40"
+                  : "text-muted-foreground/50 ring-1 ring-border/40 hover:text-muted-foreground"
+              }`}
+            >
+              Todos
+            </button>
+            {(["EFAI", "EFAF", "EM"] as const).map((s) => {
+              const cfg = SEG_CONFIG[s];
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    setSegmento(s);
+                    setSerie("todas");
+                  }}
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-all ${
+                    segmento === s
+                      ? `${cfg.bg} ${cfg.text} ring-1 ${cfg.ring}`
+                      : "text-muted-foreground/50 ring-1 ring-border/40 hover:text-muted-foreground"
+                  }`}
+                >
+                  {cfg.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="hidden h-4 w-px bg-border/60 sm:block" />
+
+        {/* Série */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Série
+          </span>
+          <select
+            value={serieEfetiva}
+            onChange={(e) => setSerie(e.target.value)}
+            className="rounded-lg border border-input bg-background px-2 py-1 text-xs text-foreground focus:border-ring focus:outline-none"
+          >
+            <option value="todas">Todas</option>
+            {seriesDisponiveis.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="hidden h-4 w-px bg-border/60 sm:block" />
+
+        {/* Projeto */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Projeto
+          </span>
+          <select
+            value={projetoId}
+            onChange={(e) => setProjetoId(e.target.value)}
+            className="rounded-lg border border-input bg-background px-2 py-1 text-xs text-foreground focus:border-ring focus:outline-none max-w-[200px]"
+          >
+            <option value="todos">Todos</option>
+            {projetos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Reset */}
+        {(segmento !== "todos" || serieEfetiva !== "todas" || projetoId !== "todos") && (
           <button
             type="button"
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
+            onClick={() => {
+              setSegmento("todos");
+              setSerie("todas");
+              setProjetoId("todos");
+            }}
+            className="ml-auto text-[11px] text-muted-foreground hover:text-foreground transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-3.5 w-3.5"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.25 2.25 0 0118 8.757v4.493a2.25 2.25 0 01-1.875 2.215c-.151.023-.302.044-.454.063A2.75 2.75 0 0113 17.5H7a2.75 2.75 0 01-2.671-2.972 44.112 44.112 0 01-.454-.063A2.25 2.25 0 012 12.25V8.757a2.25 2.25 0 011.874-2.202c.374-.056.75-.107 1.126-.153V2.75zm1.5 0v3.28a49.59 49.59 0 016.5 0V2.75a.25.25 0 00-.25-.25h-6a.25.25 0 00-.25.25zM5 12.25v3.25a1.25 1.25 0 001.25 1.25h7.5A1.25 1.25 0 0015 15.5v-3.25a.25.25 0 00-.25-.25H5.25a.25.25 0 00-.25.25z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Imprimir
+            Limpar filtros
           </button>
-        </div>
+        )}
       </div>
 
       {/* Cabeçalho visível apenas na impressão */}
@@ -393,25 +674,22 @@ export function CalendarioAcademicoPage({
       {meses.length === 0 ? (
         <div className="rounded-xl border border-border bg-card px-5 py-10 text-center">
           <p className="text-sm text-muted-foreground">
-            Nenhum evento encontrado para {selectedAno}.
+            Nenhum evento encontrado para os filtros selecionados.
           </p>
           <p className="mt-1 text-xs text-muted-foreground/60">
-            Cadastre fases nas olimpíadas ou aulas na Preparação.
+            Ajuste os filtros ou cadastre eventos na Preparação.
           </p>
         </div>
       ) : (
         <div className="space-y-8">
           {meses.map(([key, { label, eventos: evs }]) => (
             <div key={key}>
-              {/* Cabeçalho do mês */}
               <p
                 className="mb-3 text-xs font-semibold uppercase tracking-wider capitalize"
                 style={{ color: "rgb(91,184,193)" }}
               >
                 {label}
               </p>
-
-              {/* Eventos do mês */}
               <div className="rounded-xl border border-border bg-card divide-y divide-border/50">
                 {evs.map((ev) => (
                   <div key={`${ev.kind}-${ev.data.id}`} className="px-5 py-4">
