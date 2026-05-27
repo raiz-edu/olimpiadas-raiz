@@ -299,7 +299,7 @@ function MultiSelectDropdown<T extends string | number>({
           </div>
 
           {/* Lista de opções */}
-          <div className="max-h-52 overflow-y-auto p-1.5">
+          <div className="p-1.5">
             {options.map((opt) => {
               const checked = selected.includes(opt.value);
               return (
