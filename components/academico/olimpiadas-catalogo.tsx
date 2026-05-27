@@ -496,6 +496,9 @@ const AREAS: Array<{ slug: AreaSlug | "todos"; label: string }> = [
   { slug: "ciencias", label: "Ciências" },
   { slug: "stem", label: "STEM" },
   { slug: "ambiente", label: "Meio Ambiente" },
+  { slug: "economia", label: "Economia" },
+  { slug: "robotica", label: "Robótica" },
+  { slug: "filosofia", label: "Filosofia" },
 ];
 
 // ─── AreaSelect ────────────────────────────────────────────────────────────
