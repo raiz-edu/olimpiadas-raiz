@@ -29,7 +29,7 @@ export default async function CalendarioAcademicoServerPage({
       supabase
         .from("olimpiada_fase")
         .select(
-          "id, tipo, nome, data_inicio, data_fim, observacoes, olimpiada:olimpiada_id(nome, sigla, ano_letivo, series_elegiveis)",
+          "id, tipo, nome, data_inicio, data_fim, observacoes, olimpiada:olimpiada_id(nome, ano_letivo, series_elegiveis)",
         )
         .order("data_inicio", { ascending: true }),
       supabase
@@ -57,9 +57,12 @@ export default async function CalendarioAcademicoServerPage({
     data_fim: f.data_fim,
     observacoes: f.observacoes ?? null,
     olimpiada_nome: f.olimpiada?.nome ?? "—",
-    olimpiada_sigla: f.olimpiada?.sigla ?? "",
+    olimpiada_sigla: "",
     olimpiada_ano: f.olimpiada?.ano_letivo ?? 0,
-    series_elegiveis: f.olimpiada?.series_elegiveis ?? [],
+    // normaliza "6º ano" → "6º" para consistência com SERIES_TO_SEG
+    series_elegiveis: (f.olimpiada?.series_elegiveis ?? []).map((s: string) =>
+      s.replace(/\s+ano$/i, "").trim(),
+    ),
   }));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,7 +78,9 @@ export default async function CalendarioAcademicoServerPage({
     projeto_nome: a.projeto?.nome ?? "—",
     olimpiada_sigla: a.projeto?.olimpiada_sigla ?? "—",
     projeto_ano: a.projeto?.ano_letivo ?? 0,
-    series_elegiveis: a.projeto?.series_elegiveis ?? [],
+    series_elegiveis: (a.projeto?.series_elegiveis ?? []).map((s: string) =>
+      s.replace(/\s+ano$/i, "").trim(),
+    ),
   }));
 
   const anosSet = new Set<number>();
