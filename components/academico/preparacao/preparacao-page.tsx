@@ -43,6 +43,13 @@ function getSeriesParaOlimpiada(sigla: string): string[] {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function fmtDuracao(seg: number | null): string {
+  if (!seg) return "";
+  const m = Math.floor(seg / 60);
+  const s = seg % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 function fmtDateTime(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("pt-BR", {
@@ -275,14 +282,12 @@ function NovaAulaForm({ projetoId, onClose }: { projetoId: string; onClose: () =
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Duração (min)</label>
+          <label className="text-xs font-medium text-muted-foreground">Duração (MM:SS)</label>
           <input
             name="duracao_minutos"
-            type="number"
-            min={15}
-            step={15}
-            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
-            placeholder="90"
+            type="text"
+            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+            placeholder="32:27"
           />
         </div>
       </div>
@@ -397,14 +402,12 @@ function NovoSimuladoForm({ projetoId, onClose }: { projetoId: string; onClose: 
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Duração (min)</label>
+          <label className="text-xs font-medium text-muted-foreground">Duração (MM:SS)</label>
           <input
             name="duracao_minutos"
-            type="number"
-            min={15}
-            step={15}
-            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
-            placeholder="120"
+            type="text"
+            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+            placeholder="32:27"
           />
         </div>
         {modalidade === "online" ? (
@@ -521,15 +524,13 @@ function EditarSimuladoForm({ aula, onClose }: { aula: Aula; onClose: () => void
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Duração (min)</label>
+          <label className="text-xs font-medium text-muted-foreground">Duração (MM:SS)</label>
           <input
             name="duracao_minutos"
-            type="number"
-            min={15}
-            step={15}
-            defaultValue={aula.duracao_minutos ?? ""}
-            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
-            placeholder="120"
+            type="text"
+            defaultValue={fmtDuracao(aula.duracao_minutos)}
+            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+            placeholder="32:27"
           />
         </div>
         {modalidade === "online" ? (
@@ -649,15 +650,13 @@ function EditarAulaForm({ aula, onClose }: { aula: Aula; onClose: () => void }) 
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Duração (min)</label>
+          <label className="text-xs font-medium text-muted-foreground">Duração (MM:SS)</label>
           <input
             name="duracao_minutos"
-            type="number"
-            min={15}
-            step={15}
-            defaultValue={aula.duracao_minutos ?? ""}
-            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
-            placeholder="90"
+            type="text"
+            defaultValue={fmtDuracao(aula.duracao_minutos)}
+            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+            placeholder="32:27"
           />
         </div>
       </div>
@@ -758,7 +757,7 @@ function AulaCard({ aula }: { aula: Aula }) {
           <p className="text-sm font-medium text-foreground">{aula.titulo}</p>
           <p className="text-xs text-muted-foreground">
             {fmtDateTime(aula.data_hora)}
-            {aula.duracao_minutos ? ` · ${aula.duracao_minutos} min` : ""}
+            {aula.duracao_minutos ? ` · ${fmtDuracao(aula.duracao_minutos)}` : ""}
             {(aula.tipo === "online" || aula.tipo === "simulado") && aula.link_aula && (
               <>
                 {" · "}

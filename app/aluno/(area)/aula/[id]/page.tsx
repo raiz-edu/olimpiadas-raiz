@@ -113,7 +113,10 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
           )}
           <span className="text-xs text-muted-foreground capitalize">{aula.tipo}</span>
           {aula.duracao_minutos && (
-            <span className="text-xs text-muted-foreground">· {aula.duracao_minutos} min</span>
+            <span className="text-xs text-muted-foreground">
+              · {Math.floor(aula.duracao_minutos / 60)}:
+              {String(aula.duracao_minutos % 60).padStart(2, "0")}
+            </span>
           )}
         </div>
         <h1 className="text-xl font-bold text-foreground">{aula.titulo}</h1>

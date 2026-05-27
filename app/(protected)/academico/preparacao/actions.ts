@@ -30,14 +30,14 @@ export async function criarProjeto(_prev: ProjetoState, formData: FormData): Pro
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("preparacao_projeto")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     .insert({
       olimpiada_sigla: sigla,
       nome,
       descricao,
       ano_letivo: ano,
       series_elegiveis: series,
-    } as any);
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   if (error) return { error: error.message };
   revalidatePath(PATH);
@@ -63,13 +63,14 @@ export async function atualizarProjeto(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("preparacao_projeto")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     .update({
       olimpiada_sigla: sigla,
       nome,
       descricao,
       ano_letivo: ano,
       series_elegiveis: series,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
     .eq("id", id);
 
@@ -86,6 +87,21 @@ export async function excluirProjeto(id: string): Promise<void> {
   revalidatePath(PATH);
 }
 
+// ─── Helper: parse MM:SS → segundos ──────────────────────────────────────────
+
+function parseDuracao(raw: string | null): number | null {
+  if (!raw || !raw.trim()) return null;
+  const t = raw.trim();
+  if (t.includes(":")) {
+    const parts = t.split(":");
+    const m = parseInt(parts[0] ?? "0", 10) || 0;
+    const s = parseInt(parts[1] ?? "0", 10) || 0;
+    return m * 60 + Math.min(s, 59);
+  }
+  const n = parseInt(t, 10);
+  return isNaN(n) ? null : n * 60; // fallback: número puro interpretado como minutos
+}
+
 // ─── Aulas ────────────────────────────────────────────────────────────────────
 
 export async function criarAula(
@@ -99,7 +115,7 @@ export async function criarAula(
   const titulo = (formData.get("titulo") as string)?.trim();
   const tipoRaw = formData.get("tipo") as string;
   const dataHora = (formData.get("data_hora") as string) || null;
-  const duracao = Number(formData.get("duracao_minutos")) || null;
+  const duracao = parseDuracao(formData.get("duracao_minutos") as string);
   const link = (formData.get("link_aula") as string)?.trim() || null;
   const polos = (formData.get("polos") as string)?.trim() || null;
   const descricao = (formData.get("descricao") as string)?.trim() || null;
@@ -144,7 +160,7 @@ export async function atualizarAula(
   const titulo = (formData.get("titulo") as string)?.trim();
   const tipoRaw = formData.get("tipo") as string;
   const dataHora = (formData.get("data_hora") as string) || null;
-  const duracao = Number(formData.get("duracao_minutos")) || null;
+  const duracao = parseDuracao(formData.get("duracao_minutos") as string);
   const link = (formData.get("link_aula") as string)?.trim() || null;
   const polos = (formData.get("polos") as string)?.trim() || null;
   const descricao = (formData.get("descricao") as string)?.trim() || null;

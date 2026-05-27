@@ -472,7 +472,13 @@ function AulaCard({ aula }: { aula: AulaRow }) {
         <p className="text-sm font-medium text-foreground">{aula.titulo}</p>
         <p className="text-xs text-muted-foreground">
           {fmtTime(aula.data_hora)}
-          {aula.duracao_minutos && <> · {aula.duracao_minutos} min</>}
+          {aula.duracao_minutos && (
+            <>
+              {" "}
+              · {Math.floor(aula.duracao_minutos / 60)}:
+              {String(aula.duracao_minutos % 60).padStart(2, "0")}
+            </>
+          )}
           {aula.tipo === "online" && aula.link_aula && (
             <>
               {" "}
