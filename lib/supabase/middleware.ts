@@ -30,8 +30,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthPage = request.nextUrl.pathname.startsWith("/login");
+  const isAlunoAuth = request.nextUrl.pathname.startsWith("/aluno/login");
   const isAcceptInvite = request.nextUrl.pathname.startsWith("/aceitar-convite");
-  const isPublicPath = request.nextUrl.pathname === "/" || isAuthPage || isAcceptInvite;
+  const isPublicPath =
+    request.nextUrl.pathname === "/" || isAuthPage || isAlunoAuth || isAcceptInvite;
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
