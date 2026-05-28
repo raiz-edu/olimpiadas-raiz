@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>A Trilha Olímpica</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  background:#000;
+  overflow:hidden;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}
+
+/* Wrapper centers the stage via flexbox */
+#wrapper {
+  width:100vw; height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; background:#000;
+}
+
+/* Stage is 1920x1080, scaled down by JS */
+#stage {
+  width:1920px; height:1080px;
+  flex-shrink:0;
+  transform-origin:center center;
+  background:#09090b;
+  position:relative;
+  overflow:hidden;
+}
+
+/* ===== SLIDES ===== */
+.slide {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:80px 120px;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.45s ease;
+}
+.slide.active { opacity:1; pointer-events:auto; }
+
+/* Animation targets — no default opacity (animation controls it) */
+.e  { } /* fade up */
+.es { } /* scale in */
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(36px); }
+  to   { opacity:1; transform:none; }
+}
+@keyframes scaleIn {
+  from { opacity:0; transform:scale(0.72); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+/* ===== TYPOGRAPHY ===== */
+.hero  { font-size:260px; font-weight:900; line-height:0.9; letter-spacing:-8px; }
+.big   { font-size:96px;  font-weight:800; line-height:1.1; }
+.title { font-size:72px;  font-weight:700; line-height:1.2; }
+.sub   { font-size:48px;  font-weight:400; line-height:1.4; color:#a1a1aa; }
+.body  { font-size:42px;  line-height:1.6; }
+.label { font-size:28px;  font-weight:700; letter-spacing:5px; text-transform:uppercase; color:#52525b; }
+.unum  { font-size:180px; font-weight:900; line-height:0.9; letter-spacing:-4px; }
+.divider { width:100px; height:4px; border-radius:2px; margin:28px auto; }
+
+/* ===== COLORS / GLOWS ===== */
+.gblue   { color:#60a5fa; text-shadow:0 0 50px rgba(96,165,250,.55); }
+.ggold   { color:#f59e0b; text-shadow:0 0 50px rgba(245,158,11,.55); }
+.ggreen  { color:#22c55e; text-shadow:0 0 50px rgba(34,197,94,.55); }
+.gred    { color:#ef4444; text-shadow:0 0 50px rgba(239,68,68,.5); }
+.gpurple { color:#a855f7; text-shadow:0 0 50px rgba(168,85,247,.55); }
+
+/* ===== PILLS ===== */
+.pill { display:inline-block; padding:14px 32px; border-radius:100px; font-size:30px; font-weight:700; border:2px solid; margin:10px; }
+.pn { background:rgba(59,130,246,.12); color:#60a5fa; border-color:#3b82f6; }
+.pi { background:rgba(245,158,11,.12);  color:#fbbf24; border-color:#f59e0b; }
+
+/* ===== CARD ===== */
+.card { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:24px; padding:48px 40px; text-align:center; }
+
+/* ===== BAR ===== */
+.bar-track { height:56px; background:rgba(255,255,255,.07); border-radius:10px; overflow:hidden; position:relative; }
+.bar-bg    { position:absolute; inset:0; background:rgba(59,130,246,.18); }
+.bar-used  { position:absolute; top:0; left:0; height:100%; border-radius:10px; width:0%;
+             transition:width 1.5s cubic-bezier(.4,0,.2,1);
+             display:flex; align-items:center; padding-left:16px;
+             font-size:26px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; }
+
+/* ===== HUD ===== */
+.progress-wrap { position:absolute; bottom:0; left:0; right:0; height:5px; background:rgba(255,255,255,.08); z-index:99; }
+.progress-fill { height:100%; background:#3b82f6; width:0%; }
+.hud-num  { position:absolute; bottom:14px; right:36px; font-size:22px; color:#3f3f46; font-weight:600; z-index:99; }
+.hud-play { position:absolute; top:16px; right:36px; font-size:28px; color:#3f3f46; z-index:99; cursor:pointer; user-select:none; }
+
+.noise {
+  position:absolute; inset:0; pointer-events:none; opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+</style>
+</head>
+<body>
+<div id="wrapper">
+<div id="stage">
+<div class="noise"></div>
+<div class="progress-wrap"><div class="progress-fill" id="pbar"></div></div>
+<div class="hud-num"  id="hnum">1 / 13</div>
+<div class="hud-play" id="hplay">▶</div>
+
+<!-- ===== S1: INTRO ===== -->
+<div class="slide" id="s1" style="background:radial-gradient(ellipse at 30% 35%,#1a0535 0%,#09090b 65%,#00122a 100%)">
+  <div style="text-align:center">
+    <div class="label e" data-d="0" style="color:#a78bfa;letter-spacing:8px;margin-bottom:28px">ESPECIAL · DADOS VERIFICADOS</div>
+    <div class="big  e" data-d="200" style="font-size:112px;color:#fafafa;margin-bottom:20px">🏅 A TRILHA OLÍMPICA</div>
+    <div class="divider e" data-d="400" style="background:linear-gradient(90deg,#a855f7,#3b82f6)"></div>
+    <div style="height:20px"></div>
+    <div class="sub e" data-d="600" style="font-size:52px;max-width:1300px">Como uma medalha pode abrir as portas<br>das melhores universidades do mundo</div>
+    <div style="height:40px"></div>
+    <div class="e" data-d="900" style="font-size:30px;color:#3f3f46;letter-spacing:4px;text-transform:uppercase">Ciclo 2026 · Fontes oficiais verificadas</div>
+  </div>
+</div>
+
+<!-- ===== S2: HOOK ===== -->
+<div class="slide" id="s2" style="background:radial-gradient(ellipse at 70% 40%,#0f1b38 0%,#09090b 70%)">
+  <div style="text-align:center;max-width:1450px">
+    <div class="body e" data-d="0" style="color:#94a3b8;font-size:54px;line-height:1.6">
+      Você se dedicou anos para resolver<br>problemas que <span style="color:#fafafa;font-weight:700">99,9% das pessoas não conseguem.</span>
+    </div>
+    <div style="height:60px"></div>
+    <div class="big e" data-d="400" style="color:#3b82f6;font-size:86px">
+      E se isso bastasse para entrar<br>direto na universidade dos seus sonhos?
+    </div>
+    <div style="height:60px"></div>
+    <div class="e" data-d="800" style="font-size:60px;color:#22c55e;font-weight:800;letter-spacing:2px">
+      Sem vestibular &nbsp;·&nbsp; Sem ENEM.
+    </div>
+  </div>
+</div>
+
+<!-- ===== S3: O NÚMERO ===== -->
+<div class="slide" id="s3" style="background:radial-gradient(ellipse at 50% 50%,#0e2040 0%,#09090b 70%)">
+  <div style="text-align:center">
+    <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:12px">BRASIL · 2026</div>
+    <div class="hero es gblue" data-d="200" id="c-big" style="margin-bottom:8px">0</div>
+    <div class="title e" data-d="500" style="color:#fafafa;font-size:68px">vagas universitárias <span class="ggold" style="font-weight:900">EXCLUSIVAS</span></div>
+    <div class="sub e" data-d="700" style="font-size:46px;margin-top:16px">para medalhistas de olimpíadas do conhecimento</div>
+    <div style="height:44px"></div>
+    <div class="e" data-d="900" style="font-size:32px;color:#52525b">USP · UNICAMP · UNESP · IMPA TECH · UFABC</div>
+  </div>
+</div>
+
+<!-- ===== S4: UNESP ===== -->
+<div class="slide" id="s4" style="background:radial-gradient(ellipse at 20% 80%,#0c2e14 0%,#09090b 60%)">
+  <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
+    <div style="flex-shrink:0;text-align:center;min-width:440px">
+      <div class="label e" data-d="0" style="color:#4ade80;margin-bottom:12px">MAIOR DO BRASIL</div>
+      <div class="e" data-d="0" style="font-size:100px;font-weight:900;color:#22c55e">UNESP</div>
+      <div class="unum es ggreen" data-d="200" id="c-unesp">0</div>
+      <div style="font-size:52px;font-weight:700;color:#fafafa;margin-top:6px">vagas em 2026</div>
+      <div style="height:16px"></div>
+      <div class="e" data-d="400" style="font-size:28px;color:#a1a1aa">Mat · Fís · Quím · Bio · Inf · Astro · Hist</div>
+    </div>
+    <div style="flex:1">
+      <div class="e" data-d="300" style="background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.35);border-radius:20px;padding:36px 44px">
+        <div style="font-size:34px;color:#f87171;font-weight:700;margin-bottom:20px">⚠️ DADO CHOCANTE — Histórico desde 2020</div>
+        <div style="font-size:40px;color:#fafafa;margin-bottom:12px"><strong>863 vagas</strong> ofertadas</div>
+        <div class="bar-track" style="margin-bottom:12px"><div class="bar-bg"></div><div class="bar-used" id="bar-unesp" style="background:#ef4444">137 usadas</div></div>
+        <div style="font-size:32px;color:#71717a">Apenas <strong style="color:#ef4444">137 estudantes</strong> matriculados</div>
+        <div style="margin-top:24px;font-size:80px;font-weight:900;color:#ef4444;text-align:center;text-shadow:0 0 40px rgba(239,68,68,.5)" id="pct-unesp">0%</div>
+        <div style="text-align:center;font-size:30px;color:#71717a;margin-top:-4px">das vagas foram utilizadas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S5: USP ===== -->
+<div class="slide" id="s5" style="background:radial-gradient(ellipse at 80% 20%,#1c1440 0%,#09090b 60%)">
+  <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
+    <div style="flex-shrink:0;text-align:center;min-width:420px">
+      <div class="e" data-d="0" style="font-size:96px;font-weight:900;color:#a855f7">USP</div>
+      <div class="unum es gpurple" data-d="200" id="c-usp">0</div>
+      <div style="font-size:52px;font-weight:700;color:#fafafa;margin-top:6px">vagas em 2026</div>
+      <div style="height:16px"></div>
+      <div class="e" data-d="400" style="font-size:34px;color:#a1a1aa">100+ cursos · 7 campi</div>
+      <div class="e" data-d="500" style="font-size:28px;color:#52525b;margin-top:8px">Inscrição gratuita · Jan/2026</div>
+    </div>
+    <div style="flex:1">
+      <div class="e" data-d="200" style="font-size:36px;color:#a1a1aa;margin-bottom:28px;font-weight:600">Sistema de pontos por nível de medalha:</div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="e" data-d="300" style="display:flex;align-items:center;gap:20px">
+          <div style="width:180px;font-size:32px;color:#a78bfa;text-align:right;font-weight:700">Internacional</div>
+          <div style="display:flex;gap:6px"><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div></div>
+          <div style="font-size:44px;font-weight:900;color:#fafafa">6 pts</div>
+        </div>
+        <div class="e" data-d="450" style="display:flex;align-items:center;gap:20px">
+          <div style="width:180px;font-size:32px;color:#60a5fa;text-align:right;font-weight:700">Nacional</div>
+          <div style="display:flex;gap:6px"><div style="width:52px;height:44px;background:#3b82f6;border-radius:6px"></div><div style="width:52px;height:44px;background:#3b82f6;border-radius:6px"></div><div style="width:52px;height:44px;background:#3b82f6;border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(59,130,246,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(59,130,246,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(59,130,246,.2);border-radius:6px"></div></div>
+          <div style="font-size:44px;font-weight:900;color:#fafafa">3 pts</div>
+        </div>
+        <div class="e" data-d="600" style="display:flex;align-items:center;gap:20px">
+          <div style="width:180px;font-size:32px;color:#71717a;text-align:right;font-weight:700">Estadual</div>
+          <div style="display:flex;gap:6px"><div style="width:52px;height:44px;background:#52525b;border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div></div>
+          <div style="font-size:44px;font-weight:900;color:#fafafa">1 pt</div>
+        </div>
+      </div>
+      <div style="height:44px"></div>
+      <div class="e" data-d="700" style="font-size:34px;color:#71717a">📈 Crescimento: <strong style="color:#fafafa">113</strong> (2019) → <strong style="color:#fafafa">200</strong> (2024) → <strong style="color:#a78bfa">234</strong> (2026)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S6: UNICAMP ===== -->
+<div class="slide" id="s6" style="background:radial-gradient(ellipse at 50% 80%,#1c1400 0%,#09090b 60%)">
+  <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
+    <div style="flex-shrink:0;text-align:center;min-width:420px">
+      <div class="e" data-d="0" style="font-size:88px;font-weight:900;color:#f59e0b">UNICAMP</div>
+      <div class="unum es ggold" data-d="200" id="c-unicamp">0</div>
+      <div style="font-size:52px;font-weight:700;color:#fafafa;margin-top:6px">vagas em 2026</div>
+      <div style="height:16px"></div>
+      <div class="e" data-d="400" style="font-size:34px;color:#a1a1aa">37 cursos · 26+ olimpíadas aceitas</div>
+      <div class="e" data-d="500" style="font-size:28px;color:#52525b;margin-top:8px">Medalhas dos últimos 2 anos</div>
+    </div>
+    <div style="flex:1">
+      <div class="e" data-d="200" style="font-size:36px;color:#fafafa;line-height:2;margin-bottom:36px">IMO · OBM · OBMEP · OBF · OBQ<br>IBO · IPhO · IOI · OBI · e mais 16...</div>
+      <div class="e" data-d="400" style="background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.3);border-radius:20px;padding:36px 44px">
+        <div style="font-size:38px;color:#fafafa;margin-bottom:16px">Em 5 edições: <strong style="color:#fbbf24">564 vagas</strong> abertas</div>
+        <div class="bar-track" style="margin-bottom:12px"><div class="bar-bg"></div><div class="bar-used" id="bar-unicamp" style="background:#f59e0b">267 utilizadas</div></div>
+        <div style="font-size:32px;color:#71717a">Somente <strong style="color:#fbbf24">267</strong> utilizadas</div>
+        <div style="margin-top:24px;font-size:80px;font-weight:900;color:#f59e0b;text-align:center;text-shadow:0 0 40px rgba(245,158,11,.5)" id="pct-unicamp">0%</div>
+        <div style="text-align:center;font-size:30px;color:#71717a;margin-top:-4px">das vagas foram preenchidas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S7: IMPA TECH ===== -->
+<div class="slide" id="s7" style="background:radial-gradient(ellipse at 50% 30%,#002040 0%,#09090b 60%)">
+  <div style="text-align:center;max-width:1600px">
+    <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:14px;font-size:32px">O MAIS EXCLUSIVO DO BRASIL</div>
+    <div class="e" data-d="100" style="font-size:100px;font-weight:900;color:#60a5fa;margin-bottom:36px;text-shadow:0 0 60px rgba(96,165,250,.45)">IMPA TECH</div>
+    <div class="e" data-d="300" style="display:flex;width:100%;max-width:1200px;height:80px;border-radius:16px;overflow:hidden;margin:0 auto 40px">
+      <div style="width:80%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;color:#fff">80% — EXCLUSIVO PARA MEDALHISTAS</div>
+      <div style="width:20%;background:#27272a;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#52525b">20% ENEM</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:1400px;margin:0 auto 36px">
+      <div class="card e" data-d="400" style="border-color:rgba(59,130,246,.3)"><div style="font-size:56px;font-weight:900;color:#60a5fa">80 vagas</div><div style="font-size:28px;color:#a1a1aa;margin-top:10px">exclusivas para medalhistas</div></div>
+      <div class="card e" data-d="550" style="border-color:rgba(34,197,94,.3)"><div style="font-size:56px;font-weight:900;color:#22c55e">100%</div><div style="font-size:28px;color:#a1a1aa;margin-top:10px">GRATUITO</div></div>
+      <div class="card e" data-d="700" style="border-color:rgba(245,158,11,.3)"><div style="font-size:56px;font-weight:900;color:#fbbf24">5</div><div style="font-size:28px;color:#a1a1aa;margin-top:10px">olimpíadas aceitas no nível máximo</div></div>
+    </div>
+    <div class="e" data-d="800" style="font-size:34px;color:#52525b">OBMEP · OBM · OBFEP · OBQ · OBI (nível 3 nacional)</div>
+  </div>
+</div>
+
+<!-- ===== S8: UFABC + IME ===== -->
+<div class="slide" id="s8" style="background:radial-gradient(ellipse at 60% 60%,#1a0f30 0%,#09090b 60%)">
+  <div style="text-align:center;max-width:1600px;width:100%">
+    <div class="label e" data-d="0" style="color:#a78bfa;margin-bottom:36px;font-size:30px">E AINDA TEM MAIS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+      <div class="card e" data-d="200" style="border-color:rgba(168,85,247,.3);padding:56px">
+        <div style="font-size:72px;font-weight:900;color:#a855f7;margin-bottom:20px">UFABC</div>
+        <div style="font-size:34px;color:#fafafa;line-height:1.8">Bacharelado em Ciência & Tecnologia<br>Bacharelado em Ciências & Humanidades<br>Licenciaturas em CN e CH</div>
+        <div style="margin-top:24px;font-size:28px;color:#71717a">Modelo único: entra em ciência, especializa-se depois</div>
+      </div>
+      <div class="card e" data-d="400" style="border-color:rgba(34,197,94,.3);padding:56px">
+        <div style="font-size:72px;font-weight:900;color:#22c55e;margin-bottom:20px">IME-USP</div>
+        <div style="font-size:36px;color:#fafafa;margin-bottom:16px">Programa <strong style="color:#4ade80">iCEM</strong></div>
+        <div style="font-size:32px;color:#a1a1aa;line-height:1.7">Bolsas de iniciação científica<br>para calouros medalhistas<br>OBM · OBMEP · OBI · OBF</div>
+        <div style="margin-top:20px;font-size:28px;color:#52525b">~80 alunos beneficiados por turma</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S9: O ESCÂNDALO ===== -->
+<div class="slide" id="s9" style="background:radial-gradient(ellipse at 50% 50%,#1e0808 0%,#09090b 60%)">
+  <div style="text-align:center;width:100%;max-width:1600px">
+    <div class="e" data-d="0" style="font-size:52px;color:#71717a;margin-bottom:16px">E mesmo com tudo isso...</div>
+    <div class="big es gred" data-d="200" style="font-size:100px;margin-bottom:52px">A MAIORIA DAS VAGAS FICA VAZIA</div>
+    <div style="width:100%;max-width:1500px;margin:0 auto">
+      <div class="e" data-d="400" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
+        <div style="font-size:44px;font-weight:800;color:#22c55e;width:200px;text-align:right">UNESP</div>
+        <div class="bar-track" style="flex:1"><div class="bar-bg"></div><div class="bar-used" id="b2-unesp" style="background:#ef4444">137 de 863</div></div>
+        <div style="font-size:48px;font-weight:900;color:#ef4444;width:120px;text-align:right" id="p2-unesp">0%</div>
+      </div>
+      <div class="e" data-d="600" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
+        <div style="font-size:44px;font-weight:800;color:#fbbf24;width:200px;text-align:right">UNICAMP</div>
+        <div class="bar-track" style="flex:1"><div class="bar-bg"></div><div class="bar-used" id="b2-unicamp" style="background:#f59e0b">267 de 564</div></div>
+        <div style="font-size:48px;font-weight:900;color:#f59e0b;width:120px;text-align:right" id="p2-unicamp">0%</div>
+      </div>
+      <div class="e" data-d="800" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
+        <div style="font-size:44px;font-weight:800;color:#a78bfa;width:200px;text-align:right">USP</div>
+        <div class="bar-track" style="flex:1"><div class="bar-bg"></div><div class="bar-used" id="b2-usp" style="background:#a855f7">30 de 113 (2019)</div></div>
+        <div style="font-size:48px;font-weight:900;color:#a855f7;width:120px;text-align:right" id="p2-usp">0%</div>
+      </div>
+    </div>
+    <div class="e" data-d="1000" style="margin-top:32px;font-size:38px;color:#52525b">Causa: <strong style="color:#fafafa">desconhecimento</strong> e desalinhamento entre vagas e cursos desejados</div>
+  </div>
+</div>
+
+<!-- ===== S10: OLIMPÍADAS ===== -->
+<div class="slide" id="s10" style="background:radial-gradient(ellipse at 30% 70%,#001e34 0%,#09090b 60%)">
+  <div style="text-align:center;width:100%">
+    <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:32px;font-size:30px">OLIMPÍADAS QUE ABREM PORTAS</div>
+    <div class="e" data-d="100" style="font-size:28px;color:#3f3f46;letter-spacing:4px;text-transform:uppercase;margin-bottom:18px">Nacionais</div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:28px">
+      <div class="pill pn e" data-d="150">OBMEP</div><div class="pill pn e" data-d="200">OBM</div><div class="pill pn e" data-d="250">OBF</div><div class="pill pn e" data-d="300">OBQ</div><div class="pill pn e" data-d="350">OBI</div>
+      <div class="pill pn e" data-d="400">OBA</div><div class="pill pn e" data-d="450">ONHB</div><div class="pill pn e" data-d="500">OBFEP</div><div class="pill pn e" data-d="550">OBR</div><div class="pill pn e" data-d="600">OBB</div>
+    </div>
+    <div style="width:60%;margin:8px auto;height:2px;background:rgba(255,255,255,.08)"></div>
+    <div class="e" data-d="700" style="font-size:28px;color:#3f3f46;letter-spacing:4px;text-transform:uppercase;margin:18px 0">Internacionais</div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:36px">
+      <div class="pill pi e" data-d="750">IMO 🌍</div><div class="pill pi e" data-d="800">IPhO 🌍</div><div class="pill pi e" data-d="850">IChO 🌍</div><div class="pill pi e" data-d="900">IOI 🌍</div><div class="pill pi e" data-d="950">IBO 🌍</div><div class="pill pi e" data-d="1000">IOAA 🌍</div>
+    </div>
+    <div class="e" data-d="1100" style="font-size:32px;color:#52525b">Unicamp aceita <strong style="color:#fafafa">26+</strong> olimpíadas · Medalhas internacionais valem <strong style="color:#fbbf24">6× mais</strong> que estaduais</div>
+  </div>
+</div>
+
+<!-- ===== S11: EXTERIOR ===== -->
+<div class="slide" id="s11" style="background:radial-gradient(ellipse at 50% 30%,#001533 0%,#09090b 60%)">
+  <div style="text-align:center;max-width:1600px">
+    <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:24px;font-size:32px">E NO EXTERIOR?</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:44px">
+      <div class="card e" data-d="200" style="padding:40px 24px"><div style="font-size:52px;font-weight:900;color:#fafafa;margin-bottom:10px">MIT</div><div style="font-size:24px;color:#52525b">EUA</div></div>
+      <div class="card e" data-d="350" style="padding:40px 24px"><div style="font-size:42px;font-weight:900;color:#fafafa;margin-bottom:10px">Caltech</div><div style="font-size:24px;color:#52525b">EUA</div></div>
+      <div class="card e" data-d="500" style="padding:40px 24px"><div style="font-size:40px;font-weight:900;color:#fafafa;margin-bottom:10px">Cambridge</div><div style="font-size:24px;color:#52525b">Reino Unido</div></div>
+      <div class="card e" data-d="650" style="padding:40px 24px"><div style="font-size:40px;font-weight:900;color:#fafafa;margin-bottom:10px">ETH Zurich</div><div style="font-size:24px;color:#52525b">Suíça</div></div>
+    </div>
+    <div class="e" data-d="700" style="background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.3);border-radius:20px;padding:44px;margin-bottom:32px">
+      <div style="font-size:40px;font-weight:700;color:#fbbf24;margin-bottom:16px">Sem vagas formais reservadas para brasileiros</div>
+      <div style="font-size:40px;color:#fafafa;line-height:1.6">Mas uma medalha no <strong style="color:#fbbf24">IMO, IPhO ou IOI</strong><br>é diferencial decisivo no processo seletivo holístico</div>
+    </div>
+    <div class="e" data-d="900" style="font-size:34px;color:#52525b">Casos reais de brasileiros admitidos em universidades de elite via desempenho olímpico</div>
+  </div>
+</div>
+
+<!-- ===== S12: LEGISLAÇÃO ===== -->
+<div class="slide" id="s12" style="background:radial-gradient(ellipse at 70% 50%,#0e200e 0%,#09090b 60%)">
+  <div style="text-align:center;max-width:1400px">
+    <div class="label e" data-d="0" style="color:#4ade80;margin-bottom:32px;font-size:32px">O FUTURO</div>
+    <div class="e" data-d="100" style="font-size:92px;font-weight:900;color:#22c55e;margin-bottom:20px;text-shadow:0 0 60px rgba(34,197,94,.35)">PL 3943/23</div>
+    <div class="e" data-d="300" style="font-size:46px;color:#fafafa;margin-bottom:36px">Em tramitação na Câmara dos Deputados</div>
+    <div class="e" data-d="500" style="background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:20px;padding:52px;margin-bottom:36px">
+      <div style="font-size:42px;color:#fafafa;line-height:1.7">Se aprovado: <strong style="color:#4ade80">TODAS</strong> as universidades federais do Brasil<br>serão obrigadas a criar vagas olímpicas.<br><br>Hoje: apenas SP tem programa estruturado<br>Amanhã: <strong style="color:#fafafa">UFMG · UFRJ · UnB · UFRGS · UFPE</strong> e todas as outras</div>
+    </div>
+    <div class="e" data-d="700" style="font-size:34px;color:#52525b">Obrigação: publicar lista de olimpíadas, nº de vagas e sistema de pontuação por edital</div>
+  </div>
+</div>
+
+<!-- ===== S13: CONCLUSÃO ===== -->
+<div class="slide" id="s13" style="background:radial-gradient(ellipse at 50% 50%,#1c1000 0%,#09090b 60%)">
+  <div style="text-align:center;max-width:1400px">
+    <div class="e" data-d="0" style="font-size:54px;color:#71717a;margin-bottom:32px">Se você compete em olimpíadas...</div>
+    <div class="big es ggold" data-d="200" style="font-size:100px;margin-bottom:48px">Seu caminho está aberto.</div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:64px;margin:0 0 48px">
+      <div class="e" data-d="400" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#fbbf24">1.000+</div><div style="font-size:32px;color:#71717a">vagas esperando</div></div>
+      <div style="width:2px;height:120px;background:rgba(255,255,255,.1)"></div>
+      <div class="e" data-d="550" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#60a5fa">5</div><div style="font-size:32px;color:#71717a">universidades de topo</div></div>
+      <div style="width:2px;height:120px;background:rgba(255,255,255,.1)"></div>
+      <div class="e" data-d="700" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#22c55e">0</div><div style="font-size:32px;color:#71717a">vestibulares necessários</div></div>
+    </div>
+    <div class="e" data-d="900" style="font-size:48px;color:#fafafa;font-weight:700">A medalha é o ingresso.</div>
+  </div>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /wrapper -->
+
+<script>
+// ===== SCALE =====
+function scaleStage(){
+  const sc = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  document.getElementById('stage').style.transform = 'scale(' + sc + ')';
+}
+window.addEventListener('resize', scaleStage);
+scaleStage();
+
+// ===== COUNTER =====
+function counter(el, to, ms) {
+  if (!el) return;
+  const t0 = performance.now();
+  (function upd(t) {
+    const p = Math.min((t-t0)/ms, 1);
+    const e = 1 - Math.pow(1-p, 3);
+    el.textContent = Math.round(to*e).toLocaleString('pt-BR') + (to >= 1000 ? '+' : '');
+    if (p < 1) requestAnimationFrame(upd);
+  })(t0);
+}
+function pctAnim(el, to, ms) {
+  if (!el) return;
+  const t0 = performance.now();
+  (function upd(t) {
+    const p = Math.min((t-t0)/ms, 1);
+    el.textContent = Math.round(to * (1 - Math.pow(1-p,3))) + '%';
+    if (p < 1) requestAnimationFrame(upd);
+  })(t0);
+}
+function barAnim(id, pct, delay) {
+  setTimeout(function(){ const e=document.getElementById(id); if(e) e.style.width=pct+'%'; }, delay);
+}
+
+// ===== ENTER CALLBACKS =====
+function onEnter(i) {
+  switch(i) {
+    case 2: setTimeout(function(){ counter(document.getElementById('c-big'), 1000, 2000); }, 400); break;
+    case 3:
+      setTimeout(function(){
+        counter(document.getElementById('c-unesp'), 451, 1400);
+        barAnim('bar-unesp', 16, 1600);
+        setTimeout(function(){ var b=document.getElementById('bar-unesp'); if(b) b.textContent='16%'; }, 3200);
+        setTimeout(function(){ pctAnim(document.getElementById('pct-unesp'), 16, 1200); }, 1800);
+      }, 300); break;
+    case 4: setTimeout(function(){ counter(document.getElementById('c-usp'), 234, 1400); }, 300); break;
+    case 5:
+      setTimeout(function(){
+        counter(document.getElementById('c-unicamp'), 133, 1400);
+        barAnim('bar-unicamp', 47, 1600);
+        setTimeout(function(){ var b=document.getElementById('bar-unicamp'); if(b) b.textContent='47%'; }, 3200);
+        setTimeout(function(){ pctAnim(document.getElementById('pct-unicamp'), 47, 1200); }, 1800);
+      }, 300); break;
+    case 8:
+      setTimeout(function(){
+        barAnim('b2-unesp',   16, 300);
+        barAnim('b2-unicamp', 47, 600);
+        barAnim('b2-usp',     27, 900);
+        setTimeout(function(){ pctAnim(document.getElementById('p2-unesp'),   16, 1200); }, 400);
+        setTimeout(function(){ pctAnim(document.getElementById('p2-unicamp'), 47, 1200); }, 700);
+        setTimeout(function(){ pctAnim(document.getElementById('p2-usp'),     27, 1200); }, 1000);
+      }, 800); break;
+  }
+}
+
+// ===== SHOW SLIDE =====
+const N = 13;
+var cur = 0, paused = false, elapsed = 0, lastT = null;
+var DUR = [5000,5000,6000,7000,7000,6500,7000,5500,8000,6500,7000,5500,6000];
+
+function showSlide(i) {
+  // Deactivate all
+  for (var j = 1; j <= N; j++) {
+    var s = document.getElementById('s'+j);
+    if (!s) continue;
+    s.classList.remove('active');
+    // Reset animations on all animated elements
+    s.querySelectorAll('.e,.es').forEach(function(el) {
+      el.style.animation = 'none';
+      el.style.opacity = '';
+    });
+  }
+
+  // Activate target
+  var target = document.getElementById('s'+(i+1));
+  if (target) {
+    // Apply entrance animations
+    target.querySelectorAll('.e').forEach(function(el) {
+      var d = parseInt(el.dataset.d || 0);
+      el.style.animation = 'fadeUp 0.55s ease ' + d + 'ms both';
+    });
+    target.querySelectorAll('.es').forEach(function(el) {
+      var d = parseInt(el.dataset.d || 0);
+      el.style.animation = 'scaleIn 0.55s cubic-bezier(.34,1.56,.64,1) ' + d + 'ms both';
+    });
+    target.classList.add('active');
+  }
+
+  document.getElementById('hnum').textContent = (i+1) + ' / ' + N;
+  cur = i; elapsed = 0; lastT = null;
+  onEnter(i);
+}
+
+// ===== TICK / PROGRESS =====
+function tick(t) {
+  if (!paused && lastT !== null) elapsed += t - lastT;
+  lastT = t;
+  var dur = DUR[cur];
+  var pct = Math.min(elapsed / dur, 1);
+  document.getElementById('pbar').style.width = (pct * 100) + '%';
+  if (elapsed >= dur) showSlide((cur + 1) % N);
+  requestAnimationFrame(tick);
+}
+
+// ===== CONTROLS =====
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space')      { e.preventDefault(); paused = !paused; document.getElementById('hplay').textContent = paused ? '⏸' : '▶'; }
+  if (e.code === 'ArrowRight') { showSlide(Math.min(cur+1, N-1)); }
+  if (e.code === 'ArrowLeft')  { showSlide(Math.max(cur-1, 0)); }
+});
+document.getElementById('hplay').addEventListener('click', function() {
+  paused = !paused;
+  document.getElementById('hplay').textContent = paused ? '⏸' : '▶';
+});
+
+// ===== INIT =====
+showSlide(0);
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

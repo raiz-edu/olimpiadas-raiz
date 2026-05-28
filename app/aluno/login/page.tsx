@@ -97,9 +97,18 @@ export default async function LoginAlunoPage({
       {/* ── Lado esquerdo: vídeo ───────────────────────────────────────── */}
       <div
         className="relative hidden overflow-hidden lg:block lg:w-1/2"
-        style={{ background: "#0a1628" }}
+        style={{ background: "#09090b" }}
       >
-        {videoSrc && <VideoBackground src={videoSrc} />}
+        {videoSrc ? (
+          <VideoBackground src={videoSrc} />
+        ) : (
+          <iframe
+            src="/trilha-olimpica.html"
+            className="absolute inset-0 h-full w-full"
+            style={{ border: "none", pointerEvents: "none" }}
+            title="A Trilha Olímpica"
+          />
+        )}
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
