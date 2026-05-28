@@ -4,33 +4,69 @@ export const metadata = {
   title: "Acesso do Aluno — Plataforma Olímpica",
 };
 
-export default function LoginAlunoPage() {
+const SLUG_TO_LOGO: Record<string, string> = {
+  americano: "americano",
+  apogeu: "apogeu",
+  "matriz-educacao": "matriz",
+  "qi-bilingue": "qi",
+  uniao: "uniao",
+  unificado: "unificado",
+};
+
+const SLUG_TO_NOME: Record<string, string> = {
+  americano: "Americano",
+  apogeu: "Apogeu",
+  "matriz-educacao": "Matriz Educação",
+  "qi-bilingue": "QI Bilíngue",
+  uniao: "União",
+  unificado: "Unificado",
+};
+
+export default async function LoginAlunoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ marca?: string }>;
+}) {
+  const { marca } = await searchParams;
+  const logoFile = marca ? SLUG_TO_LOGO[marca] : null;
+  const marcaNome = marca ? SLUG_TO_NOME[marca] : null;
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div
-            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-            style={{ background: "rgb(91,184,193)" }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-7 w-7"
-              aria-hidden="true"
+          {logoFile ? (
+            <img
+              src={`/marcas/${logoFile}.png`}
+              alt={marcaNome ?? ""}
+              className="mx-auto mb-4 h-14 w-auto object-contain"
+            />
+          ) : (
+            <div
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+              style={{ background: "rgb(91,184,193)" }}
             >
-              <circle cx="12" cy="8" r="6" />
-              <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-            </svg>
-          </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-7 w-7"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="6" />
+                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+              </svg>
+            </div>
+          )}
           <h1 className="text-xl font-bold text-foreground">Plataforma Olímpica</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Raiz Educação — Área do Aluno</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {marcaNome ? `${marcaNome} — Área do Aluno` : "Raiz Educação — Área do Aluno"}
+          </p>
         </div>
 
         {/* Card */}
