@@ -13,18 +13,18 @@ html, body {
   font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
 }
 
-/* Wrapper centers the stage via flexbox */
+/* Wrapper pins stage to top-center */
 #wrapper {
   width:100vw; height:100vh;
-  display:flex; align-items:center; justify-content:center;
-  overflow:hidden; background:#000;
+  display:flex; align-items:flex-start; justify-content:center;
+  overflow:hidden; background:#09090b;
 }
 
 /* Stage is 1920x1080, scaled down by JS */
 #stage {
   width:1920px; height:1080px;
   flex-shrink:0;
-  transform-origin:center center;
+  transform-origin:top center;
   background:#09090b;
   position:relative;
   overflow:hidden;
@@ -367,7 +367,7 @@ html, body {
 <script>
 // ===== SCALE =====
 function scaleStage(){
-  const sc = Math.max(window.innerWidth/1920, window.innerHeight/1080);
+  const sc = window.innerWidth / 1920;
   document.getElementById('stage').style.transform = 'scale(' + sc + ')';
 }
 window.addEventListener('resize', scaleStage);
