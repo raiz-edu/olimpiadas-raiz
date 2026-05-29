@@ -1,17 +1,46 @@
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { getServerSession } from "@/lib/auth/session";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { UserProvider } from "@/lib/auth/context";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 
+const SLUG_TO_LOGO: Record<string, string> = {
+  americano: "americano",
+  apogeu: "apogeu",
+  "matriz-educacao": "matriz",
+  "qi-bilingue": "qi",
+  uniao: "uniao",
+  unificado: "unificado",
+};
+
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();
   if (!session) redirect("/login");
 
   const { user } = session;
+
+  // Busca a marca do usuário
+  let marcaSlug: string | null = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = createAdminClient() as any;
+    const { data } = await supabase
+      .from("usuario_marca")
+      .select("marca:marca_id(slug)")
+      .eq("usuario_id", user.id)
+      .limit(1)
+      .single();
+    const marca = Array.isArray(data?.marca) ? data.marca[0] : data?.marca;
+    marcaSlug = marca?.slug ?? null;
+  } catch {
+    marcaSlug = null;
+  }
+
+  const logoFile = marcaSlug ? SLUG_TO_LOGO[marcaSlug] : null;
 
   return (
     <UserProvider user={user}>
@@ -33,15 +62,24 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               />
               {/* Separador vertical */}
               <div className="hidden sm:block h-10 w-px bg-border/60 mx-1" />
-              <div className="hidden sm:block">
-                <p
-                  className="font-bold leading-tight"
-                  style={{ fontSize: 22, color: "rgb(91, 184, 193)" }}
-                >
-                  Programa Raiz Olímpica
-                </p>
-                <p className="text-xs text-muted-foreground leading-tight">Raiz Educação</p>
-              </div>
+              {logoFile ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={`/marcas/${logoFile}.png`}
+                  alt={marcaSlug ?? ""}
+                  className="hidden sm:block max-h-16 max-w-[160px] object-contain"
+                />
+              ) : (
+                <div className="hidden sm:block">
+                  <p
+                    className="font-bold leading-tight"
+                    style={{ fontSize: 22, color: "rgb(91, 184, 193)" }}
+                  >
+                    Programa Raiz Olímpica
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-tight">Raiz Educação</p>
+                </div>
+              )}
             </div>
 
             {/* User info + logout */}
