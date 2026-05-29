@@ -125,7 +125,7 @@ export default async function LoginAlunoPage({
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
-      <div className="flex w-1/3 flex-col items-center justify-center bg-background px-6 py-12">
+      <div className="flex w-1/3 flex-col items-center justify-center bg-background px-10 py-12">
         <div className="w-full max-w-sm">
           {/* Header com logo da marca */}
           <div className="mb-8 text-center">
