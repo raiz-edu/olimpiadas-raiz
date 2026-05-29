@@ -21,7 +21,7 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
   return (
     <header
       className="sticky top-0 z-30 border-b"
-      style={{ background: "#cbd5e1", borderColor: "#b0bec5" }}
+      style={{ background: "#94a3b8", borderColor: "#7f8ea3" }}
     >
       <div className="mx-auto flex h-20 max-w-4xl items-center justify-between px-4 sm:px-6">
         <Link href="/aluno/dashboard" className="flex items-center gap-3">
