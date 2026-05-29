@@ -112,10 +112,15 @@ export default async function LoginAlunoPage({
             title="A Trilha Olímpica"
           />
         )}
-        {/* Gradiente de integração com o painel de login */}
+        {/* Vinheta — fades em todas as bordas */}
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 w-32"
-          style={{ background: "linear-gradient(to right, transparent, #0f172a)" }}
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: [
+              "linear-gradient(to right,  #0f172a 0%, transparent 15%, transparent 85%, #0f172a 100%)",
+              "linear-gradient(to bottom, #0f172a 0%, transparent 12%, transparent 88%, #0f172a 100%)",
+            ].join(", "),
+          }}
         />
       </div>
 
