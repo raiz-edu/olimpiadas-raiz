@@ -368,7 +368,8 @@ html, body {
 // ===== SCALE =====
 function scaleStage(){
   const sc = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  document.getElementById('stage').style.transform = 'scale(' + sc + ')';
+  const shift = Math.round(window.innerWidth * 0.12);
+  document.getElementById('stage').style.transform = 'translateX(' + shift + 'px) scale(' + sc + ')';
 }
 window.addEventListener('resize', scaleStage);
 scaleStage();
