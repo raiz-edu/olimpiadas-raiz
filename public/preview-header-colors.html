@@ -2,179 +2,121 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Preview — Cores do Header</title>
+<title>Preview — Cores do Header × 6 Marcas</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#0f172a; font-family:'Segoe UI',Arial,sans-serif; padding:40px 32px; }
 
-h1 { color:#94a3b8; font-size:13px; letter-spacing:4px; text-transform:uppercase; margin-bottom:32px; }
+h1 { color:#94a3b8; font-size:12px; letter-spacing:4px; text-transform:uppercase; margin-bottom:40px; }
 
-.option { margin-bottom:40px; }
-.label  { color:#64748b; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-.num    { color:#38bdf8; font-weight:700; margin-right:8px; }
+.section { margin-bottom:56px; }
+.section-title { color:#38bdf8; font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid rgba(148,163,184,0.15); }
+.num { color:#64748b; margin-right:6px; }
 
-/* ===== HEADER MOCKUP ===== */
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+
+.brand-block {}
+
+.brand-label { color:#475569; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:5px; }
+
 .header {
   display:flex; align-items:center; justify-content:space-between;
-  height:72px; padding:0 40px;
+  height:60px; padding:0 16px;
   border-bottom:1px solid;
-  border-radius:8px;
+  border-radius:6px 6px 0 0;
 }
+.logo { height:40px; max-width:140px; object-fit:contain; }
+.right { display:flex; align-items:center; gap:8px; }
+.nome { font-size:11px; font-weight:500; }
+.btn  { border:1px solid; border-radius:6px; padding:3px 10px; font-size:10px; }
 
-.logo { height:48px; object-fit:contain; }
-
-.right { display:flex; align-items:center; gap:12px; }
-.nome  { font-size:14px; font-weight:500; }
-.btn   {
-  border:1px solid; border-radius:8px;
-  padding:5px 14px; font-size:12px; cursor:pointer;
+.content {
+  background:#162032;
+  border-radius:0 0 6px 6px;
+  padding:10px 16px;
+  display:flex; gap:8px;
 }
+.card { background:#1e293b; border-radius:6px; padding:10px 12px; flex:1; }
+.tag  { background:rgba(91,184,193,0.2); color:#5bb8c1; font-size:9px; font-weight:700; padding:2px 6px; border-radius:100px; display:inline-block; margin-bottom:5px; }
+.ct   { color:#e2e8f0; font-size:10px; font-weight:600; }
+.cb   { color:#475569; font-size:9px; margin-top:2px; }
 
-/* ===== OPÇÃO 1 — Branco com brilho ===== */
-.opt1 {
-  background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 50%, #ffffff 100%);
-  border-color: #dbeafe;
-  box-shadow: 0 2px 12px rgba(147,197,253,0.35), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-.opt1 .nome { color: #1e293b; }
-.opt1 .btn  { border-color: #bfdbfe; color: #3b82f6; background: rgba(219,234,254,0.4); }
+/* ===== OPÇÃO 1 — Branco shimmer ===== */
+.h1 { background:linear-gradient(135deg,#ffffff 0%,#f0f6ff 50%,#ffffff 100%); border-color:#dbeafe; box-shadow:0 2px 10px rgba(147,197,253,0.3),inset 0 1px 0 rgba(255,255,255,0.9); }
+.h1 .nome { color:#1e293b; }
+.h1 .btn  { border-color:#bfdbfe; color:#3b82f6; background:rgba(219,234,254,0.4); }
 
 /* ===== OPÇÃO 2 — Branco puro ===== */
-.opt2 {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-.opt2 .nome { color: #1e293b; }
-.opt2 .btn  { border-color: #cbd5e1; color: #475569; }
+.h2 { background:#ffffff; border-color:#e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.10); }
+.h2 .nome { color:#1e293b; }
+.h2 .btn  { border-color:#cbd5e1; color:#475569; }
 
 /* ===== OPÇÃO 3 — Cinza azulado suave ===== */
-.opt3 {
-  background: #e8edf5;
-  border-color: #c8d2e0;
-}
-.opt3 .nome { color: #1e293b; }
-.opt3 .btn  { border-color: #b0bec5; color: #475569; }
+.h3 { background:#e8edf5; border-color:#c8d2e0; }
+.h3 .nome { color:#1e293b; }
+.h3 .btn  { border-color:#b0bec5; color:#475569; }
 
-/* ===== OPÇÃO 4 — Cinza médio (atual) ===== */
-.opt4 {
-  background: #94a3b8;
-  border-color: #7f8ea3;
-}
-.opt4 .nome { color: #1e293b; }
-.opt4 .btn  { border-color: #64748b; color: #1e293b; }
+/* ===== OPÇÃO 4 — Cinza médio atual ===== */
+.h4 { background:#94a3b8; border-color:#7f8ea3; }
+.h4 .nome { color:#1e293b; }
+.h4 .btn  { border-color:#64748b; color:#1e293b; }
 
-/* ===== OPÇÃO 5 — Vidro escuro (glassmorphism) ===== */
-.opt5 {
-  background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.92) 100%);
-  border-color: rgba(148,163,184,0.2);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-.opt5 .nome { color: #f1f5f9; }
-.opt5 .btn  { border-color: rgba(148,163,184,0.4); color: #94a3b8; }
-
-/* ===== content preview ===== */
-.content {
-  background: #0f172a;
-  border-radius: 0 0 8px 8px;
-  padding: 20px 40px;
-  display: flex; gap: 16px;
-}
-.card {
-  background: #1e293b;
-  border-radius: 8px;
-  padding: 16px;
-  flex: 1;
-}
-.card-tag { background: rgba(91,184,193,0.2); color: #5bb8c1; font-size:10px; font-weight:700; padding:3px 8px; border-radius:100px; display:inline-block; margin-bottom:8px; }
-.card-title { color:#f1f5f9; font-size:13px; font-weight:600; }
-.card-body  { color:#64748b; font-size:11px; margin-top:4px; }
+/* ===== OPÇÃO 5 — Glassmorphism escuro ===== */
+.h5 { background:linear-gradient(135deg,rgba(30,41,59,0.9) 0%,rgba(15,23,42,0.95) 100%); border-color:rgba(148,163,184,0.2); box-shadow:0 2px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05); }
+.h5 .nome { color:#f1f5f9; }
+.h5 .btn  { border-color:rgba(148,163,184,0.35); color:#94a3b8; }
 </style>
 </head>
 <body>
+<h1>Preview — 5 opções de cor × 6 marcas</h1>
 
-<h1>Preview — Cores do Header da Área do Aluno</h1>
+<script>
+const MARCAS = [
+  { slug:'apogeu',          file:'apogeu',    nome:'Aluno Apogeu' },
+  { slug:'matriz-educacao', file:'matriz',    nome:'Aluno Matriz' },
+  { slug:'qi-bilingue',     file:'qi',        nome:'Aluno QI' },
+  { slug:'uniao',           file:'uniao',     nome:'Aluno União' },
+  { slug:'unificado',       file:'unificado', nome:'Aluno Unificado' },
+  { slug:'americano',       file:'americano', nome:'Aluno Americano' },
+];
 
-<!-- OPÇÃO 1 -->
-<div class="option">
-  <div class="label"><span class="num">1</span>Branco com brilho azulado (shimmer)</div>
-  <div class="header opt1">
-    <img class="logo" src="/marcas/uniao.png" alt="União">
-    <div class="right">
-      <span class="nome">Aluno Teste União</span>
-      <button class="btn opt1">Sair</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card"><div class="card-tag">OBMEP MIRIM</div><div class="card-title">Nivelamento para a OBMEP MIRIM</div><div class="card-body">Projeto em 4 aulas · 2026</div></div>
-    <div class="card"><div class="card-tag">OBMEP</div><div class="card-title">Preparação OBMEP 2026</div><div class="card-body">Material de preparação · 2026</div></div>
-  </div>
-</div>
+const OPCOES = [
+  { num:1, label:'Branco com brilho azulado (shimmer)', cls:'h1' },
+  { num:2, label:'Branco puro + sombra',                cls:'h2' },
+  { num:3, label:'Cinza azulado suave (#e8edf5)',        cls:'h3' },
+  { num:4, label:'Cinza médio atual (#94a3b8)',          cls:'h4' },
+  { num:5, label:'Vidro escuro / glassmorphism',         cls:'h5' },
+];
 
-<!-- OPÇÃO 2 -->
-<div class="option">
-  <div class="label"><span class="num">2</span>Branco puro + sombra sutil</div>
-  <div class="header opt2">
-    <img class="logo" src="/marcas/uniao.png" alt="União">
-    <div class="right">
-      <span class="nome">Aluno Teste União</span>
-      <button class="btn opt2">Sair</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card"><div class="card-tag">OBMEP MIRIM</div><div class="card-title">Nivelamento para a OBMEP MIRIM</div><div class="card-body">Projeto em 4 aulas · 2026</div></div>
-    <div class="card"><div class="card-tag">OBMEP</div><div class="card-title">Preparação OBMEP 2026</div><div class="card-body">Material de preparação · 2026</div></div>
-  </div>
-</div>
+const card = () => `
+  <div class="card"><div class="tag">OBMEP</div><div class="ct">Preparação OBMEP 2026</div><div class="cb">2026 · 1 aula</div></div>
+  <div class="card"><div class="tag">OBA</div><div class="ct">Astronomia para a OBA</div><div class="cb">2026 · 2 aulas</div></div>
+`;
 
-<!-- OPÇÃO 3 -->
-<div class="option">
-  <div class="label"><span class="num">3</span>Cinza azulado suave (#e8edf5)</div>
-  <div class="header opt3">
-    <img class="logo" src="/marcas/uniao.png" alt="União">
-    <div class="right">
-      <span class="nome">Aluno Teste União</span>
-      <button class="btn opt3">Sair</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card"><div class="card-tag">OBMEP MIRIM</div><div class="card-title">Nivelamento para a OBMEP MIRIM</div><div class="card-body">Projeto em 4 aulas · 2026</div></div>
-    <div class="card"><div class="card-tag">OBMEP</div><div class="card-title">Preparação OBMEP 2026</div><div class="card-body">Material de preparação · 2026</div></div>
-  </div>
-</div>
+const logoH = (slug) => slug === 'uniao' ? '32px' : '40px';
 
-<!-- OPÇÃO 4 -->
-<div class="option">
-  <div class="label"><span class="num">4</span>Cinza médio atual (#94a3b8)</div>
-  <div class="header opt4">
-    <img class="logo" src="/marcas/uniao.png" alt="União">
-    <div class="right">
-      <span class="nome">Aluno Teste União</span>
-      <button class="btn opt4">Sair</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card"><div class="card-tag">OBMEP MIRIM</div><div class="card-title">Nivelamento para a OBMEP MIRIM</div><div class="card-body">Projeto em 4 aulas · 2026</div></div>
-    <div class="card"><div class="card-tag">OBMEP</div><div class="card-title">Preparação OBMEP 2026</div><div class="card-body">Material de preparação · 2026</div></div>
-  </div>
-</div>
-
-<!-- OPÇÃO 5 -->
-<div class="option">
-  <div class="label"><span class="num">5</span>Vidro escuro / glassmorphism</div>
-  <div class="header opt5">
-    <img class="logo" src="/marcas/uniao.png" alt="União">
-    <div class="right">
-      <span class="nome">Aluno Teste União</span>
-      <button class="btn opt5">Sair</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card"><div class="card-tag">OBMEP MIRIM</div><div class="card-title">Nivelamento para a OBMEP MIRIM</div><div class="card-body">Projeto em 4 aulas · 2026</div></div>
-    <div class="card"><div class="card-tag">OBMEP</div><div class="card-title">Preparação OBMEP 2026</div><div class="card-body">Material de preparação · 2026</div></div>
-  </div>
-</div>
-
+let html = '';
+for (const op of OPCOES) {
+  html += `<div class="section">
+    <div class="section-title"><span class="num">${op.num}</span>${op.label}</div>
+    <div class="grid">`;
+  for (const m of MARCAS) {
+    html += `
+      <div class="brand-block">
+        <div class="brand-label">${m.slug}</div>
+        <div class="header ${op.cls}">
+          <img class="logo" src="/marcas/${m.file}.png" style="height:${logoH(m.slug)}" alt="${m.slug}">
+          <div class="right">
+            <span class="nome">${m.nome}</span>
+            <button class="btn">Sair</button>
+          </div>
+        </div>
+        <div class="content">${card()}</div>
+      </div>`;
+  }
+  html += `</div></div>`;
+}
+document.write(html);
+</script>
 </body>
 </html>
