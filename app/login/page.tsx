@@ -36,7 +36,7 @@ export default async function LoginPage({
       {/* ── Lado esquerdo: apresentação ───────────────────────────────── */}
       <div className="relative w-1/2 overflow-hidden" style={{ background: "#0f172a" }}>
         <iframe
-          src="/trilha-olimpica.html"
+          src="/apresentacao"
           className="absolute inset-0 h-full w-full"
           style={{ border: "none", pointerEvents: "none" }}
           title="A Trilha Olímpica"

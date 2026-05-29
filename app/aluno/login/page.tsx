@@ -100,7 +100,7 @@ export default async function LoginAlunoPage({
           <VideoBackground src={videoSrc} />
         ) : (
           <iframe
-            src="/trilha-olimpica.html"
+            src="/apresentacao"
             className="absolute inset-0 h-full w-full"
             style={{ border: "none", pointerEvents: "none" }}
             title="A Trilha Olímpica"
