@@ -621,6 +621,9 @@ export function CalendarioAcademicoPage({
     if (series.length > 0) p.set("series", series.join(","));
     if (projetos.length > 0) p.set("projetos", projetos.join(","));
     if (meses.length > 0) p.set("meses", meses.map(String).join(","));
+    if (!showFases) p.set("fases", "0");
+    if (!showAulas) p.set("aulas", "0");
+    if (!showSimulados) p.set("simulados", "0");
     return `/api/academico/calendario/doc?${p.toString()}`;
   }
 

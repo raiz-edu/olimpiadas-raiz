@@ -240,6 +240,9 @@ export async function GET(req: NextRequest) {
   const mesesParam = url.searchParams.get("meses") ?? url.searchParams.get("mes") ?? "";
   const mesesList = mesesParam ? mesesParam.split(",").map(Number).filter(Boolean) : [];
   const marcaParam = url.searchParams.get("marca") ?? "";
+  const includeFases = url.searchParams.get("fases") !== "0";
+  const includeAulas = url.searchParams.get("aulas") !== "0";
+  const includeSimulados = url.searchParams.get("simulados") !== "0";
 
   // Determina marca
   let marcaSlug: string | null = null;
@@ -282,6 +285,7 @@ export async function GET(req: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const f of (fasesData ?? []) as any[]) {
+    if (!includeFases) continue; // filtro de visibilidade
     const ol = f.olimpiada;
     if (!ol || ol.ano_letivo !== ano) continue;
     if (projetosList.length > 0) continue; // quando filtrando por projeto, oculta fases
@@ -311,6 +315,9 @@ export async function GET(req: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const a of (aulasData ?? []) as any[]) {
+    // filtros de visibilidade por tipo
+    if (a.tipo === "simulado" && !includeSimulados) continue;
+    if (a.tipo !== "simulado" && !includeAulas) continue;
     const proj = a.projeto;
     if (!proj || proj.ano_letivo !== ano) continue;
     if (projetosList.length > 0 && !projetosList.includes(proj.id)) continue;
