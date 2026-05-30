@@ -7,50 +7,55 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI',Arial,sans-serif; background:#0f172a; color:#e2e8f0; }
 
-/* NAV */
 .nav { background:#fff; border-bottom:1px solid #e2e8f0; height:72px; display:flex; align-items:center; justify-content:space-between; padding:0 40px; box-shadow:0 1px 4px rgba(0,0,0,.1); }
 .nav-logo { height:40px; }
 .nav-user { display:flex; align-items:center; gap:12px; font-size:14px; color:#1e293b; }
 .btn-sair { border:1px solid #cbd5e1; border-radius:8px; padding:4px 14px; font-size:12px; color:#475569; cursor:pointer; background:transparent; }
 
-/* LAYOUT */
 .page { max-width:1024px; margin:0 auto; padding:32px 40px; }
-
-/* TABS / SECTIONS */
 .section-label { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#38bdf8; margin-bottom:20px; }
 
-/* FILTROS */
 .filters { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-bottom:24px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
 .filter-group { display:flex; flex-direction:column; gap:4px; }
 .filter-label { font-size:11px; color:#64748b; font-weight:600; letter-spacing:.5px; }
-select, .select-mock {
+.select-mock {
   background:#0f172a; border:1px solid #334155; border-radius:8px;
   color:#e2e8f0; padding:7px 32px 7px 12px; font-size:13px; cursor:pointer;
-  appearance:none; -webkit-appearance:none;
+  appearance:none; -webkit-appearance:none; min-width:140px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat; background-position:right 10px center; min-width:130px;
+  background-repeat:no-repeat; background-position:right 10px center;
 }
 .btn-filtrar { background:#1d4ed8; color:#fff; border:none; border-radius:8px; padding:8px 20px; font-size:13px; font-weight:600; cursor:pointer; }
 .btn-aleatorio { background:transparent; color:#38bdf8; border:1px solid #1d4ed8; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; }
 
-/* QUESTÃO CARD */
 .questao-card { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:28px; margin-bottom:20px; }
 .questao-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:700; }
+.badge-olimpiada { background:rgba(34,197,94,.15); color:#4ade80; border:1px solid rgba(34,197,94,.3); }
 .badge-nivel { background:rgba(56,189,248,.15); color:#38bdf8; border:1px solid rgba(56,189,248,.3); }
 .badge-fase  { background:rgba(167,139,250,.15); color:#a78bfa; border:1px solid rgba(167,139,250,.3); }
 .badge-ano   { background:rgba(100,116,139,.15); color:#94a3b8; border:1px solid #334155; }
 .badge-assunto { background:rgba(251,191,36,.1); color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
+
 .questao-numero { font-size:12px; color:#64748b; margin-bottom:6px; }
-.questao-enunciado { font-size:16px; line-height:1.7; color:#f1f5f9; margin-bottom:24px; }
+.questao-enunciado { font-size:15px; line-height:1.75; color:#f1f5f9; margin-bottom:20px; }
 .questao-enunciado strong { color:#38bdf8; }
 
-/* ALTERNATIVAS */
+/* Imagem da questão */
+.questao-imagem { margin:16px 0 20px; text-align:center; }
+.questao-imagem img { max-width:100%; border-radius:8px; border:1px solid #334155; background:#0f172a; }
+.img-placeholder {
+  display:inline-flex; align-items:center; justify-content:center; flex-direction:column; gap:8px;
+  width:340px; height:200px; border-radius:8px; border:2px dashed #334155;
+  color:#475569; font-size:13px; background:rgba(15,23,42,.5);
+}
+.img-placeholder svg { opacity:.4; }
+.img-caption { font-size:11px; color:#475569; margin-top:6px; }
+
 .alternativas { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
 .alt {
   display:flex; align-items:center; gap:14px; padding:12px 16px;
-  border:2px solid #334155; border-radius:10px; cursor:pointer;
-  transition:all .15s; background:transparent;
+  border:2px solid #334155; border-radius:10px; cursor:pointer; transition:all .15s;
 }
 .alt:hover { border-color:#38bdf8; background:rgba(56,189,248,.05); }
 .alt.selected-wrong { border-color:#ef4444; background:rgba(239,68,68,.08); }
@@ -58,130 +63,130 @@ select, .select-mock {
 .alt.is-correct { border-color:#22c55e; background:rgba(34,197,94,.06); }
 .alt-letra {
   width:32px; height:32px; border-radius:50%; border:2px solid #475569;
-  display:flex; align-items:center; justify-content:center;
-  font-size:13px; font-weight:700; color:#94a3b8; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#94a3b8; flex-shrink:0;
 }
 .alt.selected-wrong .alt-letra { border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,.15); }
-.alt.selected-right .alt-letra { border-color:#22c55e; color:#22c55e; background:rgba(34,197,94,.15); }
-.alt.is-correct .alt-letra { border-color:#22c55e; color:#22c55e; }
-.alt-texto { font-size:14px; color:#cbd5e1; }
+.alt.selected-right .alt-letra, .alt.is-correct .alt-letra { border-color:#22c55e; color:#22c55e; background:rgba(34,197,94,.15); }
+.alt-texto { font-size:14px; color:#cbd5e1; flex:1; }
 .alt.selected-wrong .alt-texto { color:#fca5a5; }
 .alt.selected-right .alt-texto, .alt.is-correct .alt-texto { color:#86efac; }
 
-/* FEEDBACK */
+/* Alternativa com imagem */
+.alt-img { flex-direction:column; align-items:flex-start; padding:14px 16px; }
+.alt-img .alt-header { display:flex; align-items:center; gap:14px; width:100%; }
+.alt-img .alt-img-content {
+  margin-top:10px; margin-left:46px; padding:10px;
+  background:#0f172a; border-radius:6px; border:1px solid #334155;
+  font-size:12px; color:#64748b; width:200px; height:80px;
+  display:flex; align-items:center; justify-content:center;
+}
+
 .feedback { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; margin-bottom:20px; font-size:14px; font-weight:600; }
 .feedback.wrong { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3); color:#f87171; }
 .feedback.right  { background:rgba(34,197,94,.1);  border:1px solid rgba(34,197,94,.3);  color:#4ade80; }
 
-/* SOLUCAO */
-.solucao { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:16px 20px; margin-bottom:20px; }
-.solucao-label { font-size:11px; font-weight:700; letter-spacing:2px; color:#38bdf8; margin-bottom:8px; text-transform:uppercase; }
-.solucao-texto { font-size:14px; color:#94a3b8; line-height:1.7; }
-.solucao-texto strong { color:#e2e8f0; }
+/* GABARITO */
+.gabarito { background:#0f172a; border:1px solid #334155; border-radius:12px; padding:20px; margin-bottom:20px; }
+.gabarito-header { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.gabarito-title { font-size:12px; font-weight:700; letter-spacing:2px; color:#38bdf8; text-transform:uppercase; }
+.gabarito-resposta { display:flex; align-items:center; gap:10px; background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.3); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:14px; color:#4ade80; font-weight:600; }
+.gabarito-resolucao-label { font-size:11px; font-weight:700; letter-spacing:1px; color:#64748b; text-transform:uppercase; margin-bottom:8px; }
+.gabarito-resolucao { font-size:14px; color:#94a3b8; line-height:1.75; }
+.gabarito-resolucao strong { color:#e2e8f0; }
+.gabarito-img { margin:12px 0; padding:12px; background:#1e293b; border-radius:8px; border:1px solid #334155; text-align:center; font-size:12px; color:#475569; height:120px; display:flex; align-items:center; justify-content:center; }
 
-/* ACTIONS */
 .questao-actions { display:flex; gap:12px; }
-.btn-solucao { background:transparent; border:1px solid #334155; color:#94a3b8; border-radius:8px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
-.btn-solucao:hover { border-color:#38bdf8; color:#38bdf8; }
-.btn-proxima { background:#38bdf8; color:#0f172a; border:none; border-radius:8px; padding:9px 24px; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
-.btn-proxima:hover { background:#7dd3fc; }
+.btn-gabarito { background:transparent; border:1px solid #334155; color:#94a3b8; border-radius:8px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-gabarito.active { border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,.08); }
+.btn-proxima { background:#38bdf8; color:#0f172a; border:none; border-radius:8px; padding:9px 24px; font-size:13px; font-weight:700; cursor:pointer; }
 
-/* PROGRESSO */
 .progress-bar { background:#1e293b; border-radius:100px; height:6px; margin-bottom:6px; }
-.progress-fill { background:linear-gradient(to right,#38bdf8,#818cf8); border-radius:100px; height:100%; transition:width .3s; }
+.progress-fill { background:linear-gradient(to right,#38bdf8,#818cf8); border-radius:100px; height:100%; }
 .progress-label { font-size:12px; color:#64748b; margin-bottom:20px; }
+
+/* INFO BOX imagens */
+.info-box { background:#1e3a5f; border:1px solid #1d4ed8; border-radius:10px; padding:16px 20px; margin-bottom:20px; font-size:13px; color:#93c5fd; line-height:1.6; }
+.info-box strong { color:#dbeafe; }
 
 /* DASHBOARD */
 .dashboard-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
 .stat-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; }
 .stat-value { font-size:36px; font-weight:800; color:#38bdf8; }
-.stat-value.green { color:#4ade80; }
-.stat-value.amber { color:#fbbf24; }
+.stat-value.green { color:#4ade80; } .stat-value.amber { color:#fbbf24; }
 .stat-label { font-size:12px; color:#64748b; margin-top:4px; }
-
 .table-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-bottom:20px; }
 .table-title { font-size:14px; font-weight:600; color:#f1f5f9; margin-bottom:14px; }
 table { width:100%; border-collapse:collapse; }
 th { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#64748b; text-align:left; padding:6px 10px; border-bottom:1px solid #334155; }
-td { font-size:13px; color:#cbd5e1; padding:10px; border-bottom:1px solid #1e293b; }
+td { font-size:13px; color:#cbd5e1; padding:10px; border-bottom:1px solid rgba(51,65,85,.5); }
 tr:last-child td { border-bottom:none; }
-.pct { font-weight:700; }
-.pct.high { color:#4ade80; }
-.pct.mid  { color:#fbbf24; }
-.pct.low  { color:#f87171; }
+.pct.high { color:#4ade80; font-weight:700; } .pct.mid { color:#fbbf24; font-weight:700; } .pct.low { color:#f87171; font-weight:700; }
 .mini-bar { height:4px; border-radius:100px; background:#334155; margin-top:4px; }
 .mini-fill { height:100%; border-radius:100px; }
 .link-revisao { color:#38bdf8; font-size:12px; text-decoration:none; }
-.link-revisao:hover { text-decoration:underline; }
 
-/* TABS PREVIEW */
 .tab-nav { display:flex; gap:4px; margin-bottom:28px; background:#1e293b; border-radius:10px; padding:4px; border:1px solid #334155; width:fit-content; }
 .tab { padding:7px 20px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:#64748b; transition:all .15s; }
 .tab.active { background:#0f172a; color:#38bdf8; box-shadow:0 1px 3px rgba(0,0,0,.3); }
-
-.screen { display:none; }
-.screen.active { display:block; }
-
-.section-divider { border:none; border-top:1px solid #1e293b; margin:32px 0; }
+.screen { display:none; } .screen.active { display:block; }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav">
-  <img class="nav-logo" src="/marcas/qi.png" alt="QI">
-  <div class="nav-user">
-    <span>Aluno Teste QI</span>
-    <button class="btn-sair">Sair</button>
-  </div>
+  <img class="nav-logo" src="/marcas/qi.png" alt="QI" style="height:44px">
+  <div class="nav-user"><span>Aluno Teste QI</span><button class="btn-sair">Sair</button></div>
 </div>
 
 <div class="page">
-
-  <!-- TAB NAV -->
   <div class="tab-nav">
-    <div class="tab active" onclick="showScreen('treino')">Treino</div>
-    <div class="tab" onclick="showScreen('respondida')">Após responder</div>
-    <div class="tab" onclick="showScreen('dashboard')">Dashboard</div>
+    <div class="tab active" onclick="showScreen('treino')">1 · Treino (filtros)</div>
+    <div class="tab" onclick="showScreen('imagem')">2 · Questão com imagem</div>
+    <div class="tab" onclick="showScreen('respondida')">3 · Após responder + Gabarito</div>
+    <div class="tab" onclick="showScreen('dashboard')">4 · Dashboard</div>
   </div>
 
-  <!-- ===== TELA 1: TREINO ===== -->
+  <!-- ===== ABA 1: TREINO ===== -->
   <div id="screen-treino" class="screen active">
-    <div class="section-label">Treino OBMEP — Questões</div>
-
-    <!-- Filtros -->
+    <div class="section-label">Treino — Filtros (com Olimpíada adicionada)</div>
     <div class="filters">
       <div class="filter-group">
+        <span class="filter-label">Olimpíada</span>
+        <select class="select-mock">
+          <option>Todas</option>
+          <option selected>OBMEP</option>
+          <option>OBMEP Mirim</option>
+        </select>
+      </div>
+      <div class="filter-group">
         <span class="filter-label">Nível</span>
-        <select class="select-mock"><option>Todos os níveis</option><option>Mirim</option><option selected>Nível 1</option><option>Nível 2</option><option>Nível 3</option></select>
+        <select class="select-mock"><option>Todos</option><option selected>Nível 1</option><option>Nível 2</option><option>Nível 3</option></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Fase</span>
-        <select class="select-mock"><option>Todas as fases</option><option selected>1ª Fase</option><option>2ª Fase</option></select>
+        <select class="select-mock"><option>Todas</option><option selected>1ª Fase</option><option>2ª Fase</option></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Ano</span>
-        <select class="select-mock"><option>Todos os anos</option><option>2022</option><option selected>2023</option><option>2024</option><option>2025</option></select>
+        <select class="select-mock"><option>Todos</option><option>2022</option><option selected>2023</option><option>2024</option><option>2025</option></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Assunto</span>
-        <select class="select-mock"><option selected>Todos os assuntos</option><option>Aritmética</option><option>Geometria</option><option>Álgebra</option></select>
+        <select class="select-mock"><option selected>Todos</option><option>Aritmética</option><option>Geometria</option><option>Álgebra</option></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Modo</span>
         <select class="select-mock"><option selected>Sequencial</option><option>Aleatório</option></select>
       </div>
       <button class="btn-filtrar">Filtrar</button>
-      <button class="btn-aleatorio">🔀 Aleatório</button>
     </div>
 
-    <!-- Progresso -->
     <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
-    <div class="progress-label">Questão 4 de 12 · 3 respondidas · 2 corretas</div>
+    <div class="progress-label">Questão 4 de 12 &nbsp;·&nbsp; 3 respondidas &nbsp;·&nbsp; 2 corretas</div>
 
-    <!-- Questão -->
     <div class="questao-card">
       <div class="questao-meta">
+        <span class="badge badge-olimpiada">OBMEP</span>
         <span class="badge badge-nivel">Nível 1</span>
         <span class="badge badge-fase">1ª Fase</span>
         <span class="badge badge-ano">2023</span>
@@ -191,7 +196,6 @@ tr:last-child td { border-bottom:none; }
       <div class="questao-enunciado">
         Um retângulo tem perímetro igual a <strong>40 cm</strong>. Se o comprimento é o dobro da largura, qual é a área do retângulo?
       </div>
-
       <div class="alternativas">
         <div class="alt"><div class="alt-letra">A</div><div class="alt-texto">64 cm²</div></div>
         <div class="alt"><div class="alt-letra">B</div><div class="alt-texto">128 cm²</div></div>
@@ -199,162 +203,186 @@ tr:last-child td { border-bottom:none; }
         <div class="alt"><div class="alt-letra">D</div><div class="alt-texto">80 cm²</div></div>
         <div class="alt"><div class="alt-letra">E</div><div class="alt-texto">Nenhuma das anteriores</div></div>
       </div>
-
       <div class="questao-actions">
-        <button class="btn-solucao" disabled style="opacity:.4;cursor:not-allowed">Ver solução</button>
-        <button class="btn-proxima" disabled style="opacity:.4;cursor:not-allowed">Próxima →</button>
+        <button class="btn-gabarito" disabled style="opacity:.35;cursor:not-allowed">Gabarito</button>
+        <button class="btn-proxima" disabled style="opacity:.35;cursor:not-allowed">Próxima →</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== TELA 2: APÓS RESPONDER (ERRADA) ===== -->
-  <div id="screen-respondida" class="screen">
-    <div class="section-label">Treino OBMEP — Após responder</div>
+  <!-- ===== ABA 2: QUESTÃO COM IMAGEM ===== -->
+  <div id="screen-imagem" class="screen">
+    <div class="section-label">Questão com imagem — como funciona</div>
 
-    <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
-    <div class="progress-label">Questão 5 de 12 · 4 respondidas · 2 corretas</div>
+    <div class="info-box">
+      <strong>Como as imagens funcionam:</strong> cada questão pode ter uma imagem no enunciado (figura geométrica, gráfico, tabela). As alternativas também podem ser imagens. O admin faz upload da imagem ao cadastrar a questão — a imagem é salva no <strong>Supabase Storage</strong> e exibida via URL. O aluno vê texto e imagem juntos, assim como no PDF original.
+    </div>
 
     <div class="questao-card">
       <div class="questao-meta">
+        <span class="badge badge-olimpiada">OBMEP</span>
+        <span class="badge badge-nivel">Nível 2</span>
+        <span class="badge badge-fase">1ª Fase</span>
+        <span class="badge badge-ano">2024</span>
+        <span class="badge badge-assunto">Geometria</span>
+      </div>
+      <div class="questao-numero">Questão 7</div>
+
+      <!-- Enunciado com imagem -->
+      <div class="questao-enunciado">
+        Na figura abaixo, o quadrado <strong>ABCD</strong> tem lado 6 cm. Os pontos M e N são os pontos médios dos lados AB e BC, respectivamente. Qual é a área da região sombreada?
+      </div>
+      <div class="questao-imagem">
+        <div class="img-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9l4-4 4 4 4-5 4 5"/><circle cx="8.5" cy="13.5" r="1.5"/></svg>
+          <span>Figura geométrica da questão</span>
+          <span style="font-size:11px;color:#334155">Upload pelo admin → Supabase Storage</span>
+        </div>
+        <div class="img-caption">Figura 1 — Quadrado ABCD com pontos M e N</div>
+      </div>
+
+      <!-- Alternativas texto -->
+      <div class="alternativas">
+        <div class="alt"><div class="alt-letra">A</div><div class="alt-texto">9 cm²</div></div>
+        <div class="alt"><div class="alt-letra">B</div><div class="alt-texto">12 cm²</div></div>
+        <div class="alt"><div class="alt-letra">C</div><div class="alt-texto">13,5 cm²</div></div>
+        <div class="alt"><div class="alt-letra">D</div><div class="alt-texto">15 cm²</div></div>
+        <div class="alt"><div class="alt-letra">E</div><div class="alt-texto">18 cm²</div></div>
+      </div>
+      <div class="questao-actions">
+        <button class="btn-gabarito" disabled style="opacity:.35;cursor:not-allowed">Gabarito</button>
+        <button class="btn-proxima" disabled style="opacity:.35;cursor:not-allowed">Próxima →</button>
+      </div>
+    </div>
+
+    <!-- Alternativas com imagem -->
+    <div class="section-label" style="margin-top:8px">Variação — alternativas que são figuras</div>
+    <div class="info-box">
+      Quando as <strong>alternativas são figuras</strong> (ex: "qual dos gráficos abaixo representa..."), cada alternativa exibe uma imagem abaixo da letra.
+    </div>
+    <div class="questao-card">
+      <div class="questao-meta">
+        <span class="badge badge-olimpiada">OBMEP Mirim</span>
+        <span class="badge badge-nivel">N2</span>
+        <span class="badge badge-fase">2ª Fase</span>
+        <span class="badge badge-ano">2023</span>
+      </div>
+      <div class="questao-numero">Questão 3</div>
+      <div class="questao-enunciado">Qual das figuras abaixo representa um quadrilátero com <strong>exatamente dois eixos de simetria</strong>?</div>
+      <div class="alternativas">
+        <div class="alt alt-img">
+          <div class="alt-header"><div class="alt-letra">A</div><div class="alt-texto">Figura A</div></div>
+          <div class="alt-img-content">[ figura geométrica A ]</div>
+        </div>
+        <div class="alt alt-img">
+          <div class="alt-header"><div class="alt-letra">B</div><div class="alt-texto">Figura B</div></div>
+          <div class="alt-img-content">[ figura geométrica B ]</div>
+        </div>
+        <div class="alt alt-img">
+          <div class="alt-header"><div class="alt-letra">C</div><div class="alt-texto">Figura C</div></div>
+          <div class="alt-img-content">[ figura geométrica C ]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ABA 3: APÓS RESPONDER ===== -->
+  <div id="screen-respondida" class="screen">
+    <div class="section-label">Após responder — botão Gabarito</div>
+
+    <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
+    <div class="progress-label">Questão 5 de 12 &nbsp;·&nbsp; 4 respondidas &nbsp;·&nbsp; 2 corretas</div>
+
+    <!-- Resposta errada + gabarito expandido -->
+    <div class="questao-card">
+      <div class="questao-meta">
+        <span class="badge badge-olimpiada">OBMEP</span>
         <span class="badge badge-nivel">Nível 1</span>
         <span class="badge badge-fase">1ª Fase</span>
         <span class="badge badge-ano">2023</span>
         <span class="badge badge-assunto">Geometria</span>
       </div>
-      <div class="questao-numero">Questão 4</div>
-      <div class="questao-enunciado">
-        Um retângulo tem perímetro igual a <strong>40 cm</strong>. Se o comprimento é o dobro da largura, qual é a área do retângulo?
-      </div>
-
+      <div class="questao-numero">Questão 4 — resposta errada</div>
+      <div class="questao-enunciado">Um retângulo tem perímetro igual a <strong>40 cm</strong>. Se o comprimento é o dobro da largura, qual é a área do retângulo?</div>
       <div class="alternativas">
         <div class="alt selected-wrong"><div class="alt-letra">A</div><div class="alt-texto">64 cm² &nbsp;← sua resposta</div></div>
         <div class="alt"><div class="alt-letra">B</div><div class="alt-texto">128 cm²</div></div>
-        <div class="alt is-correct"><div class="alt-letra">C</div><div class="alt-texto">200 cm² &nbsp;✓ resposta correta</div></div>
+        <div class="alt is-correct"><div class="alt-letra">C</div><div class="alt-texto">200 cm² &nbsp;✓ correta</div></div>
         <div class="alt"><div class="alt-letra">D</div><div class="alt-texto">80 cm²</div></div>
         <div class="alt"><div class="alt-letra">E</div><div class="alt-texto">Nenhuma das anteriores</div></div>
       </div>
+      <div class="feedback wrong">✗ &nbsp;Resposta incorreta.</div>
 
-      <div class="feedback wrong">✗ &nbsp;Resposta incorreta. A alternativa correta é C.</div>
-
-      <!-- Solução expandida -->
-      <div class="solucao">
-        <div class="solucao-label">Solução</div>
-        <div class="solucao-texto">
-          Seja a largura = x e o comprimento = 2x. O perímetro é <strong>2(x + 2x) = 40</strong>, logo <strong>6x = 40</strong>, então <strong>x = 40/6 ≈ 6,67</strong>... aguardando expansão da solução completa pelo professor.
+      <!-- GABARITO EXPANDIDO -->
+      <div class="gabarito">
+        <div class="gabarito-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          <span class="gabarito-title">Gabarito & Resolução</span>
         </div>
+        <div class="gabarito-resposta">✓ &nbsp;Alternativa C — 200 cm²</div>
+        <div class="gabarito-resolucao-label">Resolução</div>
+        <div class="gabarito-resolucao">
+          Seja a largura = <strong>x</strong> e o comprimento = <strong>2x</strong>.<br>
+          Perímetro: 2(x + 2x) = 40 &nbsp;→&nbsp; 6x = 40 &nbsp;→&nbsp; x = 40/6...<br><br>
+          <em>(Resolução completa cadastrada pelo professor, pode incluir imagem abaixo)</em>
+        </div>
+        <div class="gabarito-img">[ imagem da resolução — opcional, upload pelo admin ]</div>
       </div>
 
       <div class="questao-actions">
-        <button class="btn-solucao">Fechar solução</button>
+        <button class="btn-gabarito active">Fechar gabarito</button>
         <button class="btn-proxima">Próxima questão →</button>
       </div>
     </div>
 
-    <!-- Versão com resposta CERTA -->
-    <div class="section-label" style="margin-top:32px">Variação — Resposta correta</div>
+    <!-- Resposta certa -->
+    <div class="section-label" style="margin-top:8px">Variação — resposta correta</div>
     <div class="questao-card">
-      <div class="questao-meta">
-        <span class="badge badge-nivel">Nível 1</span>
-        <span class="badge badge-fase">1ª Fase</span>
-        <span class="badge badge-ano">2023</span>
-      </div>
+      <div class="questao-meta"><span class="badge badge-olimpiada">OBMEP</span><span class="badge badge-nivel">Nível 1</span></div>
       <div class="questao-numero">Questão 5</div>
       <div class="questao-enunciado">Quantos divisores positivos tem o número <strong>120</strong>?</div>
       <div class="alternativas">
         <div class="alt"><div class="alt-letra">A</div><div class="alt-texto">12</div></div>
-        <div class="alt selected-right"><div class="alt-letra">B</div><div class="alt-texto">16 &nbsp;✓ correto!</div></div>
+        <div class="alt selected-right"><div class="alt-letra">B</div><div class="alt-texto">16 &nbsp;✓ sua resposta</div></div>
         <div class="alt"><div class="alt-letra">C</div><div class="alt-texto">8</div></div>
         <div class="alt"><div class="alt-letra">D</div><div class="alt-texto">24</div></div>
       </div>
       <div class="feedback right">✓ &nbsp;Correto! Muito bem!</div>
       <div class="questao-actions">
-        <button class="btn-solucao">Ver solução</button>
+        <button class="btn-gabarito">Gabarito</button>
         <button class="btn-proxima">Próxima questão →</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== TELA 3: DASHBOARD ===== -->
+  <!-- ===== ABA 4: DASHBOARD ===== -->
   <div id="screen-dashboard" class="screen">
     <div class="section-label">Dashboard — Meu Desempenho</div>
-
     <div class="dashboard-grid">
-      <div class="stat-card">
-        <div class="stat-value">47</div>
-        <div class="stat-label">Questões respondidas</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value green">68%</div>
-        <div class="stat-label">Taxa de acerto geral</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value amber">15</div>
-        <div class="stat-label">Questões para revisar</div>
-      </div>
+      <div class="stat-card"><div class="stat-value">47</div><div class="stat-label">Questões respondidas</div></div>
+      <div class="stat-card"><div class="stat-value green">68%</div><div class="stat-label">Taxa de acerto geral</div></div>
+      <div class="stat-card"><div class="stat-value amber">15</div><div class="stat-label">Para revisar</div></div>
     </div>
-
     <div class="table-card">
-      <div class="table-title">Desempenho por Nível</div>
+      <div class="table-title">Por Olimpíada e Nível</div>
       <table>
-        <tr><th>Nível</th><th>Respondidas</th><th>Acertos</th><th>%</th><th></th></tr>
-        <tr>
-          <td>Mirim</td><td>12</td><td>10</td>
-          <td><span class="pct high">83%</span></td>
-          <td><div class="mini-bar"><div class="mini-fill" style="width:83%;background:#4ade80"></div></div></td>
-        </tr>
-        <tr>
-          <td>Nível 1</td><td>20</td><td>14</td>
-          <td><span class="pct mid">70%</span></td>
-          <td><div class="mini-bar"><div class="mini-fill" style="width:70%;background:#fbbf24"></div></div></td>
-        </tr>
-        <tr>
-          <td>Nível 2</td><td>11</td><td>6</td>
-          <td><span class="pct mid">55%</span></td>
-          <td><div class="mini-bar"><div class="mini-fill" style="width:55%;background:#fbbf24"></div></div></td>
-        </tr>
-        <tr>
-          <td>Nível 3</td><td>4</td><td>1</td>
-          <td><span class="pct low">25%</span></td>
-          <td><div class="mini-bar"><div class="mini-fill" style="width:25%;background:#f87171"></div></div></td>
-        </tr>
+        <tr><th>Olimpíada</th><th>Nível</th><th>Respondidas</th><th>Acertos</th><th>%</th><th></th></tr>
+        <tr><td>OBMEP Mirim</td><td>—</td><td>12</td><td>10</td><td><span class="pct high">83%</span></td><td><div class="mini-bar"><div class="mini-fill" style="width:83%;background:#4ade80"></div></div></td></tr>
+        <tr><td>OBMEP</td><td>Nível 1</td><td>20</td><td>14</td><td><span class="pct mid">70%</span></td><td><div class="mini-bar"><div class="mini-fill" style="width:70%;background:#fbbf24"></div></div></td></tr>
+        <tr><td>OBMEP</td><td>Nível 2</td><td>11</td><td>6</td><td><span class="pct mid">55%</span></td><td><div class="mini-bar"><div class="mini-fill" style="width:55%;background:#fbbf24"></div></div></td></tr>
+        <tr><td>OBMEP</td><td>Nível 3</td><td>4</td><td>1</td><td><span class="pct low">25%</span></td><td><div class="mini-bar"><div class="mini-fill" style="width:25%;background:#f87171"></div></div></td></tr>
       </table>
     </div>
-
     <div class="table-card">
-      <div class="table-title">Desempenho por Assunto</div>
+      <div class="table-title">Últimas erradas — clique para revisar</div>
       <table>
-        <tr><th>Assunto</th><th>Respondidas</th><th>Acertos</th><th>%</th></tr>
-        <tr><td>Aritmética</td><td>18</td><td>14</td><td><span class="pct high">78%</span></td></tr>
-        <tr><td>Geometria</td><td>15</td><td>9</td><td><span class="pct mid">60%</span></td></tr>
-        <tr><td>Álgebra</td><td>9</td><td>5</td><td><span class="pct mid">56%</span></td></tr>
-        <tr><td>Combinatória</td><td>5</td><td>4</td><td><span class="pct high">80%</span></td></tr>
-      </table>
-    </div>
-
-    <div class="table-card">
-      <div class="table-title">Últimas questões erradas — clique para revisar</div>
-      <table>
-        <tr><th>Nível</th><th>Fase</th><th>Ano</th><th>Assunto</th><th>Data</th><th></th></tr>
-        <tr>
-          <td>Nível 1</td><td>1ª</td><td>2023</td><td>Geometria</td><td style="color:#64748b;font-size:12px">hoje</td>
-          <td><a class="link-revisao" href="#">Revisar →</a></td>
-        </tr>
-        <tr>
-          <td>Nível 2</td><td>1ª</td><td>2022</td><td>Álgebra</td><td style="color:#64748b;font-size:12px">ontem</td>
-          <td><a class="link-revisao" href="#">Revisar →</a></td>
-        </tr>
-        <tr>
-          <td>Nível 3</td><td>2ª</td><td>2021</td><td>Combinatória</td><td style="color:#64748b;font-size:12px">28/05</td>
-          <td><a class="link-revisao" href="#">Revisar →</a></td>
-        </tr>
-        <tr>
-          <td>Nível 2</td><td>2ª</td><td>2023</td><td>Geometria</td><td style="color:#64748b;font-size:12px">27/05</td>
-          <td><a class="link-revisao" href="#">Revisar →</a></td>
-        </tr>
+        <tr><th>Olimpíada</th><th>Nível</th><th>Fase</th><th>Assunto</th><th>Data</th><th></th></tr>
+        <tr><td>OBMEP</td><td>N1</td><td>1ª</td><td>Geometria</td><td style="color:#64748b;font-size:12px">hoje</td><td><a class="link-revisao" href="#">Revisar →</a></td></tr>
+        <tr><td>OBMEP</td><td>N2</td><td>1ª</td><td>Álgebra</td><td style="color:#64748b;font-size:12px">ontem</td><td><a class="link-revisao" href="#">Revisar →</a></td></tr>
+        <tr><td>OBMEP Mirim</td><td>—</td><td>2ª</td><td>Combinatória</td><td style="color:#64748b;font-size:12px">28/05</td><td><a class="link-revisao" href="#">Revisar →</a></td></tr>
       </table>
     </div>
   </div>
-
 </div>
 
 <script>
