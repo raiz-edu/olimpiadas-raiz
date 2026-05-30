@@ -46,39 +46,49 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     <UserProvider user={user}>
       <div className="flex min-h-screen flex-col">
         {/* Top navbar */}
-        <header className="sticky top-0 z-30 border-b border-border bg-card">
-          <div className="flex h-[88px] items-center justify-between px-4">
-            {/* Logo + hamburger mobile */}
+        <header
+          className="sticky top-0 z-30 border-b"
+          style={{
+            background: "#ffffff",
+            borderColor: "#e2e8f0",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+          }}
+        >
+          <div className="flex h-[88px] items-center justify-between px-6 sm:px-10">
+            {/* Logo */}
             <div className="flex items-center gap-3">
               <MobileNav />
-              <Image
-                src="/logo-raiz.png"
-                alt="Raiz Educação"
-                width={300}
-                height={248}
-                style={{ height: 80, width: "auto" }}
-                className="object-contain"
-                priority
-              />
-              {/* Separador vertical */}
-              <div className="hidden sm:block h-10 w-px bg-border/60 mx-1" />
               {logoFile ? (
+                /* Só a logo da marca — sem Raiz */
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={`/marcas/${logoFile}.png`}
                   alt={marcaSlug ?? ""}
-                  className={`hidden sm:block max-w-[160px] object-contain ${marcaSlug === "uniao" ? "max-h-12" : "max-h-16"}`}
+                  className={`block max-w-[200px] object-contain ${marcaSlug === "uniao" ? "max-h-12" : "max-h-16"}`}
                 />
               ) : (
-                <div className="hidden sm:block">
-                  <p
-                    className="font-bold leading-tight"
-                    style={{ fontSize: 22, color: "rgb(91, 184, 193)" }}
-                  >
-                    Programa Raiz Olímpica
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-tight">Raiz Educação</p>
-                </div>
+                /* Sem marca: exibe logo Raiz + texto */
+                <>
+                  <Image
+                    src="/logo-raiz.png"
+                    alt="Raiz Educação"
+                    width={300}
+                    height={248}
+                    style={{ height: 80, width: "auto" }}
+                    className="object-contain"
+                    priority
+                  />
+                  <div className="hidden sm:block h-10 w-px bg-border/60 mx-1" />
+                  <div className="hidden sm:block">
+                    <p
+                      className="font-bold leading-tight"
+                      style={{ fontSize: 22, color: "rgb(91, 184, 193)" }}
+                    >
+                      Programa Raiz Olímpica
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-tight">Raiz Educação</p>
+                  </div>
+                </>
               )}
             </div>
 
