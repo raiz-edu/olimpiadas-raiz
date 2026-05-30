@@ -64,7 +64,13 @@ export default async function ProtectedLayout({ children }: { children: React.Re
                 <img
                   src={`/marcas/${logoFile}.png`}
                   alt={marcaSlug ?? ""}
-                  className={`block max-w-[200px] object-contain ${marcaSlug === "uniao" ? "max-h-12" : "max-h-16"}`}
+                  className={`block object-contain ${
+                    marcaSlug === "uniao"
+                      ? "max-h-12 max-w-[200px]"
+                      : ["apogeu", "matriz-educacao", "qi-bilingue"].includes(marcaSlug ?? "")
+                        ? "max-h-24 max-w-[280px]"
+                        : "max-h-16 max-w-[200px]"
+                  }`}
                 />
               ) : (
                 /* Sem marca: exibe logo Raiz + texto */
