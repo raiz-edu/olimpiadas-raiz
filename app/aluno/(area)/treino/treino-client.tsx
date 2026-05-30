@@ -29,7 +29,7 @@ export function TreinoClient({
   const [mostrarGabarito, setMostrarGabarito] = useState(false);
 
   const questao = questoes[idx];
-  const alts = altsMap[questao?.id] ?? [];
+  const alts = (questao?.id ? altsMap[questao.id] : undefined) ?? [];
   const total = questoes.length;
 
   const [estado, action, isPending] = useActionState(responderQuestao, null);
