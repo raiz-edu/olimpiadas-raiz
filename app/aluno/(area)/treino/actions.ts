@@ -146,13 +146,14 @@ export async function getDashboardAluno() {
   if (!data) {
     const { data: raw } = await admin
       .from("resposta_aluno")
-      .select("correta, questao:questao_id(olimpiada, nivel, assunto)")
+      .select("questao_id, correta, questao:questao_id(olimpiada, nivel, assunto)")
       .eq("aluno_id", session.aluno.id)
       .order("respondido_em", { ascending: false });
 
     const visto = new Set<string>();
     const deduped = (raw ?? []).filter((r: any) => {
-      const key = r.questao?.id ?? Math.random();
+      // usa questao_id da própria linha — o join não retorna .id
+      const key = r.questao_id as string;
       if (visto.has(key)) return false;
       visto.add(key);
       return true;

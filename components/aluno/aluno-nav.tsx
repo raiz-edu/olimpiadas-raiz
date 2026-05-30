@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { logoutAluno } from "@/app/aluno/login/actions";
 import type { Aluno } from "@/lib/types/database";
 
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, exact }: { href: string; label: string; exact?: boolean }) {
   const pathname = usePathname();
-  const active = pathname.startsWith(href) && (href !== "/aluno/dashboard" || pathname === "/aluno/dashboard");
+  const active = exact
+    ? pathname === href
+    : pathname.startsWith(href) && (href !== "/aluno/dashboard" || pathname === "/aluno/dashboard");
   return (
     <Link
       href={href}
@@ -87,7 +89,8 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
         {/* Links de navegação */}
         <nav className="hidden sm:flex items-center gap-1 ml-4">
           <NavLink href="/aluno/dashboard" label="Projetos" />
-          <NavLink href="/aluno/treino" label="Banco de Questões" />
+          <NavLink href="/aluno/treino" label="Banco de Questões" exact />
+          <NavLink href="/aluno/treino/dashboard" label="Meu Desempenho" />
         </nav>
 
         <div className="flex items-center gap-3 ml-auto">
