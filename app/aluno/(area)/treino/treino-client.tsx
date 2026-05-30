@@ -19,9 +19,9 @@ export function TreinoClient({
   primeiraAlt: Alternativa[];
 }) {
   const [idx, setIdx] = useState(0);
-  const [altsMap, setAltsMap] = useState<Record<string, Alternativa[]>>({
-    [questoes[0]?.id]: primeiraAlt,
-  });
+  const initialAlts: Record<string, Alternativa[]> = {};
+  if (questoes[0]?.id) initialAlts[questoes[0].id] = primeiraAlt;
+  const [altsMap, setAltsMap] = useState<Record<string, Alternativa[]>>(initialAlts);
   const [gabarito, setGabarito] = useState<{
     texto: string | null;
     imagem_url: string | null;
