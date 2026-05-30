@@ -1,8 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { logoutAluno } from "@/app/aluno/login/actions";
 import type { Aluno } from "@/lib/types/database";
+
+function NavLink({ href, label }: { href: string; label: string }) {
+  const pathname = usePathname();
+  const active = pathname.startsWith(href) && (href !== "/aluno/dashboard" || pathname === "/aluno/dashboard");
+  return (
+    <Link
+      href={href}
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${active ? "bg-black/8 text-slate-800" : "text-slate-500 hover:text-slate-800 hover:bg-black/5"}`}
+    >
+      {label}
+    </Link>
+  );
+}
 
 const TEAL = "rgb(91,184,193)";
 
@@ -70,7 +84,13 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
           )}
         </Link>
 
-        <div className="flex items-center gap-3">
+        {/* Links de navegação */}
+        <nav className="hidden sm:flex items-center gap-1 ml-4">
+          <NavLink href="/aluno/dashboard" label="Projetos" />
+          <NavLink href="/aluno/treino" label="Banco de Questões" />
+        </nav>
+
+        <div className="flex items-center gap-3 ml-auto">
           <span className="hidden text-right sm:block">
             <p className="text-sm font-medium leading-tight" style={{ color: "#1e293b" }}>
               {aluno.nome}

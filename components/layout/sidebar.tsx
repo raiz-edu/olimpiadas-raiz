@@ -209,6 +209,12 @@ function SidebarContent() {
           >
             Calendário
           </SubItem>
+          <SubItem
+            active={pathname.startsWith("/academico/banco-questoes")}
+            onClick={() => go("/academico/banco-questoes")}
+          >
+            Banco de Questões
+          </SubItem>
         </>
       )}
 

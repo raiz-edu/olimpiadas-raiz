@@ -15,6 +15,8 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 // ---------------------------------------------------------------------------
 
 export type ClassificacaoOlimpiada = "obrigatoria" | "facultativa";
+export type OlimpiadaQuestao = "obmep_mirim" | "obmep";
+export type TipoQuestao = "multipla_escolha" | "aberta";
 export type StatusInscricao = "pendente" | "confirmada" | "cancelada";
 export type TipoResultado =
   | "aprovado"
@@ -657,6 +659,132 @@ export type Database = {
         };
         Relationships: [];
       };
+      questao: {
+        Row: {
+          id: string;
+          olimpiada: OlimpiadaQuestao;
+          nivel: string | null;
+          fase: number;
+          ano: number;
+          numero: number;
+          enunciado: string;
+          imagem_url: string | null;
+          assunto: string | null;
+          tipo: TipoQuestao;
+          ativo: boolean;
+          video_url: string | null;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          olimpiada: OlimpiadaQuestao;
+          nivel?: string | null;
+          fase: number;
+          ano: number;
+          numero: number;
+          enunciado: string;
+          imagem_url?: string | null;
+          assunto?: string | null;
+          tipo?: TipoQuestao;
+          ativo?: boolean;
+          video_url?: string | null;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          olimpiada?: OlimpiadaQuestao;
+          nivel?: string | null;
+          fase?: number;
+          ano?: number;
+          numero?: number;
+          enunciado?: string;
+          imagem_url?: string | null;
+          assunto?: string | null;
+          tipo?: TipoQuestao;
+          ativo?: boolean;
+          video_url?: string | null;
+          criado_em?: string;
+        };
+        Relationships: [];
+      };
+      alternativa: {
+        Row: {
+          id: string;
+          questao_id: string;
+          letra: string;
+          texto: string | null;
+          imagem_url: string | null;
+          correta: boolean;
+        };
+        Insert: {
+          id?: string;
+          questao_id: string;
+          letra: string;
+          texto?: string | null;
+          imagem_url?: string | null;
+          correta?: boolean;
+        };
+        Update: {
+          id?: string;
+          questao_id?: string;
+          letra?: string;
+          texto?: string | null;
+          imagem_url?: string | null;
+          correta?: boolean;
+        };
+        Relationships: [];
+      };
+      solucao: {
+        Row: {
+          id: string;
+          questao_id: string;
+          texto: string | null;
+          imagem_url: string | null;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          questao_id: string;
+          texto?: string | null;
+          imagem_url?: string | null;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          questao_id?: string;
+          texto?: string | null;
+          imagem_url?: string | null;
+          criado_em?: string;
+        };
+        Relationships: [];
+      };
+      resposta_aluno: {
+        Row: {
+          id: string;
+          aluno_id: string;
+          questao_id: string;
+          alternativa_id: string | null;
+          correta: boolean;
+          respondido_em: string;
+        };
+        Insert: {
+          id?: string;
+          aluno_id: string;
+          questao_id: string;
+          alternativa_id?: string | null;
+          correta: boolean;
+          respondido_em?: string;
+        };
+        Update: {
+          id?: string;
+          aluno_id?: string;
+          questao_id?: string;
+          alternativa_id?: string | null;
+          correta?: boolean;
+          respondido_em?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_dashboard_inscricoes: {
@@ -779,6 +907,10 @@ export type Convite = Tables<"convite">;
 export type DashboardInscricao = Views<"v_dashboard_inscricoes">;
 export type PreparacaoProjeto = Tables<"preparacao_projeto">;
 export type PreparacaoAula = Tables<"preparacao_aula">;
+export type Questao = Tables<"questao">;
+export type Alternativa = Tables<"alternativa">;
+export type Solucao = Tables<"solucao">;
+export type RespostaAluno = Tables<"resposta_aluno">;
 export type PreparacaoMaterial = Tables<"preparacao_material">;
 export type AlunoProgresso = Tables<"aluno_progresso">;
 export type MetaMarca = Tables<"meta_marca">;

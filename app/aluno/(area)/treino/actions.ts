@@ -1,0 +1,212 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getStudentSession } from "@/lib/auth/student-session";
+
+// ─── Questões para treino ────────────────────────────────────────────────────
+
+export async function getQuestoesTreino(filtros: {
+  olimpiada?: string;
+  nivel?: string;
+  fase?: number;
+  ano?: number;
+  assunto?: string;
+  modo?: "sequencial" | "aleatorio";
+  limit?: number;
+}) {
+  const session = await getStudentSession();
+  if (!session) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+
+  let query = supabase
+    .from("questao")
+    .select("id, olimpiada, nivel, fase, ano, numero, enunciado, imagem_url, assunto, tipo, video_url")
+    .eq("ativo", true);
+
+  if (filtros.olimpiada) query = query.eq("olimpiada", filtros.olimpiada);
+  if (filtros.nivel) query = query.eq("nivel", filtros.nivel);
+  if (filtros.fase) query = query.eq("fase", filtros.fase);
+  if (filtros.ano) query = query.eq("ano", filtros.ano);
+  if (filtros.assunto) query = query.ilike("assunto", `%${filtros.assunto}%`);
+
+  if (filtros.modo === "aleatorio") {
+    // Supabase não suporta RANDOM() nativamente — busca tudo e embaralha no servidor
+    const { data } = await query.limit(200);
+    const lista = data ?? [];
+    for (let i = lista.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [lista[i], lista[j]] = [lista[j], lista[i]];
+    }
+    return lista.slice(0, filtros.limit ?? 20);
+  }
+
+  query = query.order("olimpiada").order("fase").order("ano").order("numero");
+  const { data } = await query.limit(filtros.limit ?? 20);
+  return data ?? [];
+}
+
+export async function getAlternativasQuestao(questaoId: string) {
+  const session = await getStudentSession();
+  if (!session) return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+  // Retorna apenas id, letra e texto — NÃO retorna "correta" para o client
+  const { data } = await supabase
+    .from("alternativa")
+    .select("id, letra, texto, imagem_url")
+    .eq("questao_id", questaoId)
+    .order("letra");
+  return data ?? [];
+}
+
+// ─── Responder questão ───────────────────────────────────────────────────────
+
+export type RespostaState = { correta: boolean; alternativa_correta_id: string | null } | { error: string } | null;
+
+export async function responderQuestao(_prev: RespostaState, formData: FormData): Promise<RespostaState> {
+  const session = await getStudentSession();
+  if (!session) return { error: "Não autenticado" };
+
+  const questao_id = formData.get("questao_id") as string;
+  const alternativa_id = formData.get("alternativa_id") as string;
+
+  if (!questao_id || !alternativa_id) return { error: "Dados inválidos" };
+
+  // Verifica resposta NO SERVIDOR via adminClient — campo "correta" nunca vai ao client
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { data: alt } = await admin
+    .from("alternativa")
+    .select("correta, questao_id")
+    .eq("id", alternativa_id)
+    .single();
+
+  if (!alt || alt.questao_id !== questao_id) return { error: "Alternativa inválida" };
+
+  const correta: boolean = alt.correta === true;
+
+  // Busca alternativa correta para exibir no gabarito
+  const { data: altCorreta } = await admin
+    .from("alternativa")
+    .select("id")
+    .eq("questao_id", questao_id)
+    .eq("correta", true)
+    .single();
+
+  // Registra resposta
+  await admin.from("resposta_aluno").insert({
+    aluno_id: session.aluno.id,
+    questao_id,
+    alternativa_id,
+    correta,
+  });
+
+  return { correta, alternativa_correta_id: altCorreta?.id ?? null };
+}
+
+// ─── Solução (revelada apenas após responder) ────────────────────────────────
+
+export async function getSolucaoQuestao(questaoId: string) {
+  const session = await getStudentSession();
+  if (!session) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { data } = await admin
+    .from("solucao")
+    .select("texto, imagem_url")
+    .eq("questao_id", questaoId)
+    .maybeSingle();
+  return data;
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+
+export async function getDashboardAluno() {
+  const session = await getStudentSession();
+  if (!session) return { por_olimpiada: [], total: 0, acertos: 0 };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+
+  // Usa DISTINCT ON para contar apenas a última tentativa por questão
+  const { data } = await admin.rpc("dashboard_aluno_treino", { p_aluno_id: session.aluno.id }).maybeSingle();
+
+  // Fallback: query direta se a função RPC não existir ainda
+  if (!data) {
+    const { data: raw } = await admin
+      .from("resposta_aluno")
+      .select("correta, questao:questao_id(olimpiada, nivel, assunto)")
+      .eq("aluno_id", session.aluno.id)
+      .order("respondido_em", { ascending: false });
+
+    const visto = new Set<string>();
+    const deduped = (raw ?? []).filter((r: any) => {
+      const key = r.questao?.id ?? Math.random();
+      if (visto.has(key)) return false;
+      visto.add(key);
+      return true;
+    });
+
+    const total = deduped.length;
+    const acertos = deduped.filter((r: any) => r.correta).length;
+
+    const mapaOlimpiada: Record<string, { total: number; acertos: number }> = {};
+    for (const r of deduped) {
+      const key = r.questao?.olimpiada ?? "?";
+      if (!mapaOlimpiada[key]) mapaOlimpiada[key] = { total: 0, acertos: 0 };
+      mapaOlimpiada[key].total++;
+      if (r.correta) mapaOlimpiada[key].acertos++;
+    }
+
+    return {
+      total,
+      acertos,
+      por_olimpiada: Object.entries(mapaOlimpiada).map(([olimpiada, v]) => ({ olimpiada, ...v })),
+    };
+  }
+
+  return data;
+}
+
+export async function getUltimasErradas(limit = 10) {
+  const session = await getStudentSession();
+  if (!session) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { data } = await admin
+    .from("resposta_aluno")
+    .select("questao_id, respondido_em, questao:questao_id(olimpiada, nivel, fase, ano, numero, assunto)")
+    .eq("aluno_id", session.aluno.id)
+    .eq("correta", false)
+    .order("respondido_em", { ascending: false })
+    .limit(limit * 3); // busca extra para deduplicar
+
+  const visto = new Set<string>();
+  const deduped = (data ?? []).filter((r: any) => {
+    if (visto.has(r.questao_id)) return false;
+    visto.add(r.questao_id);
+    return true;
+  });
+
+  return deduped.slice(0, limit);
+}
+
+export async function getRespostaAluno(questaoId: string) {
+  const session = await getStudentSession();
+  if (!session) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { data } = await admin
+    .from("resposta_aluno")
+    .select("correta, alternativa_id")
+    .eq("aluno_id", session.aluno.id)
+    .eq("questao_id", questaoId)
+    .order("respondido_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}

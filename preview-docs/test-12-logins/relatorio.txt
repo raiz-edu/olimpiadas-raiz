@@ -1,0 +1,12 @@
+✅ OK  [diretor] apogeu — diretor.apogeu@olimpiadas.teste
+✅ OK  [diretor] matriz-educacao — diretor.matriz-educacao@olimpiadas.teste
+✅ OK  [diretor] qi-bilingue — diretor.qi-bilingue@olimpiadas.teste
+✅ OK  [diretor] uniao — diretor.uniao@olimpiadas.teste
+✅ OK  [diretor] unificado — diretor.unificado@olimpiadas.teste
+✅ OK  [diretor] americano — diretor.americano@olimpiadas.teste
+✅ OK  [aluno] apogeu — aluno.apogeu@olimpiadas.teste
+✅ OK  [aluno] matriz-educacao — aluno.matriz-educacao@olimpiadas.teste
+✅ OK  [aluno] qi-bilingue — aluno.qi-bilingue@olimpiadas.teste
+✅ OK  [aluno] uniao — aluno.uniao@olimpiadas.teste
+✅ OK  [aluno] unificado — aluno.unificado@olimpiadas.teste
+✅ OK  [aluno] americano — aluno.americano@olimpiadas.teste

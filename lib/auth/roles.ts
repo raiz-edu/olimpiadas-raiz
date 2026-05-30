@@ -10,7 +10,8 @@ export type Resource =
   | "resultado"
   | "audit_log"
   | "convite"
-  | "usuario";
+  | "usuario"
+  | "questao";
 
 export type Action = "create" | "read" | "update" | "delete" | "export";
 
@@ -49,6 +50,10 @@ export const ADMIN_MARCA_EXTRA = perms(
 
 export const ROLE_PERMISSIONS: RolePermissions = {
   raiz: perms(
+    "questao:create",
+    "questao:read",
+    "questao:update",
+    "questao:delete",
     "marca:create",
     "marca:read",
     "marca:update",
