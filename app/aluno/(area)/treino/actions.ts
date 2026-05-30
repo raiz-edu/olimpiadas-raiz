@@ -133,51 +133,62 @@ export async function getSolucaoQuestao(questaoId: string) {
 
 export async function getDashboardAluno() {
   const session = await getStudentSession();
-  if (!session) return { por_olimpiada: [], total: 0, acertos: 0 };
+  if (!session) return { por_olimpiada: [], por_assunto: [], total: 0, acertos: 0 };
 
   const admin = createAdminClient() as any;
 
-  // Usa DISTINCT ON para contar apenas a última tentativa por questão
-  const { data } = await admin
-    .rpc("dashboard_aluno_treino", { p_aluno_id: session.aluno.id })
-    .maybeSingle();
+  const { data: raw } = await admin
+    .from("resposta_aluno")
+    .select("questao_id, correta, questao:questao_id(olimpiada, nivel, assunto)")
+    .eq("aluno_id", session.aluno.id)
+    .order("respondido_em", { ascending: false });
 
-  // Fallback: query direta se a função RPC não existir ainda
-  if (!data) {
-    const { data: raw } = await admin
-      .from("resposta_aluno")
-      .select("questao_id, correta, questao:questao_id(olimpiada, nivel, assunto)")
-      .eq("aluno_id", session.aluno.id)
-      .order("respondido_em", { ascending: false });
+  // Deduplica: conta apenas a última tentativa por questão
+  const visto = new Set<string>();
+  const deduped = (raw ?? []).filter((r: any) => {
+    const key = r.questao_id as string;
+    if (visto.has(key)) return false;
+    visto.add(key);
+    return true;
+  });
 
-    const visto = new Set<string>();
-    const deduped = (raw ?? []).filter((r: any) => {
-      // usa questao_id da própria linha — o join não retorna .id
-      const key = r.questao_id as string;
-      if (visto.has(key)) return false;
-      visto.add(key);
-      return true;
-    });
+  const total = deduped.length;
+  const acertos = deduped.filter((r: any) => r.correta).length;
 
-    const total = deduped.length;
-    const acertos = deduped.filter((r: any) => r.correta).length;
-
-    const mapaOlimpiada: Record<string, { total: number; acertos: number }> = {};
-    for (const r of deduped) {
-      const key = r.questao?.olimpiada ?? "?";
-      if (!mapaOlimpiada[key]) mapaOlimpiada[key] = { total: 0, acertos: 0 };
-      mapaOlimpiada[key].total++;
-      if (r.correta) mapaOlimpiada[key].acertos++;
-    }
-
-    return {
-      total,
-      acertos,
-      por_olimpiada: Object.entries(mapaOlimpiada).map(([olimpiada, v]) => ({ olimpiada, ...v })),
-    };
+  // Agrega por olimpíada
+  const mapaOlimpiada: Record<string, { total: number; acertos: number }> = {};
+  for (const r of deduped) {
+    const key = r.questao?.olimpiada ?? "?";
+    if (!mapaOlimpiada[key]) mapaOlimpiada[key] = { total: 0, acertos: 0 };
+    mapaOlimpiada[key].total++;
+    if (r.correta) mapaOlimpiada[key].acertos++;
   }
 
-  return data;
+  // Agrega por assunto — base para o aluno guiar os estudos
+  const mapaAssunto: Record<string, { total: number; acertos: number }> = {};
+  for (const r of deduped) {
+    const key = r.questao?.assunto ?? "Sem assunto";
+    if (!mapaAssunto[key]) mapaAssunto[key] = { total: 0, acertos: 0 };
+    mapaAssunto[key].total++;
+    if (r.correta) mapaAssunto[key].acertos++;
+  }
+
+  // Ordena por % de acerto crescente (assuntos mais fracos primeiro)
+  const por_assunto = Object.entries(mapaAssunto)
+    .map(([assunto, v]) => ({
+      assunto,
+      total: v.total,
+      acertos: v.acertos,
+      erros: v.total - v.acertos,
+    }))
+    .sort((a, b) => a.acertos / a.total - b.acertos / b.total);
+
+  return {
+    total,
+    acertos,
+    por_olimpiada: Object.entries(mapaOlimpiada).map(([olimpiada, v]) => ({ olimpiada, ...v })),
+    por_assunto,
+  };
 }
 
 export async function getUltimasErradas(limit = 10) {
