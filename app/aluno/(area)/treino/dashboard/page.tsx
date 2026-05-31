@@ -57,7 +57,7 @@ export default async function TreinoDashboardPage() {
       ) : (
         <>
           {/* Resumo geral */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl border border-border bg-card p-4 text-center">
               <div className="text-3xl font-black text-foreground">{total}</div>
               <div className="text-xs text-muted-foreground mt-1">Respondidas</div>
@@ -94,7 +94,7 @@ export default async function TreinoDashboardPage() {
                   const cor = pctColor(pA);
                   return (
                     <div key={row.assunto} className="px-5 py-4">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-2 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-foreground">{row.assunto}</span>
                         <div className="flex items-center gap-3 text-xs">
                           <span className="text-muted-foreground">
@@ -135,35 +135,43 @@ export default async function TreinoDashboardPage() {
               <div className="px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground">Por Olimpíada</h2>
               </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs text-muted-foreground border-b border-border">
-                    <th className="px-5 py-3 text-left font-semibold">Olimpíada</th>
-                    <th className="px-5 py-3 text-right font-semibold">Questões</th>
-                    <th className="px-5 py-3 text-right font-semibold text-emerald-400">Acerto</th>
-                    <th className="px-5 py-3 text-right font-semibold text-red-400">Erro</th>
-                    <th className="px-5 py-3 w-24"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {por_olimpiada.map((row: any) => {
-                    const pA = row.total > 0 ? Math.round((row.acertos / row.total) * 100) : 0;
-                    return (
-                      <tr key={row.olimpiada} className="border-b border-border/40">
-                        <td className="px-5 py-3 font-medium">
-                          {OLIMPIADA_LABEL[row.olimpiada] ?? row.olimpiada}
-                        </td>
-                        <td className="px-5 py-3 text-right text-muted-foreground">{row.total}</td>
-                        <td className="px-5 py-3 text-right font-bold text-emerald-400">{pA}%</td>
-                        <td className="px-5 py-3 text-right font-bold text-red-400">{100 - pA}%</td>
-                        <td className="px-5 py-3">
-                          <PctBar pct={pA} color={pctColor(pA)} />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[380px] text-sm">
+                  <thead>
+                    <tr className="text-xs text-muted-foreground border-b border-border">
+                      <th className="px-5 py-3 text-left font-semibold">Olimpíada</th>
+                      <th className="px-5 py-3 text-right font-semibold">Questões</th>
+                      <th className="px-5 py-3 text-right font-semibold text-emerald-400">
+                        Acerto
+                      </th>
+                      <th className="px-5 py-3 text-right font-semibold text-red-400">Erro</th>
+                      <th className="px-5 py-3 w-24"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {por_olimpiada.map((row: any) => {
+                      const pA = row.total > 0 ? Math.round((row.acertos / row.total) * 100) : 0;
+                      return (
+                        <tr key={row.olimpiada} className="border-b border-border/40">
+                          <td className="px-5 py-3 font-medium">
+                            {OLIMPIADA_LABEL[row.olimpiada] ?? row.olimpiada}
+                          </td>
+                          <td className="px-5 py-3 text-right text-muted-foreground">
+                            {row.total}
+                          </td>
+                          <td className="px-5 py-3 text-right font-bold text-emerald-400">{pA}%</td>
+                          <td className="px-5 py-3 text-right font-bold text-red-400">
+                            {100 - pA}%
+                          </td>
+                          <td className="px-5 py-3">
+                            <PctBar pct={pA} color={pctColor(pA)} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -173,40 +181,46 @@ export default async function TreinoDashboardPage() {
               <div className="px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground">Questões para revisar</h2>
               </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs text-muted-foreground border-b border-border">
-                    <th className="px-5 py-3 text-left font-semibold">Olimpíada</th>
-                    <th className="px-5 py-3 text-left font-semibold">Fase · Ano</th>
-                    <th className="px-5 py-3 text-left font-semibold">Assunto</th>
-                    <th className="px-5 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {erradas.map((r: any) => (
-                    <tr key={r.questao_id} className="border-b border-border/40">
-                      <td className="px-5 py-3">
-                        {OLIMPIADA_LABEL[r.questao?.olimpiada] ?? r.questao?.olimpiada}
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {r.questao?.fase}ª Fase · {r.questao?.ano}
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {r.questao?.assunto ?? "—"}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <Link
-                          href={`/aluno/treino/${r.questao_id}`}
-                          className="text-xs font-semibold"
-                          style={{ color: TEAL }}
-                        >
-                          Revisar →
-                        </Link>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[380px] text-sm">
+                  <thead>
+                    <tr className="text-xs text-muted-foreground border-b border-border">
+                      <th className="px-5 py-3 text-left font-semibold">Olimpíada</th>
+                      <th className="px-5 py-3 text-left font-semibold hidden sm:table-cell">
+                        Fase · Ano
+                      </th>
+                      <th className="px-5 py-3 text-left font-semibold hidden sm:table-cell">
+                        Assunto
+                      </th>
+                      <th className="px-5 py-3"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {erradas.map((r: any) => (
+                      <tr key={r.questao_id} className="border-b border-border/40">
+                        <td className="px-5 py-3">
+                          {OLIMPIADA_LABEL[r.questao?.olimpiada] ?? r.questao?.olimpiada}
+                        </td>
+                        <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">
+                          {r.questao?.fase}ª Fase · {r.questao?.ano}
+                        </td>
+                        <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">
+                          {r.questao?.assunto ?? "—"}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <Link
+                            href={`/aluno/treino/${r.questao_id}`}
+                            className="text-xs font-semibold"
+                            style={{ color: TEAL }}
+                          >
+                            Revisar →
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>

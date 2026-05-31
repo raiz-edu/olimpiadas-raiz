@@ -1,11 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAluno } from "@/app/aluno/login/actions";
 import type { Aluno } from "@/lib/types/database";
 
-function NavLink({ href, label, exact }: { href: string; label: string; exact?: boolean }) {
+/* ── Desktop nav link ─────────────────────────────────────────────────────── */
+function NavLink({
+  href,
+  label,
+  exact,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  exact?: boolean;
+  onClick?: () => void;
+}) {
   const pathname = usePathname();
   const active = exact
     ? pathname === href
@@ -13,10 +25,42 @@ function NavLink({ href, label, exact }: { href: string; label: string; exact?: 
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
         active
           ? "bg-black/8 text-slate-800"
-          : "text-slate-500 hover:text-slate-800 hover:bg-black/5"
+          : "text-slate-500 hover:bg-black/5 hover:text-slate-800"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+/* ── Mobile nav link (tap-target maior) ──────────────────────────────────── */
+function MobileNavLink({
+  href,
+  label,
+  exact,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  exact?: boolean;
+  onClick: () => void;
+}) {
+  const pathname = usePathname();
+  const active = exact
+    ? pathname === href
+    : pathname.startsWith(href) && (href !== "/aluno/dashboard" || pathname === "/aluno/dashboard");
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex w-full items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+        active
+          ? "bg-slate-100 text-slate-800"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
       }`}
     >
       {label}
@@ -35,7 +79,10 @@ const SLUG_TO_LOGO: Record<string, string> = {
   unificado: "unificado",
 };
 
+/* ── Componente principal ─────────────────────────────────────────────────── */
 export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: string | null }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
   const logoFile = marcaSlug ? SLUG_TO_LOGO[marcaSlug] : null;
 
   return (
@@ -47,8 +94,9 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
         boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
       }}
     >
+      {/* ── Barra principal ─────────────────────────────────────────────── */}
       <div className="flex h-20 w-full items-center justify-between gap-4 px-6 sm:px-10">
-        {/* Logo — lado esquerdo */}
+        {/* Logo */}
         <Link href="/aluno/dashboard" className="flex shrink-0 items-center gap-3">
           {logoFile ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -85,19 +133,16 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
           )}
         </Link>
 
-        {/* Lado direito: nav + separador + nome + sair */}
+        {/* Desktop: nav + separador + nome + sair */}
         <div className="hidden sm:flex items-center gap-5">
-          {/* Links de navegação */}
           <nav className="flex items-center gap-1">
             <NavLink href="/aluno/dashboard" label="Projetos" />
             <NavLink href="/aluno/treino" label="Banco de Questões" exact />
             <NavLink href="/aluno/treino/dashboard" label="Meu Desempenho" />
           </nav>
 
-          {/* Separador vertical */}
           <div className="h-5 w-px bg-slate-200" />
 
-          {/* Nome e botão Sair */}
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium" style={{ color: "#1e293b" }}>
               {aluno.nome.split(" ")[0]}
@@ -122,19 +167,73 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
           </div>
         </div>
 
-        {/* Mobile: só o botão Sair */}
-        <div className="flex sm:hidden items-center">
-          <form action={logoutAluno}>
-            <button
-              type="submit"
-              className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ borderColor: "#cbd5e1", color: "#475569", background: "transparent" }}
+        {/* Mobile: botão hamburger */}
+        <button
+          className="flex sm:hidden items-center justify-center rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+        >
+          {menuOpen ? (
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
             >
-              Sair
-            </button>
-          </form>
-        </div>
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
       </div>
+
+      {/* ── Menu mobile (dropdown) ──────────────────────────────────────── */}
+      {menuOpen && (
+        <div
+          className="sm:hidden border-t px-4 py-3 space-y-1"
+          style={{ borderColor: "#e2e8f0", background: "#ffffff" }}
+        >
+          <MobileNavLink href="/aluno/dashboard" label="Projetos" onClick={closeMenu} />
+          <MobileNavLink href="/aluno/treino" label="Banco de Questões" exact onClick={closeMenu} />
+          <MobileNavLink
+            href="/aluno/treino/dashboard"
+            label="Meu Desempenho"
+            onClick={closeMenu}
+          />
+
+          <div
+            className="mt-3 pt-3 flex items-center justify-between"
+            style={{ borderTop: "1px solid #e2e8f0" }}
+          >
+            <span className="px-4 text-sm font-medium" style={{ color: "#1e293b" }}>
+              {aluno.nome.split(" ")[0]}
+            </span>
+            <form action={logoutAluno}>
+              <button
+                type="submit"
+                className="rounded-lg border px-4 py-2 text-xs font-medium"
+                style={{ borderColor: "#cbd5e1", color: "#475569" }}
+              >
+                Sair
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
