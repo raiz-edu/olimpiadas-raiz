@@ -28,34 +28,61 @@ export default function NovaBancoQuestaoPage() {
       )}
 
       <form action={action} className="space-y-5 rounded-xl border border-border bg-card p-6">
+        {/* datalists de sugestões */}
+        <datalist id="dl-olimpiada">
+          <option value="obmep" />
+          <option value="obmep_mirim" />
+          <option value="obm" />
+          <option value="obf" />
+          <option value="obi" />
+          <option value="obq" />
+          <option value="onhb" />
+          <option value="oba" />
+          <option value="obr" />
+          <option value="obmep_mirim" />
+        </datalist>
+        <datalist id="dl-nivel">
+          <option value="nivel_1" />
+          <option value="nivel_2" />
+          <option value="nivel_3" />
+          <option value="mirim" />
+        </datalist>
+
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Olimpíada *</label>
-            <select name="olimpiada" required className={selectClass}>
-              <option value="">Selecione</option>
-              <option value="obmep">OBMEP (N1 / N2 / N3)</option>
-              <option value="obmep_mirim">OBMEP Mirim</option>
-            </select>
+            <input
+              name="olimpiada"
+              type="text"
+              list="dl-olimpiada"
+              required
+              placeholder="ex: obmep, obm, obf…"
+              className={inputClass}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Nível</label>
-            <select name="nivel" className={selectClass}>
-              <option value="">— (Mirim não tem nível)</option>
-              <option value="nivel_1">Nível 1</option>
-              <option value="nivel_2">Nível 2</option>
-              <option value="nivel_3">Nível 3</option>
-            </select>
+            <input
+              name="nivel"
+              type="text"
+              list="dl-nivel"
+              placeholder="ex: nivel_1, nivel_2, mirim…"
+              className={inputClass}
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Fase *</label>
-            <select name="fase" required className={selectClass}>
-              <option value="">Selecione</option>
-              <option value="1">1ª Fase</option>
-              <option value="2">2ª Fase</option>
-            </select>
+            <input
+              name="fase"
+              type="number"
+              min={1}
+              placeholder="1"
+              required
+              className={inputClass}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Ano *</label>

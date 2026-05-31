@@ -15,7 +15,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 // ---------------------------------------------------------------------------
 
 export type ClassificacaoOlimpiada = "obrigatoria" | "facultativa";
-export type OlimpiadaQuestao = "obmep_mirim" | "obmep";
+export type OlimpiadaQuestao = string; // campo livre desde migration 017
 export type TipoQuestao = "multipla_escolha" | "aberta";
 export type StatusInscricao = "pendente" | "confirmada" | "cancelada";
 export type TipoResultado =

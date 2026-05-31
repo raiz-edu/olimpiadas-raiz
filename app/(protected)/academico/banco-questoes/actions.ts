@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
-import type { OlimpiadaQuestao, TipoQuestao } from "@/lib/types/database";
+import type { TipoQuestao } from "@/lib/types/database";
 
 export type QuestaoState = { error: string } | { ok: true; id?: string } | null;
 
@@ -158,7 +158,7 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:create")) return { error: "Não autorizado" };
 
-  const olimpiada = formData.get("olimpiada") as OlimpiadaQuestao;
+  const olimpiada = (formData.get("olimpiada") as string) ?? "";
   const nivel = (formData.get("nivel") as string) || null;
   const fase = Number(formData.get("fase"));
   const ano = Number(formData.get("ano"));

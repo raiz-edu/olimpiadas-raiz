@@ -23,26 +23,50 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
         </div>
       )}
 
+      {/* datalists de sugestões */}
+      <datalist id="dl-olimpiada-edit">
+        <option value="obmep" />
+        <option value="obmep_mirim" />
+        <option value="obm" />
+        <option value="obf" />
+        <option value="obi" />
+        <option value="obq" />
+        <option value="onhb" />
+        <option value="oba" />
+        <option value="obr" />
+      </datalist>
+      <datalist id="dl-nivel-edit">
+        <option value="nivel_1" />
+        <option value="nivel_2" />
+        <option value="nivel_3" />
+        <option value="mirim" />
+      </datalist>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Olimpíada
           </label>
-          <select name="olimpiada" defaultValue={questao.olimpiada} className={selectClass}>
-            <option value="obmep">OBMEP</option>
-            <option value="obmep_mirim">OBMEP Mirim</option>
-          </select>
+          <input
+            name="olimpiada"
+            type="text"
+            list="dl-olimpiada-edit"
+            defaultValue={questao.olimpiada}
+            className={inputClass}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Nível
           </label>
-          <select name="nivel" defaultValue={questao.nivel ?? ""} className={selectClass}>
-            <option value="">— (sem nível)</option>
-            <option value="nivel_1">Nível 1</option>
-            <option value="nivel_2">Nível 2</option>
-            <option value="nivel_3">Nível 3</option>
-          </select>
+          <input
+            name="nivel"
+            type="text"
+            list="dl-nivel-edit"
+            defaultValue={questao.nivel ?? ""}
+            placeholder="ex: nivel_1, mirim…"
+            className={inputClass}
+          />
         </div>
       </div>
 
@@ -51,10 +75,13 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Fase
           </label>
-          <select name="fase" defaultValue={questao.fase} className={selectClass}>
-            <option value="1">1ª</option>
-            <option value="2">2ª</option>
-          </select>
+          <input
+            name="fase"
+            type="number"
+            min={1}
+            defaultValue={questao.fase}
+            className={inputClass}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
