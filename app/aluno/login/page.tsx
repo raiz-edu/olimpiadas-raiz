@@ -99,7 +99,7 @@ export default async function LoginAlunoPage({
   );
 
   return (
-    <main className="relative flex min-h-screen">
+    <main className="relative flex min-h-screen flex-col sm:flex-row">
       {/* ── Divisor vertical sutil (só desktop) ────────────────────────── */}
       <div
         className="pointer-events-none absolute z-10 hidden sm:block"
@@ -112,9 +112,9 @@ export default async function LoginAlunoPage({
             "linear-gradient(to bottom, transparent, rgba(148,163,184,0.25) 20%, rgba(148,163,184,0.25) 80%, transparent)",
         }}
       />
-      {/* ── Lado esquerdo: vídeo (oculto em mobile) ───────────────────── */}
+      {/* ── Lado esquerdo/topo: vídeo ─────────────────────────────────── */}
       <div
-        className="relative hidden w-2/3 overflow-hidden sm:block"
+        className="relative h-52 w-full overflow-hidden sm:h-auto sm:w-2/3"
         style={{ background: "#0f172a" }}
       >
         {videoSrc ? (
