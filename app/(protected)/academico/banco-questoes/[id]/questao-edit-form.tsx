@@ -96,7 +96,16 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           Enunciado
         </label>
         <EnunciadoBlocosEditor
-          initialBlocos={questao.enunciado_blocos as BlocoEnunciado[] | null}
+          initialBlocos={
+            questao.enunciado_blocos
+              ? (questao.enunciado_blocos as BlocoEnunciado[])
+              : questao.imagem_url
+                ? ([
+                    { tipo: "texto", conteudo: questao.enunciado },
+                    { tipo: "imagem", url: questao.imagem_url },
+                  ] as BlocoEnunciado[])
+                : null
+          }
           initialEnunciado={questao.enunciado}
         />
       </div>

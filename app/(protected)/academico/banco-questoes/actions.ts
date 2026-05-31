@@ -158,6 +158,7 @@ export async function atualizarQuestao(
       numero: Number(formData.get("numero")),
       enunciado: ((formData.get("enunciado") as string) ?? "").trim(),
       enunciado_blocos,
+      imagem_url: null, // limpa campo legado ao salvar com editor de blocos
       assunto: ((formData.get("assunto") as string) ?? "").trim() || null,
       tipo: formData.get("tipo"),
     })

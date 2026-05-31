@@ -145,8 +145,7 @@ export function TreinoClient({
 
         {/* Enunciado (blocos texto+imagem ou texto plano legado) */}
         <div className="mb-4">
-          {Array.isArray((questao as any).enunciado_blocos) &&
-          (questao as any).enunciado_blocos.length > 0 ? (
+          {Array.isArray((questao as any).enunciado_blocos) ? (
             (
               (questao as any).enunciado_blocos as Array<{
                 tipo: string;

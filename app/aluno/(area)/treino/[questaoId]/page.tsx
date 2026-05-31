@@ -63,8 +63,7 @@ export default async function RevisaoQuestaoPage({
         </div>
 
         {/* Enunciado (blocos texto+imagem ou texto plano legado) */}
-        {Array.isArray((questao as any).enunciado_blocos) &&
-        (questao as any).enunciado_blocos.length > 0 ? (
+        {Array.isArray((questao as any).enunciado_blocos) ? (
           (
             (questao as any).enunciado_blocos as Array<{
               tipo: string;
