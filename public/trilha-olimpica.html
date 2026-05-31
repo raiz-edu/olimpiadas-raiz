@@ -16,14 +16,14 @@ html, body {
 /* Wrapper centraliza o stage */
 #wrapper {
   width:100vw; height:100vh;
-  display:flex; align-items:center; justify-content:center;
+  position:relative;
   overflow:hidden; background:#0f172a;
 }
 
 /* Stage is 1920x1080, scaled down by JS */
 #stage {
   width:1920px; height:1080px;
-  flex-shrink:0;
+  position:absolute; top:50%; left:50%;
   transform-origin:center center;
   background:#0f172a;
   position:relative;
@@ -364,7 +364,9 @@ function scaleStage(){
   // Mobile (<640px): usa referência menor → zoom ~2.4x para mais impacto visual
   const ref = window.innerWidth < 640 ? 800 : 1920;
   const sc = Math.min(window.innerWidth / ref, window.innerHeight / 1080);
-  document.getElementById('stage').style.transform = 'scale(' + sc + ')';
+  // translate(-50%,-50%) + scale garante centralização mesmo com overflow
+  document.getElementById('stage').style.transform =
+    'translate(-50%, -50%) scale(' + sc + ')';
 }
 window.addEventListener('resize', scaleStage);
 scaleStage();
