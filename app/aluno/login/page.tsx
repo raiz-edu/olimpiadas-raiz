@@ -102,7 +102,7 @@ export default async function LoginAlunoPage({
     <main className="relative flex min-h-screen">
       {/* ── Divisor vertical sutil ──────────────────────────────────────── */}
       <div
-        className="pointer-events-none absolute z-10"
+        className="pointer-events-none absolute z-10 hidden sm:block"
         style={{
           left: "66.666%",
           top: "17.5%",
@@ -113,7 +113,10 @@ export default async function LoginAlunoPage({
         }}
       />
       {/* ── Lado esquerdo: vídeo ───────────────────────────────────────── */}
-      <div className="relative w-2/3 overflow-hidden" style={{ background: "#0f172a" }}>
+      <div
+        className="relative hidden w-2/3 overflow-hidden sm:block"
+        style={{ background: "#0f172a" }}
+      >
         {videoSrc ? (
           <VideoBackground src={videoSrc} />
         ) : (
@@ -137,7 +140,7 @@ export default async function LoginAlunoPage({
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
-      <div className="flex w-1/3 flex-col items-center justify-center bg-background py-12">
+      <div className="flex w-full flex-col items-center justify-center bg-background py-12 sm:w-1/3">
         <div className="w-full max-w-sm px-6">
           {/* Header com logo da marca */}
           <div className="mb-8 text-center">
