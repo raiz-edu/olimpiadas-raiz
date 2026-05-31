@@ -13,19 +13,20 @@ html, body {
   font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
 }
 
-/* Wrapper */
+/* Wrapper centers the stage via flexbox */
 #wrapper {
   width:100vw; height:100vh;
-  position:relative;
+  display:flex; align-items:center; justify-content:center;
   overflow:hidden; background:#000;
 }
 
-/* Stage is 1920x1080, positioned and scaled by JS */
+/* Stage is 1920x1080, scaled down by JS */
 #stage {
   width:1920px; height:1080px;
-  position:absolute; top:0; left:0;
-  transform-origin:0 0;
+  flex-shrink:0;
+  transform-origin:center center;
   background:#09090b;
+  position:relative;
   overflow:hidden;
 }
 
@@ -365,16 +366,9 @@ html, body {
 
 <script>
 // ===== SCALE =====
-// stage fica em position:absolute top:0 left:0 com transform-origin:0 0
-// JS calcula translate+scale para centralizar em qualquer viewport
 function scaleStage(){
-  var W = window.innerWidth, H = window.innerHeight;
-  var ref = W < 640 ? 800 : 1920; // mobile: zoom in usando ref menor
-  var sc  = Math.min(W / ref, H / 1080);
-  var ox  = (W - 1920 * sc) / 2;
-  var oy  = (H - 1080 * sc) / 2;
-  document.getElementById('stage').style.transform =
-    'translate(' + ox + 'px,' + oy + 'px) scale(' + sc + ')';
+  const sc = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  document.getElementById('stage').style.transform = 'scale(' + sc + ')';
 }
 window.addEventListener('resize', scaleStage);
 scaleStage();
