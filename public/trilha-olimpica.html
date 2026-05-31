@@ -8,25 +8,24 @@
 
 html, body {
   width:100%; height:100%;
-  background:#0f172a;
+  background:#000;
   overflow:hidden;
   font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
 }
 
-/* Wrapper centraliza o stage */
+/* Wrapper centers the stage via flexbox */
 #wrapper {
   width:100vw; height:100vh;
-  position:relative;
-  overflow:hidden; background:#0f172a;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; background:#000;
 }
 
 /* Stage is 1920x1080, scaled down by JS */
 #stage {
   width:1920px; height:1080px;
-  position:absolute; top:50%; left:50%;
-  margin-left:-960px; margin-top:-540px;
+  flex-shrink:0;
   transform-origin:center center;
-  background:#0f172a;
+  background:#09090b;
   position:relative;
   overflow:hidden;
 }
@@ -88,10 +87,10 @@ html, body {
              font-size:26px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; }
 
 /* ===== HUD ===== */
-.progress-wrap { display:none; }
-.progress-fill { display:none; }
-.hud-num  { display:none; }
-.hud-play { display:none; }
+.progress-wrap { position:absolute; bottom:0; left:0; right:0; height:5px; background:rgba(255,255,255,.08); z-index:99; }
+.progress-fill { height:100%; background:#3b82f6; width:0%; }
+.hud-num  { position:absolute; bottom:14px; right:36px; font-size:22px; color:#3f3f46; font-weight:600; z-index:99; }
+.hud-play { position:absolute; top:16px; right:36px; font-size:28px; color:#3f3f46; z-index:99; cursor:pointer; user-select:none; }
 
 .noise {
   position:absolute; inset:0; pointer-events:none; opacity:.025;
@@ -108,7 +107,7 @@ html, body {
 <div class="hud-play" id="hplay">▶</div>
 
 <!-- ===== S1: INTRO ===== -->
-<div class="slide" id="s1" style="background:#0f172a">
+<div class="slide" id="s1" style="background:radial-gradient(ellipse at 30% 35%,#1a0535 0%,#09090b 65%,#00122a 100%)">
   <div style="text-align:center">
     <div class="label e" data-d="0" style="color:#a78bfa;letter-spacing:8px;margin-bottom:28px">ESPECIAL · DADOS VERIFICADOS</div>
     <div class="big  e" data-d="200" style="font-size:112px;color:#fafafa;margin-bottom:20px">🏅 A TRILHA OLÍMPICA</div>
@@ -121,7 +120,7 @@ html, body {
 </div>
 
 <!-- ===== S2: HOOK ===== -->
-<div class="slide" id="s2" style="background:#0f172a">
+<div class="slide" id="s2" style="background:radial-gradient(ellipse at 70% 40%,#0f1b38 0%,#09090b 70%)">
   <div style="text-align:center;max-width:1450px">
     <div class="body e" data-d="0" style="color:#94a3b8;font-size:54px;line-height:1.6">
       Você se dedicou anos para resolver<br>problemas que <span style="color:#fafafa;font-weight:700">99,9% das pessoas não conseguem.</span>
@@ -138,7 +137,7 @@ html, body {
 </div>
 
 <!-- ===== S3: O NÚMERO ===== -->
-<div class="slide" id="s3" style="background:#0f172a">
+<div class="slide" id="s3" style="background:radial-gradient(ellipse at 50% 50%,#0e2040 0%,#09090b 70%)">
   <div style="text-align:center">
     <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:12px">BRASIL · 2026</div>
     <div class="hero es gblue" data-d="200" id="c-big" style="margin-bottom:8px">0</div>
@@ -150,7 +149,7 @@ html, body {
 </div>
 
 <!-- ===== S4: UNESP ===== -->
-<div class="slide" id="s4" style="background:#0f172a">
+<div class="slide" id="s4" style="background:radial-gradient(ellipse at 20% 80%,#0c2e14 0%,#09090b 60%)">
   <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
     <div style="flex-shrink:0;text-align:center;min-width:440px">
       <div class="label e" data-d="0" style="color:#4ade80;margin-bottom:12px">MAIOR DO BRASIL</div>
@@ -174,37 +173,43 @@ html, body {
 </div>
 
 <!-- ===== S5: USP ===== -->
-<div class="slide" id="s5" style="background:#0f172a">
-  <div style="text-align:center;max-width:1400px;width:100%">
-    <div class="e" data-d="0" style="font-size:96px;font-weight:900;color:#a855f7">USP</div>
-    <div class="unum es gpurple" data-d="200" id="c-usp">0</div>
-    <div class="e" data-d="300" style="font-size:52px;font-weight:700;color:#fafafa;margin-top:6px">vagas em 2026</div>
-    <div class="e" data-d="400" style="font-size:32px;color:#a1a1aa;margin-top:12px">100+ cursos · 7 campi · Inscrição gratuita · Jan/2026</div>
-    <div style="height:40px"></div>
-    <div class="e" data-d="450" style="font-size:34px;color:#a1a1aa;margin-bottom:24px;font-weight:600">Sistema de pontos por nível de medalha:</div>
-    <div style="display:flex;justify-content:center;gap:40px;margin-bottom:40px">
-      <div class="e" data-d="500" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-        <div style="font-size:30px;color:#a78bfa;font-weight:700">Internacional</div>
-        <div style="display:flex;gap:5px"><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div></div>
-        <div style="font-size:40px;font-weight:900;color:#fafafa">6 pts</div>
-      </div>
-      <div class="e" data-d="600" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-        <div style="font-size:30px;color:#60a5fa;font-weight:700">Nacional</div>
-        <div style="display:flex;gap:5px"><div style="width:44px;height:36px;background:#3b82f6;border-radius:6px"></div><div style="width:44px;height:36px;background:#3b82f6;border-radius:6px"></div><div style="width:44px;height:36px;background:#3b82f6;border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(59,130,246,.2);border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(59,130,246,.2);border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(59,130,246,.2);border-radius:6px"></div></div>
-        <div style="font-size:40px;font-weight:900;color:#fafafa">3 pts</div>
-      </div>
-      <div class="e" data-d="700" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-        <div style="font-size:30px;color:#71717a;font-weight:700">Estadual</div>
-        <div style="display:flex;gap:5px"><div style="width:44px;height:36px;background:#52525b;border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:44px;height:36px;background:rgba(82,82,91,.2);border-radius:6px"></div></div>
-        <div style="font-size:40px;font-weight:900;color:#fafafa">1 pt</div>
-      </div>
+<div class="slide" id="s5" style="background:radial-gradient(ellipse at 80% 20%,#1c1440 0%,#09090b 60%)">
+  <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
+    <div style="flex-shrink:0;text-align:center;min-width:420px">
+      <div class="e" data-d="0" style="font-size:96px;font-weight:900;color:#a855f7">USP</div>
+      <div class="unum es gpurple" data-d="200" id="c-usp">0</div>
+      <div style="font-size:52px;font-weight:700;color:#fafafa;margin-top:6px">vagas em 2026</div>
+      <div style="height:16px"></div>
+      <div class="e" data-d="400" style="font-size:34px;color:#a1a1aa">100+ cursos · 7 campi</div>
+      <div class="e" data-d="500" style="font-size:28px;color:#52525b;margin-top:8px">Inscrição gratuita · Jan/2026</div>
     </div>
-    <div class="e" data-d="800" style="font-size:34px;color:#71717a">📈 Crescimento: <strong style="color:#fafafa">113</strong> (2019) → <strong style="color:#fafafa">200</strong> (2024) → <strong style="color:#a78bfa">234</strong> (2026)</div>
+    <div style="flex:1">
+      <div class="e" data-d="200" style="font-size:36px;color:#a1a1aa;margin-bottom:28px;font-weight:600">Sistema de pontos por nível de medalha:</div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="e" data-d="300" style="display:flex;align-items:center;gap:20px">
+          <div style="width:180px;font-size:32px;color:#a78bfa;text-align:right;font-weight:700">Internacional</div>
+          <div style="display:flex;gap:6px"><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div><div style="width:52px;height:44px;background:#a855f7;border-radius:6px"></div></div>
+          <div style="font-size:44px;font-weight:900;color:#fafafa">6 pts</div>
+        </div>
+        <div class="e" data-d="450" style="display:flex;align-items:center;gap:20px">
+          <div style="width:180px;font-size:32px;color:#60a5fa;text-align:right;font-weight:700">Nacional</div>
+          <div style="display:flex;gap:6px"><div style="width:52px;height:44px;background:#3b82f6;border-radius:6px"></div><div style="width:52px;height:44px;background:#3b82f6;border-radius:6px"></div><div style="width:52px;height:44px;background:#3b82f6;border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(59,130,246,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(59,130,246,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(59,130,246,.2);border-radius:6px"></div></div>
+          <div style="font-size:44px;font-weight:900;color:#fafafa">3 pts</div>
+        </div>
+        <div class="e" data-d="600" style="display:flex;align-items:center;gap:20px">
+          <div style="width:180px;font-size:32px;color:#71717a;text-align:right;font-weight:700">Estadual</div>
+          <div style="display:flex;gap:6px"><div style="width:52px;height:44px;background:#52525b;border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div><div style="width:52px;height:44px;background:rgba(82,82,91,.2);border-radius:6px"></div></div>
+          <div style="font-size:44px;font-weight:900;color:#fafafa">1 pt</div>
+        </div>
+      </div>
+      <div style="height:44px"></div>
+      <div class="e" data-d="700" style="font-size:34px;color:#71717a">📈 Crescimento: <strong style="color:#fafafa">113</strong> (2019) → <strong style="color:#fafafa">200</strong> (2024) → <strong style="color:#a78bfa">234</strong> (2026)</div>
+    </div>
   </div>
 </div>
 
 <!-- ===== S6: UNICAMP ===== -->
-<div class="slide" id="s6" style="background:#0f172a">
+<div class="slide" id="s6" style="background:radial-gradient(ellipse at 50% 80%,#1c1400 0%,#09090b 60%)">
   <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
     <div style="flex-shrink:0;text-align:center;min-width:420px">
       <div class="e" data-d="0" style="font-size:88px;font-weight:900;color:#f59e0b">UNICAMP</div>
@@ -228,7 +233,7 @@ html, body {
 </div>
 
 <!-- ===== S7: IMPA TECH ===== -->
-<div class="slide" id="s7" style="background:#0f172a">
+<div class="slide" id="s7" style="background:radial-gradient(ellipse at 50% 30%,#002040 0%,#09090b 60%)">
   <div style="text-align:center;max-width:1600px">
     <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:14px;font-size:32px">O MAIS EXCLUSIVO DO BRASIL</div>
     <div class="e" data-d="100" style="font-size:100px;font-weight:900;color:#60a5fa;margin-bottom:36px;text-shadow:0 0 60px rgba(96,165,250,.45)">IMPA TECH</div>
@@ -246,7 +251,7 @@ html, body {
 </div>
 
 <!-- ===== S8: UFABC + IME ===== -->
-<div class="slide" id="s8" style="background:#0f172a">
+<div class="slide" id="s8" style="background:radial-gradient(ellipse at 60% 60%,#1a0f30 0%,#09090b 60%)">
   <div style="text-align:center;max-width:1600px;width:100%">
     <div class="label e" data-d="0" style="color:#a78bfa;margin-bottom:36px;font-size:30px">E AINDA TEM MAIS</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
@@ -266,7 +271,7 @@ html, body {
 </div>
 
 <!-- ===== S9: O ESCÂNDALO ===== -->
-<div class="slide" id="s9" style="background:#0f172a">
+<div class="slide" id="s9" style="background:radial-gradient(ellipse at 50% 50%,#1e0808 0%,#09090b 60%)">
   <div style="text-align:center;width:100%;max-width:1600px">
     <div class="e" data-d="0" style="font-size:52px;color:#71717a;margin-bottom:16px">E mesmo com tudo isso...</div>
     <div class="big es gred" data-d="200" style="font-size:100px;margin-bottom:52px">A MAIORIA DAS VAGAS FICA VAZIA</div>
@@ -292,7 +297,7 @@ html, body {
 </div>
 
 <!-- ===== S10: OLIMPÍADAS ===== -->
-<div class="slide" id="s10" style="background:#0f172a">
+<div class="slide" id="s10" style="background:radial-gradient(ellipse at 30% 70%,#001e34 0%,#09090b 60%)">
   <div style="text-align:center;width:100%">
     <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:32px;font-size:30px">OLIMPÍADAS QUE ABREM PORTAS</div>
     <div class="e" data-d="100" style="font-size:28px;color:#3f3f46;letter-spacing:4px;text-transform:uppercase;margin-bottom:18px">Nacionais</div>
@@ -310,7 +315,7 @@ html, body {
 </div>
 
 <!-- ===== S11: EXTERIOR ===== -->
-<div class="slide" id="s11" style="background:#0f172a">
+<div class="slide" id="s11" style="background:radial-gradient(ellipse at 50% 30%,#001533 0%,#09090b 60%)">
   <div style="text-align:center;max-width:1600px">
     <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:24px;font-size:32px">E NO EXTERIOR?</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:44px">
@@ -328,7 +333,7 @@ html, body {
 </div>
 
 <!-- ===== S12: LEGISLAÇÃO ===== -->
-<div class="slide" id="s12" style="background:#0f172a">
+<div class="slide" id="s12" style="background:radial-gradient(ellipse at 70% 50%,#0e200e 0%,#09090b 60%)">
   <div style="text-align:center;max-width:1400px">
     <div class="label e" data-d="0" style="color:#4ade80;margin-bottom:32px;font-size:32px">O FUTURO</div>
     <div class="e" data-d="100" style="font-size:92px;font-weight:900;color:#22c55e;margin-bottom:20px;text-shadow:0 0 60px rgba(34,197,94,.35)">PL 3943/23</div>
@@ -341,7 +346,7 @@ html, body {
 </div>
 
 <!-- ===== S13: CONCLUSÃO ===== -->
-<div class="slide" id="s13" style="background:#0f172a">
+<div class="slide" id="s13" style="background:radial-gradient(ellipse at 50% 50%,#1c1000 0%,#09090b 60%)">
   <div style="text-align:center;max-width:1400px">
     <div class="e" data-d="0" style="font-size:54px;color:#71717a;margin-bottom:32px">Se você compete em olimpíadas...</div>
     <div class="big es ggold" data-d="200" style="font-size:100px;margin-bottom:48px">Seu caminho está aberto.</div>
@@ -362,10 +367,20 @@ html, body {
 <script>
 // ===== SCALE =====
 function scaleStage(){
-  // Mobile (<640px): usa referência menor → zoom ~2.4x para mais impacto visual
-  const ref = window.innerWidth < 640 ? 800 : 1920;
-  const sc = Math.min(window.innerWidth / ref, window.innerHeight / 1080);
-  document.getElementById('stage').style.transform = 'scale(' + sc + ')';
+  var W = window.innerWidth, H = window.innerHeight;
+  var stage = document.getElementById('stage');
+  if (W < 640) {
+    // Mobile: zoom in (ref 800px) + centralização explícita via translate
+    var sc = Math.min(W / 800, H / 1080);
+    var ox = (W - 1920 * sc) / 2;
+    var oy = (H - 1080 * sc) / 2;
+    stage.style.transformOrigin = '0 0';
+    stage.style.transform = 'translate(' + ox + 'px,' + oy + 'px) scale(' + sc + ')';
+  } else {
+    // Desktop: comportamento original (flexbox centraliza, scale do centro)
+    stage.style.transformOrigin = 'center center';
+    stage.style.transform = 'scale(' + Math.min(W / 1920, H / 1080) + ')';
+  }
 }
 window.addEventListener('resize', scaleStage);
 scaleStage();
@@ -428,7 +443,7 @@ function onEnter(i) {
 // ===== SHOW SLIDE =====
 const N = 13;
 var cur = 0, paused = false, elapsed = 0, lastT = null;
-var DUR = [10000,10000,12000,14000,14000,13000,14000,11000,16000,13000,14000,11000,12000];
+var DUR = [5000,5000,6000,7000,7000,6500,7000,5500,8000,6500,7000,5500,6000];
 
 function showSlide(i) {
   // Deactivate all
