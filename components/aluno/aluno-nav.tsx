@@ -13,7 +13,11 @@ function NavLink({ href, label, exact }: { href: string; label: string; exact?: 
   return (
     <Link
       href={href}
-      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${active ? "bg-black/8 text-slate-800" : "text-slate-500 hover:text-slate-800 hover:bg-black/5"}`}
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+        active
+          ? "bg-black/8 text-slate-800"
+          : "text-slate-500 hover:text-slate-800 hover:bg-black/5"
+      }`}
     >
       {label}
     </Link>
@@ -43,20 +47,15 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
         boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
       }}
     >
-      <div className="flex h-24 w-full items-center justify-between px-6 sm:px-10">
-        <Link href="/aluno/dashboard" className="flex items-center gap-3">
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-6 sm:px-10">
+        {/* Logo — lado esquerdo */}
+        <Link href="/aluno/dashboard" className="flex shrink-0 items-center gap-3">
           {logoFile ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`/marcas/${logoFile}.png`}
               alt={marcaSlug ?? ""}
-              className={`block object-contain ${
-                marcaSlug === "uniao"
-                  ? "max-h-16 max-w-[220px]"
-                  : ["apogeu", "matriz-educacao", "qi-bilingue"].includes(marcaSlug ?? "")
-                    ? "max-h-[77px] max-w-[224px]"
-                    : "max-h-20 max-w-[220px]"
-              }`}
+              className="block max-h-9 max-w-[160px] object-contain"
             />
           ) : (
             <>
@@ -86,32 +85,50 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
           )}
         </Link>
 
-        {/* Links de navegação */}
-        <nav className="hidden sm:flex items-center gap-1 ml-4">
-          <NavLink href="/aluno/dashboard" label="Projetos" />
-          <NavLink href="/aluno/treino" label="Banco de Questões" exact />
-          <NavLink href="/aluno/treino/dashboard" label="Meu Desempenho" />
-        </nav>
+        {/* Lado direito: nav + separador + nome + sair */}
+        <div className="hidden sm:flex items-center gap-5">
+          {/* Links de navegação */}
+          <nav className="flex items-center gap-1">
+            <NavLink href="/aluno/dashboard" label="Projetos" />
+            <NavLink href="/aluno/treino" label="Banco de Questões" exact />
+            <NavLink href="/aluno/treino/dashboard" label="Meu Desempenho" />
+          </nav>
 
-        <div className="flex items-center gap-3 ml-auto">
-          <span className="hidden text-right sm:block">
-            <p className="text-sm font-medium leading-tight" style={{ color: "#1e293b" }}>
-              {aluno.nome}
-            </p>
-          </span>
+          {/* Separador vertical */}
+          <div className="h-5 w-px bg-slate-200" />
+
+          {/* Nome e botão Sair */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium" style={{ color: "#1e293b" }}>
+              {aluno.nome.split(" ")[0]}
+            </span>
+            <form action={logoutAluno}>
+              <button
+                type="submit"
+                className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+                style={{ borderColor: "#cbd5e1", color: "#475569", background: "transparent" }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "#e2e8f0";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#1e293b";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#475569";
+                }}
+              >
+                Sair
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Mobile: só o botão Sair */}
+        <div className="flex sm:hidden items-center">
           <form action={logoutAluno}>
             <button
               type="submit"
-              className="rounded-lg border px-3 py-1.5 text-xs transition-colors"
+              className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
               style={{ borderColor: "#cbd5e1", color: "#475569", background: "transparent" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#e2e8f0";
-                (e.currentTarget as HTMLButtonElement).style.color = "#1e293b";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                (e.currentTarget as HTMLButtonElement).style.color = "#475569";
-              }}
             >
               Sair
             </button>
