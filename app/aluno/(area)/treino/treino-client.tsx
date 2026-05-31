@@ -125,7 +125,9 @@ export function TreinoClient({
           </span>
           {questao.nivel && (
             <span className="inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-bold text-sky-400">
-              {questao.nivel.replace("_", " ")}
+              {{ nivel_1: "Nível 1", nivel_2: "Nível 2", nivel_3: "Nível 3", mirim: "Mirim" }[
+                questao.nivel
+              ] ?? questao.nivel}
             </span>
           )}
           <span className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-bold text-violet-400">
