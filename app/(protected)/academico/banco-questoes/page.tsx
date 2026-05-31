@@ -4,7 +4,8 @@ import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { PageHeader } from "@/components/ui/page-header";
-import { getQuestoes } from "./actions";
+import { ConfirmButton } from "@/components/ui/confirm-button";
+import { getQuestoes, excluirQuestao } from "./actions";
 
 const OLIMPIADA_LABEL: Record<string, string> = {
   obmep_mirim: "OBMEP Mirim",
@@ -40,26 +41,46 @@ export default async function BancoQuestoesPage({
 
       {/* Filtros */}
       <form method="GET" className="mb-6 flex flex-wrap gap-3">
-        <select name="olimpiada" defaultValue={sp.olimpiada ?? ""} className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground">
+        <select
+          name="olimpiada"
+          defaultValue={sp.olimpiada ?? ""}
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+        >
           <option value="">Todas as olimpíadas</option>
           <option value="obmep">OBMEP</option>
           <option value="obmep_mirim">OBMEP Mirim</option>
         </select>
-        <select name="fase" defaultValue={sp.fase ?? ""} className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground">
+        <select
+          name="fase"
+          defaultValue={sp.fase ?? ""}
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+        >
           <option value="">Todas as fases</option>
           <option value="1">1ª Fase</option>
           <option value="2">2ª Fase</option>
         </select>
-        <select name="ano" defaultValue={sp.ano ?? ""} className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground">
+        <select
+          name="ano"
+          defaultValue={sp.ano ?? ""}
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+        >
           <option value="">Todos os anos</option>
           {Array.from({ length: 11 }, (_, i) => 2015 + i).map((a) => (
-            <option key={a} value={a}>{a}</option>
+            <option key={a} value={a}>
+              {a}
+            </option>
           ))}
         </select>
-        <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+        <button
+          type="submit"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
           Filtrar
         </button>
-        <Link href="/academico/banco-questoes" className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          href="/academico/banco-questoes"
+          className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+        >
           Limpar
         </Link>
       </form>
@@ -91,21 +112,41 @@ export default async function BancoQuestoesPage({
             <tbody>
               {questoes.map((q: any) => (
                 <tr key={q.id} className="border-b border-border/40 hover:bg-background/50">
-                  <td className="px-4 py-3 font-medium">{OLIMPIADA_LABEL[q.olimpiada] ?? q.olimpiada}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {OLIMPIADA_LABEL[q.olimpiada] ?? q.olimpiada}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{q.nivel ?? "—"}</td>
                   <td className="px-4 py-3">{q.fase}ª</td>
                   <td className="px-4 py-3">{q.ano}</td>
                   <td className="px-4 py-3">{q.numero}</td>
                   <td className="px-4 py-3 text-muted-foreground">{q.assunto ?? "—"}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${q.ativo ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"}`}>
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${q.ativo ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"}`}
+                    >
                       {q.ativo ? "Ativa" : "Inativa"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={`/academico/banco-questoes/${q.id}`} className="text-primary hover:underline text-xs mr-3">
-                      Editar
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/academico/banco-questoes/${q.id}`}
+                        className="text-primary hover:underline text-xs"
+                      >
+                        Editar
+                      </Link>
+                      {can(session.user.role, "questao:delete") && (
+                        <form action={excluirQuestao}>
+                          <input type="hidden" name="id" value={q.id} />
+                          <ConfirmButton
+                            message={`Excluir questão ${q.numero} (${q.fase}ª fase · ${q.ano})? Esta ação não pode ser desfeita.`}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                          >
+                            Excluir
+                          </ConfirmButton>
+                        </form>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

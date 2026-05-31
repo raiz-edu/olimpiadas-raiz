@@ -103,23 +103,30 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   redirect(`/academico/banco-questoes/${data.id}`);
 }
 
-export async function atualizarQuestao(id: string, _prev: QuestaoState, formData: FormData): Promise<QuestaoState> {
+export async function atualizarQuestao(
+  id: string,
+  _prev: QuestaoState,
+  formData: FormData,
+): Promise<QuestaoState> {
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
-  const { error } = await supabase.from("questao").update({
-    olimpiada: formData.get("olimpiada"),
-    nivel: (formData.get("nivel") as string) || null,
-    fase: Number(formData.get("fase")),
-    ano: Number(formData.get("ano")),
-    numero: Number(formData.get("numero")),
-    enunciado: formData.get("enunciado"),
-    assunto: ((formData.get("assunto") as string) ?? "").trim() || null,
-    tipo: formData.get("tipo"),
-    video_url: ((formData.get("video_url") as string) ?? "").trim() || null,
-  }).eq("id", id);
+  const { error } = await supabase
+    .from("questao")
+    .update({
+      olimpiada: formData.get("olimpiada"),
+      nivel: (formData.get("nivel") as string) || null,
+      fase: Number(formData.get("fase")),
+      ano: Number(formData.get("ano")),
+      numero: Number(formData.get("numero")),
+      enunciado: formData.get("enunciado"),
+      assunto: ((formData.get("assunto") as string) ?? "").trim() || null,
+      tipo: formData.get("tipo"),
+      video_url: ((formData.get("video_url") as string) ?? "").trim() || null,
+    })
+    .eq("id", id);
 
   if (error) return { error: error.message };
   revalidatePath("/academico/banco-questoes");
@@ -138,7 +145,10 @@ export async function toggleAtivo(id: string, ativo: boolean) {
 
 // ─── Alternativas ────────────────────────────────────────────────────────────
 
-export async function salvarAlternativa(_prev: QuestaoState, formData: FormData): Promise<QuestaoState> {
+export async function salvarAlternativa(
+  _prev: QuestaoState,
+  formData: FormData,
+): Promise<QuestaoState> {
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
 
@@ -155,10 +165,9 @@ export async function salvarAlternativa(_prev: QuestaoState, formData: FormData)
     await supabase.from("alternativa").update({ correta: false }).eq("questao_id", questao_id);
   }
 
-  const { error } = await supabase.from("alternativa").upsert(
-    { questao_id, letra, texto, correta },
-    { onConflict: "questao_id,letra" }
-  );
+  const { error } = await supabase
+    .from("alternativa")
+    .upsert({ questao_id, letra, texto, correta }, { onConflict: "questao_id,letra" });
 
   if (error) return { error: error.message };
   revalidatePath(`/academico/banco-questoes/${questao_id}`);
@@ -176,7 +185,10 @@ export async function excluirAlternativa(id: string, questao_id: string) {
 
 // ─── Solução ─────────────────────────────────────────────────────────────────
 
-export async function salvarSolucao(_prev: QuestaoState, formData: FormData): Promise<QuestaoState> {
+export async function salvarSolucao(
+  _prev: QuestaoState,
+  formData: FormData,
+): Promise<QuestaoState> {
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
 
@@ -185,12 +197,28 @@ export async function salvarSolucao(_prev: QuestaoState, formData: FormData): Pr
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
-  const { error } = await supabase.from("solucao").upsert(
-    { questao_id, texto },
-    { onConflict: "questao_id" }
-  );
+  const { error } = await supabase
+    .from("solucao")
+    .upsert({ questao_id, texto }, { onConflict: "questao_id" });
 
   if (error) return { error: error.message };
   revalidatePath(`/academico/banco-questoes/${questao_id}`);
   return { ok: true };
+}
+
+// ─── Exclusão ────────────────────────────────────────────────────────────────
+
+export async function excluirQuestao(formData: FormData) {
+  const session = await getServerSession();
+  if (!session || !can(session.user.role, "questao:delete")) return;
+
+  const id = formData.get("id") as string;
+  if (!id) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+  await supabase.from("questao").delete().eq("id", id);
+
+  revalidatePath("/academico/banco-questoes");
+  redirect("/academico/banco-questoes");
 }
