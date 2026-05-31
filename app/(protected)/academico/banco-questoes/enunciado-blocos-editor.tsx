@@ -4,7 +4,15 @@ import { useState, useRef, useTransition } from "react";
 import { uploadQuestaoImagem } from "./actions";
 import { inputClass } from "@/components/ui/form-field";
 
-export type BlocoEnunciado = { tipo: "texto"; conteudo: string } | { tipo: "imagem"; url: string };
+export type BlocoLargura = "pequena" | "media" | "grande" | "completa";
+export type BlocoEnunciado =
+  | { tipo: "texto"; conteudo: string }
+  | { tipo: "imagem"; url: string; largura?: BlocoLargura };
+
+export function imgStyle(largura?: BlocoLargura): React.CSSProperties {
+  const map: Record<string, string> = { pequena: "200px", media: "320px", grande: "480px" };
+  return largura && map[largura] ? { maxWidth: map[largura] } : {};
+}
 
 export function EnunciadoBlocosEditor({
   initialBlocos,
@@ -119,8 +127,24 @@ export function EnunciadoBlocosEditor({
                 <img
                   src={bloco.url}
                   alt={`Bloco ${i + 1}`}
-                  className="max-h-64 rounded border border-border object-contain"
+                  className="rounded border border-border object-contain"
+                  style={{ maxHeight: "16rem", ...imgStyle(bloco.largura) }}
                 />
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Largura:</span>
+                  <select
+                    value={bloco.largura ?? "completa"}
+                    onChange={(e) =>
+                      update(i, { ...bloco, largura: e.target.value as BlocoLargura })
+                    }
+                    className="rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground"
+                  >
+                    <option value="pequena">Pequena (~200px)</option>
+                    <option value="media">Média (~320px)</option>
+                    <option value="grande">Grande (~480px)</option>
+                    <option value="completa">Completa</option>
+                  </select>
+                </div>
               </>
             )}
           </div>

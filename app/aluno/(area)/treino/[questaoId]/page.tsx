@@ -69,6 +69,7 @@ export default async function RevisaoQuestaoPage({
               tipo: string;
               conteudo?: string;
               url?: string;
+              largura?: string;
             }>
           ).map((b, i) =>
             b.tipo === "texto" ? (
@@ -84,7 +85,19 @@ export default async function RevisaoQuestaoPage({
                 key={i}
                 src={b.url}
                 alt={`Figura ${i + 1}`}
-                className="max-w-full rounded-lg border border-border"
+                className="rounded-lg border border-border"
+                style={
+                  b.largura && b.largura !== "completa"
+                    ? {
+                        maxWidth: (
+                          { pequena: "200px", media: "320px", grande: "480px" } as Record<
+                            string,
+                            string
+                          >
+                        )[b.largura],
+                      }
+                    : { maxWidth: "100%" }
+                }
               />
             ),
           )

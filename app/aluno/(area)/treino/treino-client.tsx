@@ -151,6 +151,7 @@ export function TreinoClient({
                 tipo: string;
                 conteudo?: string;
                 url?: string;
+                largura?: string;
               }>
             ).map((b, i) =>
               b.tipo === "texto" ? (
@@ -166,7 +167,19 @@ export function TreinoClient({
                   key={i}
                   src={b.url}
                   alt={`Figura ${i + 1}`}
-                  className="max-w-full rounded-lg border border-border mb-3"
+                  className="rounded-lg border border-border mb-3"
+                  style={
+                    b.largura && b.largura !== "completa"
+                      ? {
+                          maxWidth: (
+                            { pequena: "200px", media: "320px", grande: "480px" } as Record<
+                              string,
+                              string
+                            >
+                          )[b.largura],
+                        }
+                      : { maxWidth: "100%" }
+                  }
                 />
               ),
             )

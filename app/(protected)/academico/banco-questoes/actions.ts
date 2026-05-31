@@ -97,6 +97,30 @@ export async function uploadQuestaoImagem(
   return { url: data.publicUrl };
 }
 
+export async function uploadAlternativaImagem(
+  formData: FormData,
+): Promise<{ url: string } | { error: string }> {
+  const session = await getServerSession();
+  if (!session || !can(session.user.role, "questao:read")) return { error: "Não autorizado" };
+
+  const file = formData.get("file") as File;
+  if (!file || file.size === 0) return { error: "Nenhum arquivo enviado." };
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `alternativas/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+  const { error } = await supabase.storage
+    .from("questoes")
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (error) return { error: error.message };
+
+  const { data } = supabase.storage.from("questoes").getPublicUrl(path);
+  return { url: data.publicUrl };
+}
+
 function parseBlocos(raw: string): unknown | null {
   if (!raw) return null;
   try {
@@ -192,6 +216,7 @@ export async function salvarAlternativa(
   const letra = formData.get("letra") as string;
   const texto = ((formData.get("texto") as string) ?? "").trim() || null;
   const correta = formData.get("correta") === "true";
+  const imagem_url = ((formData.get("imagem_url") as string) ?? "").trim() || null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
@@ -203,7 +228,7 @@ export async function salvarAlternativa(
 
   const { error } = await supabase
     .from("alternativa")
-    .upsert({ questao_id, letra, texto, correta }, { onConflict: "questao_id,letra" });
+    .upsert({ questao_id, letra, texto, imagem_url, correta }, { onConflict: "questao_id,letra" });
 
   if (error) return { error: error.message };
   revalidatePath(`/academico/banco-questoes/${questao_id}`);
