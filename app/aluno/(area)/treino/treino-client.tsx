@@ -339,12 +339,21 @@ export function TreinoClient({
             {mostrarGabarito ? "Fechar gabarito" : "Gabarito"}
           </button>
           {!respondido && (
-            <button
-              onClick={() => setIdx((i) => i + 1)}
-              className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-            >
-              Pular →
-            </button>
+            <>
+              <button
+                onClick={() => setIdx((i) => Math.max(0, i - 1))}
+                disabled={idx === 0}
+                className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ← Voltar
+              </button>
+              <button
+                onClick={() => setIdx((i) => i + 1)}
+                className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+              >
+                Avançar →
+              </button>
+            </>
           )}
           {respondido && (
             <button
