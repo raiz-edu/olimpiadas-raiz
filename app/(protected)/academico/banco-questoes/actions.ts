@@ -162,6 +162,7 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   const ano = Number(formData.get("ano"));
   const numeroRaw = (formData.get("numero") as string)?.trim();
   const numero = numeroRaw ? Number(numeroRaw) : null;
+  const categoria = ((formData.get("categoria") as string) ?? "").trim() || null;
   const enunciado = ((formData.get("enunciado") as string) ?? "").trim();
   const enunciado_blocos = parseBlocos((formData.get("enunciado_blocos") as string) ?? "");
   const topico = ((formData.get("topico") as string) ?? "").trim() || null;
@@ -178,6 +179,7 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
       fase,
       ano,
       numero,
+      categoria,
       enunciado,
       enunciado_blocos,
       topico,
@@ -212,6 +214,7 @@ export async function atualizarQuestao(
       fase: ((f) => (f ? Number(f) : null))((formData.get("fase") as string)?.trim()),
       ano: Number(formData.get("ano")),
       numero: ((n) => (n ? Number(n) : null))((formData.get("numero") as string)?.trim()),
+      categoria: ((formData.get("categoria") as string) ?? "").trim() || null,
       enunciado: ((formData.get("enunciado") as string) ?? "").trim(),
       enunciado_blocos,
       imagem_url: null, // limpa campo legado ao salvar com editor de blocos

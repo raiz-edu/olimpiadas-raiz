@@ -70,7 +70,7 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Fase
@@ -97,6 +97,19 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
             name="numero"
             type="number"
             defaultValue={questao.numero ?? ""}
+            placeholder="opcional"
+            className={inputClass}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Categoria
+          </label>
+          <input
+            name="categoria"
+            type="text"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            defaultValue={(questao as any).categoria ?? ""}
             placeholder="opcional"
             className={inputClass}
           />
