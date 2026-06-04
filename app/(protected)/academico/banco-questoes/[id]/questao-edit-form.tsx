@@ -78,8 +78,8 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           <input
             name="fase"
             type="number"
-            min={1}
-            defaultValue={questao.fase}
+            defaultValue={questao.fase ?? ""}
+            placeholder="opcional"
             className={inputClass}
           />
         </div>
@@ -93,7 +93,13 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Nº
           </label>
-          <input name="numero" type="number" defaultValue={questao.numero} className={inputClass} />
+          <input
+            name="numero"
+            type="number"
+            defaultValue={questao.numero ?? ""}
+            placeholder="opcional"
+            className={inputClass}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -114,6 +120,7 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           <input
             name="topico"
             type="text"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             defaultValue={(questao as any).topico ?? questao.assunto ?? ""}
             placeholder="ex: Geometria, Aritmética…"
             className={inputClass}
@@ -126,6 +133,7 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           <input
             name="subtopico"
             type="text"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             defaultValue={(questao as any).subtopico ?? ""}
             placeholder="ex: Triângulos, Frações…"
             className={inputClass}

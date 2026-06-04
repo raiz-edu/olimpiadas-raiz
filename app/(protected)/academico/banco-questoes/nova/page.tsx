@@ -74,13 +74,7 @@ export default function NovaBancoQuestaoPage() {
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Fase</label>
-            <input
-              name="fase"
-              type="number"
-              min={1}
-              placeholder="1"
-              className={inputClass}
-            />
+            <input name="fase" type="number" placeholder="opcional" className={inputClass} />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Ano</label>
@@ -95,13 +89,7 @@ export default function NovaBancoQuestaoPage() {
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Número</label>
-            <input
-              name="numero"
-              type="number"
-              min={1}
-              placeholder="1"
-              className={inputClass}
-            />
+            <input name="numero" type="number" placeholder="opcional" className={inputClass} />
           </div>
         </div>
 

@@ -34,7 +34,9 @@ export async function getQuestoes(filtros?: {
 
   let query = supabase
     .from("questao")
-    .select("id, olimpiada, nivel, fase, ano, numero, assunto, topico, subtopico, tipo, ativo, criado_em")
+    .select(
+      "id, olimpiada, nivel, fase, ano, numero, assunto, topico, subtopico, tipo, ativo, criado_em",
+    )
     .order("olimpiada")
     .order("fase")
     .order("ano")
@@ -155,9 +157,11 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
 
   const olimpiada = (formData.get("olimpiada") as string) ?? "";
   const nivel = (formData.get("nivel") as string) || null;
-  const fase = Number(formData.get("fase"));
+  const faseRaw = (formData.get("fase") as string)?.trim();
+  const fase = faseRaw ? Number(faseRaw) : null;
   const ano = Number(formData.get("ano"));
-  const numero = Number(formData.get("numero"));
+  const numeroRaw = (formData.get("numero") as string)?.trim();
+  const numero = numeroRaw ? Number(numeroRaw) : null;
   const enunciado = ((formData.get("enunciado") as string) ?? "").trim();
   const enunciado_blocos = parseBlocos((formData.get("enunciado_blocos") as string) ?? "");
   const topico = ((formData.get("topico") as string) ?? "").trim() || null;
@@ -168,7 +172,18 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   const supabase = createAdminClient() as any;
   const { data, error } = await supabase
     .from("questao")
-    .insert({ olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, topico, subtopico, tipo })
+    .insert({
+      olimpiada,
+      nivel,
+      fase,
+      ano,
+      numero,
+      enunciado,
+      enunciado_blocos,
+      topico,
+      subtopico,
+      tipo,
+    })
     .select("id")
     .single();
 
@@ -194,9 +209,9 @@ export async function atualizarQuestao(
     .update({
       olimpiada: formData.get("olimpiada"),
       nivel: (formData.get("nivel") as string) || null,
-      fase: Number(formData.get("fase")),
+      fase: ((f) => (f ? Number(f) : null))((formData.get("fase") as string)?.trim()),
       ano: Number(formData.get("ano")),
-      numero: Number(formData.get("numero")),
+      numero: ((n) => (n ? Number(n) : null))((formData.get("numero") as string)?.trim()),
       enunciado: ((formData.get("enunciado") as string) ?? "").trim(),
       enunciado_blocos,
       imagem_url: null, // limpa campo legado ao salvar com editor de blocos
