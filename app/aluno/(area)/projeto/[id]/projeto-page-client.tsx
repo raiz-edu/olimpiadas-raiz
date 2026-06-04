@@ -75,6 +75,7 @@ export function ProjetoPageClient({
   aulas: AulaCompleta[];
 }) {
   const [expandida, setExpandida] = useState<string | null>(null);
+  const [questoesAbertas, setQuestoesAbertas] = useState<Set<string>>(new Set());
 
   if (aulas.length === 0) {
     return (
@@ -142,16 +143,41 @@ export function ProjetoPageClient({
 
                 {aula.questoes.length > 0 && (
                   <div>
-                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Questões desta aula ({aula.questoes.length})
-                    </h2>
-                    <TreinoClient
-                      questoes={aula.questoes}
-                      primeiraAlt={aula.primeiraAlt}
-                      numeracaoSequencial
-                      completionUrl={`/aluno/projeto/${projetoId}`}
-                      completionLabel="Fechar"
-                    />
+                    {/* Cabeçalho colapsável das questões */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuestoesAbertas((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(aula.id)) next.delete(aula.id);
+                          else next.add(aula.id);
+                          return next;
+                        })
+                      }
+                      className="flex w-full items-center justify-between rounded-lg border border-border bg-background px-4 py-3 text-left transition-colors hover:bg-white/[0.03]"
+                    >
+                      <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Questões desta aula ({aula.questoes.length})
+                      </span>
+                      <svg
+                        className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${questoesAbertas.has(aula.id) ? "rotate-90" : ""}`}
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+
+                    {questoesAbertas.has(aula.id) && (
+                      <div className="mt-3">
+                        <TreinoClient
+                          questoes={aula.questoes}
+                          primeiraAlt={aula.primeiraAlt}
+                          numeracaoSequencial
+                          completionUrl={`/aluno/projeto/${projetoId}`}
+                          completionLabel="Fechar"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
