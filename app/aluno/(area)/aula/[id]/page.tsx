@@ -7,6 +7,8 @@ import { cookies } from "next/headers";
 import type { Database } from "@/lib/types/database";
 import { AulaPlayer } from "@/components/aluno/aula-player";
 import { MaterialList } from "@/components/aluno/material-list";
+import { TreinoClient } from "@/app/aluno/(area)/treino/treino-client";
+import { getAlternativasQuestao } from "@/app/aluno/(area)/treino/actions";
 
 function fmtDateTime(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -76,6 +78,23 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
       return { ...m, signedUrl: data?.signedUrl ?? null };
     }),
   );
+
+  // Questões vinculadas a esta aula
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: aulaQuestoes } = await (adminClient as any)
+    .from("preparacao_aula_questao")
+    .select(
+      "*, questao:questao_id(id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, ativo)",
+    )
+    .eq("aula_id", id)
+    .order("ordem");
+
+  const questoesAula = ((aulaQuestoes ?? []) as any[])
+    .map((aq: any) => aq.questao)
+    .filter((q: any) => q && q.ativo);
+
+  const primeiraAlt =
+    questoesAula.length > 0 ? await getAlternativasQuestao(questoesAula[0].id) : [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const projeto = (aula as any).projeto;
@@ -155,6 +174,16 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
               {fmtDateTime(aula.data_hora)}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Questões da aula */}
+      {questoesAula.length > 0 && (
+        <div>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Questões desta aula ({questoesAula.length})
+          </h2>
+          <TreinoClient questoes={questoesAula} primeiraAlt={primeiraAlt} />
         </div>
       )}
 
