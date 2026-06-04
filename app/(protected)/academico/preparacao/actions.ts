@@ -87,6 +87,16 @@ export async function excluirProjeto(id: string): Promise<void> {
   revalidatePath(PATH);
 }
 
+// ─── Helper: datetime-local → ISO com offset BRT (-03:00) ────────────────────
+
+function withBRT(dt: string | null): string | null {
+  if (!dt) return null;
+  // Se já tem offset ou é Z, não mexe
+  if (dt.includes("+") || dt.endsWith("Z") || dt.match(/-\d{2}:\d{2}$/)) return dt;
+  // "2026-05-27T08:00" → "2026-05-27T08:00:00-03:00"
+  return dt.length === 16 ? `${dt}:00-03:00` : `${dt}-03:00`;
+}
+
 // ─── Helper: parse MM:SS → segundos ──────────────────────────────────────────
 
 function parseDuracao(raw: string | null): number | null {
@@ -122,7 +132,7 @@ export async function criarAula(
 
   const titulo = (formData.get("titulo") as string)?.trim();
   const tipoRaw = formData.get("tipo") as string;
-  const dataHora = (formData.get("data_hora") as string) || null;
+  const dataHora = withBRT((formData.get("data_hora") as string) || null);
   const duracao = parseDuracao(formData.get("duracao_minutos") as string);
   const link = (formData.get("link_aula") as string)?.trim() || null;
   const polos = (formData.get("polos") as string)?.trim() || null;
@@ -167,7 +177,7 @@ export async function atualizarAula(
 
   const titulo = (formData.get("titulo") as string)?.trim();
   const tipoRaw = formData.get("tipo") as string;
-  const dataHora = (formData.get("data_hora") as string) || null;
+  const dataHora = withBRT((formData.get("data_hora") as string) || null);
   const duracao = parseDuracao(formData.get("duracao_minutos") as string);
   const link = (formData.get("link_aula") as string)?.trim() || null;
   const polos = (formData.get("polos") as string)?.trim() || null;
