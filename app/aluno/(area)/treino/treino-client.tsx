@@ -126,8 +126,8 @@ export function TreinoClient({
         if (respostas[q.id]) {
           const t = (q as any).topico ?? "Sem tópico";
           if (!porTopico[t]) porTopico[t] = { total: 0, acertos: 0 };
-          porTopico[t].total++;
-          if (respostas[q.id].correta) porTopico[t].acertos++;
+          porTopico[t]!.total++;
+          if (respostas[q.id]!.correta) porTopico[t]!.acertos++;
         }
       });
 
