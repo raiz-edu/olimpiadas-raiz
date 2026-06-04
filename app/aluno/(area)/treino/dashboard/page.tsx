@@ -251,7 +251,7 @@ export default async function TreinoDashboardPage() {
                 badgeCls="bg-amber-500/10 text-amber-400"
                 total={aulas.total}
                 acertos={aulas.acertos}
-                porTopico={aulas.por_aula?.map((a: any) => ({ ...a, topico: a.titulo })) ?? []}
+                porTopico={aulas.por_topico ?? []}
               />
             )}
             {simulados?.total > 0 && (
@@ -260,9 +260,7 @@ export default async function TreinoDashboardPage() {
                 badgeCls="bg-indigo-400/10 text-indigo-400"
                 total={simulados.total}
                 acertos={simulados.acertos}
-                porTopico={
-                  simulados.por_simulado?.map((s: any) => ({ ...s, topico: s.titulo })) ?? []
-                }
+                porTopico={simulados.por_topico ?? []}
               />
             )}
           </section>

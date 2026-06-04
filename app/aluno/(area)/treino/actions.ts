@@ -229,26 +229,6 @@ export async function getDashboardAluno() {
     }
   }
 
-  function agruparPorAula(items: any[]) {
-    const mapa: Record<
-      string,
-      { aula_id: string; titulo: string; total: number; acertos: number }
-    > = {};
-    for (const r of items) {
-      const key = r.aula_id ?? "desconhecida";
-      if (!mapa[key])
-        mapa[key] = {
-          aula_id: key,
-          titulo: aulasMeta[key]?.titulo ?? "Aula desconhecida",
-          total: 0,
-          acertos: 0,
-        };
-      mapa[key].total++;
-      if (r.correta) mapa[key].acertos++;
-    }
-    return Object.values(mapa).sort((a, b) => a.acertos / a.total - b.acertos / b.total);
-  }
-
   const total_geral = todas.length;
   const acertos_geral = todas.filter((r: any) => r.correta).length;
 
@@ -263,12 +243,12 @@ export async function getDashboardAluno() {
     aulas: {
       total: deAulas.length,
       acertos: deAulas.filter((r: any) => r.correta).length,
-      por_aula: agruparPorAula(deAulas),
+      por_topico: agruparPorTopico(deAulas),
     },
     simulados: {
       total: deSimulados.length,
       acertos: deSimulados.filter((r: any) => r.correta).length,
-      por_simulado: agruparPorAula(deSimulados),
+      por_topico: agruparPorTopico(deSimulados),
     },
   };
 }
