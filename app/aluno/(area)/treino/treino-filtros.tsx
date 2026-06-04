@@ -7,7 +7,7 @@ const cls = "rounded-lg border border-border bg-background px-3 py-2 text-sm tex
 
 interface TreinoFiltrosProps {
   olimpiadas: string[];
-  topicos: string[];
+  topicosMap: Record<string, string[]>;
   subtopicosMap: Record<string, string[]>;
   defaults: {
     olimpiada?: string;
@@ -22,18 +22,26 @@ interface TreinoFiltrosProps {
 
 export function TreinoFiltros({
   olimpiadas,
-  topicos,
+  topicosMap,
   subtopicosMap,
   defaults,
 }: TreinoFiltrosProps) {
+  const [olimpiadaSel, setOlimpiadaSel] = useState(defaults.olimpiada ?? "");
   const [topicoSel, setTopicoSel] = useState(defaults.topico ?? "");
   const [subtopico, setSubtopico] = useState(defaults.subtopico ?? "");
 
+  const topicos = olimpiadaSel ? (topicosMap[olimpiadaSel] ?? []) : (topicosMap[""] ?? []);
   const subtopicos = topicoSel ? (subtopicosMap[topicoSel] ?? []) : [];
+
+  function handleOlimpiadaChange(val: string) {
+    setOlimpiadaSel(val);
+    setTopicoSel("");
+    setSubtopico("");
+  }
 
   function handleTopicoChange(val: string) {
     setTopicoSel(val);
-    setSubtopico(""); // reset subtopico quando tópico muda
+    setSubtopico("");
   }
 
   return (
@@ -47,7 +55,8 @@ export function TreinoFiltros({
         </span>
         <select
           name="olimpiada"
-          defaultValue={defaults.olimpiada ?? ""}
+          value={olimpiadaSel}
+          onChange={(e) => handleOlimpiadaChange(e.target.value)}
           className={`${cls} min-w-[120px]`}
         >
           <option value="">Todas</option>

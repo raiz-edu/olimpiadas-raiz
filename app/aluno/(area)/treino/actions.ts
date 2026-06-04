@@ -17,18 +17,30 @@ export async function getTopicosDisponiveis() {
 
   const olimpiadas = [...new Set(rows.map((r) => r.olimpiada).filter(Boolean))].sort() as string[];
 
-  const topicoRows = rows.filter((r) => r.topico);
-  const topicos = [...new Set(topicoRows.map((r) => r.topico).filter(Boolean))].sort() as string[];
-
+  // topicosMap[""] = todos os tópicos; topicosMap["obmep"] = tópicos só daquela origem
+  const topicosMap: Record<string, string[]> = { "": [] };
   const subtopicosMap: Record<string, string[]> = {};
-  for (const r of topicoRows) {
-    if (!r.topico || !r.subtopico) continue;
-    const bucket = subtopicosMap[r.topico] ?? (subtopicosMap[r.topico] = []);
-    if (!bucket.includes(r.subtopico)) bucket.push(r.subtopico);
-  }
-  for (const t of topicos) subtopicosMap[t]?.sort();
+  const allTopicos = topicosMap[""] as string[];
 
-  return { olimpiadas, topicos, subtopicosMap };
+  for (const r of rows) {
+    if (!r.topico) continue;
+    // bucket global
+    if (!allTopicos.includes(r.topico)) allTopicos.push(r.topico);
+    // bucket por origem
+    if (r.olimpiada) {
+      const b = topicosMap[r.olimpiada] ?? (topicosMap[r.olimpiada] = []);
+      if (!b.includes(r.topico)) b.push(r.topico);
+    }
+    // subtópicos
+    if (r.subtopico) {
+      const s = subtopicosMap[r.topico] ?? (subtopicosMap[r.topico] = []);
+      if (!s.includes(r.subtopico)) s.push(r.subtopico);
+    }
+  }
+  for (const key of Object.keys(topicosMap)) topicosMap[key]?.sort();
+  for (const key of Object.keys(subtopicosMap)) subtopicosMap[key]?.sort();
+
+  return { olimpiadas, topicosMap, subtopicosMap };
 }
 
 export async function getQuestoesTreino(filtros: {

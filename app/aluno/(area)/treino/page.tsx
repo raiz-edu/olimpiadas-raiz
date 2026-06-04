@@ -21,7 +21,7 @@ export default async function TreinoPage({
   if (!session) redirect("/aluno/login");
 
   const sp = await searchParams;
-  const [questoes, { olimpiadas, topicos, subtopicosMap }] = await Promise.all([
+  const [questoes, { olimpiadas, topicosMap, subtopicosMap }] = await Promise.all([
     getQuestoesTreino({
       olimpiada: sp.olimpiada,
       nivel: sp.nivel,
@@ -41,7 +41,7 @@ export default async function TreinoPage({
     <div>
       <TreinoFiltros
         olimpiadas={olimpiadas}
-        topicos={topicos}
+        topicosMap={topicosMap}
         subtopicosMap={subtopicosMap}
         defaults={sp}
       />
