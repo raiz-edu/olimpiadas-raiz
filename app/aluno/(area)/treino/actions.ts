@@ -13,9 +13,16 @@ export async function getTopicosDisponiveis() {
     .select("topico, subtopico")
     .eq("ativo", true)
     .not("topico", "is", null);
-  const topicos = [...new Set((data ?? []).map((r: any) => r.topico).filter(Boolean))].sort();
-  const subtopicos = [...new Set((data ?? []).map((r: any) => r.subtopico).filter(Boolean))].sort();
-  return { topicos, subtopicos };
+  const rows: { topico: string; subtopico: string | null }[] = data ?? [];
+  const topicos = [...new Set(rows.map((r) => r.topico).filter(Boolean))].sort();
+  const subtopicosMap: Record<string, string[]> = {};
+  for (const r of rows) {
+    if (!r.topico || !r.subtopico) continue;
+    const bucket = subtopicosMap[r.topico] ?? (subtopicosMap[r.topico] = []);
+    if (!bucket.includes(r.subtopico)) bucket.push(r.subtopico);
+  }
+  for (const t of topicos) subtopicosMap[t]?.sort();
+  return { topicos, subtopicosMap };
 }
 
 export async function getQuestoesTreino(filtros: {

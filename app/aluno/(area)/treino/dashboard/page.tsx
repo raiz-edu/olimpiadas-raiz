@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
-import { getDashboardAluno, getUltimasErradas } from "../actions";
+import { getDashboardAluno } from "../actions";
 
 const TEAL = "rgb(91,184,193)";
 
@@ -158,7 +158,7 @@ export default async function TreinoDashboardPage() {
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const [dashboard, erradas] = await Promise.all([getDashboardAluno(), getUltimasErradas(8)]);
+  const dashboard = await getDashboardAluno();
   const { total_geral, acertos_geral, banco, aulas, simulados } = dashboard as any;
   const pctGeral = total_geral > 0 ? Math.round((acertos_geral / total_geral) * 100) : null;
 
@@ -273,53 +273,6 @@ export default async function TreinoDashboardPage() {
               />
             )}
           </section>
-
-          {/* Questões para revisar */}
-          {erradas.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Questões para revisar
-              </h2>
-              <div className="overflow-x-auto rounded-xl border border-border bg-card">
-                <table className="w-full min-w-[340px] text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-xs text-muted-foreground">
-                      <th className="px-5 py-3 text-left font-semibold">Origem</th>
-                      <th className="px-5 py-3 text-left font-semibold hidden sm:table-cell">
-                        Fase · Ano
-                      </th>
-                      <th className="px-5 py-3 text-left font-semibold hidden sm:table-cell">
-                        Tópico
-                      </th>
-                      <th className="px-5 py-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(erradas as any[]).map((r: any) => (
-                      <tr key={r.questao_id} className="border-b border-border/40">
-                        <td className="px-5 py-3">{r.questao?.olimpiada ?? "—"}</td>
-                        <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">
-                          {r.questao?.fase}ª Fase · {r.questao?.ano}
-                        </td>
-                        <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">
-                          {r.questao?.topico ?? r.questao?.assunto ?? "—"}
-                        </td>
-                        <td className="px-5 py-3 text-right">
-                          <Link
-                            href={`/aluno/treino/${r.questao_id}`}
-                            className="text-xs font-semibold"
-                            style={{ color: TEAL }}
-                          >
-                            Revisar →
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
         </>
       )}
     </div>

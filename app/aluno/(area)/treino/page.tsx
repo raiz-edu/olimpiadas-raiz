@@ -23,7 +23,7 @@ export default async function TreinoPage({
   if (!session) redirect("/aluno/login");
 
   const sp = await searchParams;
-  const [questoes, { topicos, subtopicos }] = await Promise.all([
+  const [questoes, { topicos, subtopicosMap }] = await Promise.all([
     getQuestoesTreino({
       olimpiada: sp.olimpiada,
       nivel: sp.nivel,
@@ -36,6 +36,7 @@ export default async function TreinoPage({
     }),
     getTopicosDisponiveis(),
   ]);
+  const subtopicos: string[] = sp.topico ? (subtopicosMap[sp.topico] ?? []) : [];
 
   const primeiraAlt = questoes.length > 0 ? await getAlternativasQuestao(questoes[0].id) : [];
 
@@ -75,23 +76,25 @@ export default async function TreinoPage({
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Subtópico
-          </span>
-          <select
-            name="subtopico"
-            defaultValue={sp.subtopico ?? ""}
-            className={`${cls} min-w-[160px]`}
-          >
-            <option value="">Todos</option>
-            {(subtopicos as string[]).map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
+        {sp.topico && (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Subtópico
+            </span>
+            <select
+              name="subtopico"
+              defaultValue={sp.subtopico ?? ""}
+              className={`${cls} min-w-[160px]`}
+            >
+              <option value="">Todos</option>
+              {subtopicos.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="flex flex-col gap-1">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
