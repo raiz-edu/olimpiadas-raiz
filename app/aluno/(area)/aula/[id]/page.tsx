@@ -183,7 +183,13 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Questões desta aula ({questoesAula.length})
           </h2>
-          <TreinoClient questoes={questoesAula} primeiraAlt={primeiraAlt} />
+          <TreinoClient
+            questoes={questoesAula}
+            primeiraAlt={primeiraAlt}
+            numeracaoSequencial
+            completionUrl={projeto ? `/aluno/projeto/${projeto.id}` : "/aluno/dashboard"}
+            completionLabel="Voltar ao projeto"
+          />
         </div>
       )}
 

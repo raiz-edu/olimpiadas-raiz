@@ -21,9 +21,15 @@ type GabaritoLocal = { texto: string | null; imagem_url: string | null } | null;
 export function TreinoClient({
   questoes,
   primeiraAlt,
+  numeracaoSequencial = false,
+  completionUrl,
+  completionLabel,
 }: {
   questoes: Questao[];
   primeiraAlt: Alternativa[];
+  numeracaoSequencial?: boolean;
+  completionUrl?: string;
+  completionLabel?: string;
 }) {
   const [idx, setIdx] = useState(0);
   const total = questoes.length;
@@ -114,18 +120,29 @@ export function TreinoClient({
           Você respondeu {respondidas} de {total} questões nesta sessão.
         </p>
         <div className="flex justify-center gap-3">
-          <Link
-            href="/aluno/treino/dashboard"
-            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-          >
-            Ver meu desempenho
-          </Link>
-          <button
-            onClick={() => window.location.assign("/aluno/treino")}
-            className="rounded-lg border border-border px-5 py-2.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            Nova sessão
-          </button>
+          {completionUrl ? (
+            <Link
+              href={completionUrl}
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              {completionLabel ?? "Voltar"}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/aluno/treino/dashboard"
+                className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              >
+                Ver meu desempenho
+              </Link>
+              <button
+                onClick={() => window.location.assign("/aluno/treino")}
+                className="rounded-lg border border-border px-5 py-2.5 text-sm text-muted-foreground hover:text-foreground"
+              >
+                Nova sessão
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -189,7 +206,9 @@ export function TreinoClient({
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground mb-3">Questão {questao.numero}</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Questão {numeracaoSequencial ? idx + 1 : questao.numero}
+        </p>
 
         {/* Enunciado (blocos texto+imagem ou texto plano legado) */}
         <div className="mb-4">
