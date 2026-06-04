@@ -6,11 +6,25 @@ import { getStudentSession } from "@/lib/auth/student-session";
 
 // ─── Questões para treino ────────────────────────────────────────────────────
 
+export async function getTopicosDisponiveis() {
+  const admin = createAdminClient() as any;
+  const { data } = await admin
+    .from("questao")
+    .select("topico, subtopico")
+    .eq("ativo", true)
+    .not("topico", "is", null);
+  const topicos = [...new Set((data ?? []).map((r: any) => r.topico).filter(Boolean))].sort();
+  const subtopicos = [...new Set((data ?? []).map((r: any) => r.subtopico).filter(Boolean))].sort();
+  return { topicos, subtopicos };
+}
+
 export async function getQuestoesTreino(filtros: {
   olimpiada?: string;
   nivel?: string;
   fase?: number;
   ano?: number;
+  topico?: string;
+  subtopico?: string;
   assunto?: string;
   modo?: "sequencial" | "aleatorio";
   limit?: number;
@@ -31,6 +45,8 @@ export async function getQuestoesTreino(filtros: {
   if (filtros.nivel) query = query.eq("nivel", filtros.nivel);
   if (filtros.fase) query = query.eq("fase", filtros.fase);
   if (filtros.ano) query = query.eq("ano", filtros.ano);
+  if (filtros.topico) query = query.eq("topico", filtros.topico);
+  if (filtros.subtopico) query = query.eq("subtopico", filtros.subtopico);
   if (filtros.assunto) query = query.ilike("assunto", `%${filtros.assunto}%`);
 
   if (filtros.modo === "aleatorio") {
@@ -187,12 +203,15 @@ export async function getDashboardAluno() {
   const deSimulados = todas.filter((r: any) => r.contexto === "simulado");
 
   // Busca nomes das aulas/simulados
-  const aulaIds = [...new Set([
-    ...deAulas.map((r: any) => r.aula_id),
-    ...deSimulados.map((r: any) => r.aula_id),
-  ].filter(Boolean))];
+  const aulaIds = [
+    ...new Set(
+      [...deAulas.map((r: any) => r.aula_id), ...deSimulados.map((r: any) => r.aula_id)].filter(
+        Boolean,
+      ),
+    ),
+  ];
 
-  let aulasMeta: Record<string, { titulo: string; tipo: string }> = {};
+  const aulasMeta: Record<string, { titulo: string; tipo: string }> = {};
   if (aulaIds.length > 0) {
     const { data: aulasData } = await admin
       .from("preparacao_aula")
@@ -204,15 +223,19 @@ export async function getDashboardAluno() {
   }
 
   function agruparPorAula(items: any[]) {
-    const mapa: Record<string, { aula_id: string; titulo: string; total: number; acertos: number }> = {};
+    const mapa: Record<
+      string,
+      { aula_id: string; titulo: string; total: number; acertos: number }
+    > = {};
     for (const r of items) {
       const key = r.aula_id ?? "desconhecida";
-      if (!mapa[key]) mapa[key] = {
-        aula_id: key,
-        titulo: aulasMeta[key]?.titulo ?? "Aula desconhecida",
-        total: 0,
-        acertos: 0,
-      };
+      if (!mapa[key])
+        mapa[key] = {
+          aula_id: key,
+          titulo: aulasMeta[key]?.titulo ?? "Aula desconhecida",
+          total: 0,
+          acertos: 0,
+        };
       mapa[key].total++;
       if (r.correta) mapa[key].acertos++;
     }
