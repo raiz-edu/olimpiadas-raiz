@@ -15,11 +15,16 @@ import {
   despublicarProjeto,
   publicarAula,
   despublicarAula,
+  criarQuestaoParaAula,
+  removerQuestaoAula,
   type Projeto,
   type Aula,
+  type AulaQuestao,
   type Material,
 } from "@/app/(protected)/academico/preparacao/actions";
 import { CATALOGO } from "@/lib/olimpiadas/catalogo";
+import { EnunciadoBlocosEditor } from "@/app/(protected)/academico/banco-questoes/enunciado-blocos-editor";
+import { inputClass, selectClass } from "@/components/ui/form-field";
 
 // ─── Séries por segmento ──────────────────────────────────────────────────────
 
@@ -725,8 +730,10 @@ function EditarAulaForm({ aula, onClose }: { aula: Aula; onClose: () => void }) 
 function AulaCard({ aula }: { aula: Aula }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showQuestaoForm, setShowQuestaoForm] = useState(false);
   const [deleting, startDelete] = useTransition();
   const [publishing, startPublish] = useTransition();
+  const [removingQ, startRemoveQ] = useTransition();
 
   function handleTogglePublish() {
     startPublish(async () => {
@@ -858,9 +865,171 @@ function AulaCard({ aula }: { aula: Aula }) {
           )}
           {aula.descricao && <p className="mt-3 text-xs text-muted-foreground">{aula.descricao}</p>}
           <MaterialUpload aulaId={aula.id} materiais={aula.materiais} />
+
+          {/* ── Questões vinculadas ─────────────────────────────────────── */}
+          {(aula.questoes ?? []).length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Questões ({aula.questoes.length})
+              </p>
+              <div className="space-y-1.5">
+                {(aula.questoes as AulaQuestao[]).map((aq) => (
+                  <div key={aq.id} className="flex items-start gap-3 rounded-lg border border-border bg-card/50 px-3 py-2">
+                    <span className="shrink-0 w-5 text-center text-xs font-bold text-muted-foreground">
+                      {aq.questao.numero}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      {aq.questao.topico && (
+                        <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide mb-0.5">
+                          {aq.questao.topico}{aq.questao.subtopico ? ` · ${aq.questao.subtopico}` : ""}
+                        </p>
+                      )}
+                      <p className="text-xs text-foreground line-clamp-2">{aq.questao.enunciado}</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={removingQ}
+                      onClick={() => {
+                        if (!confirm("Remover questão desta aula?")) return;
+                        startRemoveQ(async () => {
+                          await removerQuestaoAula(aula.id, aq.questao_id);
+                        });
+                      }}
+                      className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-red-400 transition-colors disabled:opacity-40"
+                      title="Remover questão"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Adicionar questão ────────────────────────────────────────── */}
+          {showQuestaoForm ? (
+            <NovaQuestaoAulaForm aulaId={aula.id} onClose={() => setShowQuestaoForm(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowQuestaoForm(true)}
+              className="mt-3 flex items-center gap-1.5 rounded-lg border border-dashed border-amber-500/30 px-3 py-2 text-xs text-amber-500/70 hover:border-amber-500 hover:text-amber-500 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+              </svg>
+              Adicionar questão
+            </button>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Formulário de nova questão para aula ────────────────────────────────────
+
+function NovaQuestaoAulaForm({ aulaId, onClose }: { aulaId: string; onClose: () => void }) {
+  const bound = criarQuestaoParaAula.bind(null, aulaId);
+  const [state, action, isPending] = useActionState(bound, null);
+
+  useEffect(() => {
+    if (state && "ok" in state) onClose();
+  }, [state, onClose]);
+
+  return (
+    <form action={action} className="mt-3 space-y-3 rounded-xl border border-border bg-background p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Nova Questão
+      </p>
+
+      {state && "error" in state && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {state.error}
+        </div>
+      )}
+
+      <datalist id={`dl-orig-${aulaId}`}>
+        <option value="obmep" /><option value="obmep_mirim" /><option value="obm" />
+        <option value="obf" /><option value="obi" /><option value="obq" /><option value="onhb" />
+      </datalist>
+      <datalist id={`dl-niv-${aulaId}`}>
+        <option value="nivel_1" /><option value="nivel_2" /><option value="nivel_3" /><option value="mirim" />
+      </datalist>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Origem da questão</label>
+          <input name="olimpiada" type="text" list={`dl-orig-${aulaId}`} placeholder="obmep, obm…" className={inputClass} />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Nível</label>
+          <input name="nivel" type="text" list={`dl-niv-${aulaId}`} placeholder="nivel_1, mirim…" className={inputClass} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Fase</label>
+          <input name="fase" type="number" min={1} placeholder="1" className={inputClass} />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Ano</label>
+          <input name="ano" type="number" min={2000} max={2100} placeholder={String(new Date().getFullYear())} className={inputClass} />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Número</label>
+          <input name="numero" type="number" min={1} placeholder="1" className={inputClass} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Tipo</label>
+          <select name="tipo" className={selectClass}>
+            <option value="multipla_escolha">Múltipla escolha</option>
+            <option value="aberta">Aberta</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Tópico</label>
+          <input name="topico" type="text" placeholder="ex: Geometria…" className={inputClass} />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="block text-xs font-medium text-foreground">Subtópico</label>
+        <input name="subtopico" type="text" placeholder="ex: Triângulos…" className={inputClass} />
+      </div>
+
+      <div className="space-y-1">
+        <label className="block text-xs font-medium text-foreground">Enunciado</label>
+        <p className="text-[11px] text-muted-foreground">
+          Use blocos de texto e imagem — arranje na ordem que quiser.
+        </p>
+        <EnunciadoBlocosEditor />
+      </div>
+
+      <div className="flex gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
+          style={{ backgroundColor: TEAL, color: "white" }}
+        >
+          {isPending ? "Criando…" : "Criar questão"}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
 

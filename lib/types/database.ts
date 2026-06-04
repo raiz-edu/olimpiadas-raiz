@@ -590,6 +590,12 @@ export type Database = {
         };
         Relationships: [];
       };
+      preparacao_aula_questao: {
+        Row: { id: string; aula_id: string; questao_id: string; ordem: number; criado_em: string };
+        Insert: { id?: string; aula_id: string; questao_id: string; ordem?: number; criado_em?: string };
+        Update: { id?: string; aula_id?: string; questao_id?: string; ordem?: number; criado_em?: string };
+        Relationships: [];
+      };
       preparacao_material: {
         Row: { id: string; aula_id: string; nome: string; arquivo_path: string; criado_em: string };
         Insert: {

@@ -269,6 +269,23 @@ export async function getMaterialUrl(path: string): Promise<string | null> {
 // ─── Leitura de dados ─────────────────────────────────────────────────────────
 
 export type Material = { id: string; nome: string; arquivo_path: string; criado_em: string };
+export type AulaQuestao = {
+  id: string;
+  aula_id: string;
+  questao_id: string;
+  ordem: number;
+  questao: {
+    id: string;
+    olimpiada: string;
+    nivel: string | null;
+    fase: number;
+    ano: number;
+    numero: number;
+    enunciado: string;
+    topico: string | null;
+    subtopico: string | null;
+  };
+};
 export type Aula = {
   id: string;
   projeto_id: string;
@@ -283,6 +300,7 @@ export type Aula = {
   ordem: number;
   criado_em: string;
   materiais: Material[];
+  questoes: AulaQuestao[];
 };
 export type Projeto = {
   id: string;
@@ -302,7 +320,7 @@ export async function getProjetos(): Promise<Projeto[]> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("preparacao_projeto")
-    .select(`*, aulas:preparacao_aula(*, materiais:preparacao_material(*))`)
+    .select(`*, aulas:preparacao_aula(*, materiais:preparacao_material(*), questoes:preparacao_aula_questao(*, questao:questao_id(id, olimpiada, nivel, fase, ano, numero, enunciado, topico, subtopico)))`)
     .eq("ativo", true)
     .order("criado_em", { ascending: false });
 
@@ -340,5 +358,63 @@ export async function despublicarAula(id: string): Promise<void> {
   if (!session) return;
   const supabase = createAdminClient();
   await supabase.from("preparacao_aula").update({ publicada: false }).eq("id", id);
+  revalidatePath(PATH);
+}
+
+// ─── Questões vinculadas à aula ───────────────────────────────────────────────
+
+function parseBlocosPrep(raw: string | null): unknown | null {
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+export async function criarQuestaoParaAula(
+  aulaId: string,
+  _prev: AulaState,
+  formData: FormData,
+): Promise<AulaState> {
+  const session = await getServerSession();
+  if (!session) return { error: "Não autorizado" };
+
+  const olimpiada = (formData.get("olimpiada") as string) ?? "";
+  const nivel = (formData.get("nivel") as string) || null;
+  const fase = Number(formData.get("fase")) || 0;
+  const ano = Number(formData.get("ano")) || new Date().getFullYear();
+  const numero = Number(formData.get("numero")) || 0;
+  const enunciado = ((formData.get("enunciado") as string) ?? "").trim();
+  const enunciado_blocos = parseBlocosPrep(formData.get("enunciado_blocos") as string);
+  const topico = ((formData.get("topico") as string) ?? "").trim() || null;
+  const subtopico = ((formData.get("subtopico") as string) ?? "").trim() || null;
+  const tipo = (formData.get("tipo") as string) || "multipla_escolha";
+
+  const supabase = createAdminClient();
+
+  const { data: questao, error: qErr } = await supabase
+    .from("questao")
+    .insert({ olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, topico, subtopico, tipo } as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+    .select("id")
+    .single();
+
+  if (qErr) return { error: qErr.message };
+
+  const { error: lErr } = await supabase
+    .from("preparacao_aula_questao")
+    .insert({ aula_id: aulaId, questao_id: questao.id } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  if (lErr) return { error: lErr.message };
+
+  revalidatePath(PATH);
+  return { ok: true };
+}
+
+export async function removerQuestaoAula(aulaId: string, questaoId: string): Promise<void> {
+  const session = await getServerSession();
+  if (!session) return;
+  const supabase = createAdminClient();
+  await supabase
+    .from("preparacao_aula_questao")
+    .delete()
+    .eq("aula_id", aulaId)
+    .eq("questao_id", questaoId);
   revalidatePath(PATH);
 }
