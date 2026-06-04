@@ -1,60 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import type { Database, PreparacaoAula, PreparacaoMaterial } from "@/lib/types/database";
-
-type AulaComMateriais = PreparacaoAula & { materiais: PreparacaoMaterial[] };
+import type { Database } from "@/lib/types/database";
+import { getAlternativasQuestao } from "@/app/aluno/(area)/treino/actions";
+import { ProjetoPageClient, type AulaCompleta } from "./projeto-page-client";
 
 const TEAL = "rgb(91,184,193)";
-
-function tipoIcon(tipo: string) {
-  if (tipo === "online")
-    return (
-      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-      </svg>
-    );
-  if (tipo === "presencial")
-    return (
-      <svg
-        className="h-4 w-4"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden="true"
-      >
-        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-      </svg>
-    );
-  return (
-    <svg
-      className="h-4 w-4"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-    >
-      <path d="M9 11l3 3L22 4" />
-      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-    </svg>
-  );
-}
-
-function fmtDateTime(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default async function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -68,9 +22,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
+        getAll() { return cookieStore.getAll(); },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         },
@@ -87,8 +39,58 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
 
   if (!projeto) notFound();
 
+  const adminClient = createAdminClient();
+
+  // Busca questões e monta AulaCompleta para cada aula
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const aulas = ((projeto as any).aulas ?? []) as AulaComMateriais[];
+  const aulasRaw = ((projeto as any).aulas ?? []) as any[];
+
+  const aulasCompletas: AulaCompleta[] = await Promise.all(
+    aulasRaw.map(async (aula: any) => {
+      // 1. Signed URLs dos materiais
+      const materiaisComUrl = await Promise.all(
+        (aula.materiais ?? []).map(async (m: any) => {
+          const { data } = await (adminClient as any).storage
+            .from("preparacao-materiais")
+            .createSignedUrl(m.arquivo_path, 3600);
+          return { ...m, signedUrl: data?.signedUrl ?? null };
+        }),
+      );
+
+      // 2. Questões vinculadas à aula
+      const { data: aulaQuestoes } = await (adminClient as any)
+        .from("preparacao_aula_questao")
+        .select(
+          "*, questao:questao_id(id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, ativo)",
+        )
+        .eq("aula_id", aula.id)
+        .order("ordem");
+
+      const questoes = ((aulaQuestoes ?? []) as any[])
+        .map((aq: any) => aq.questao)
+        .filter((q: any) => q && q.ativo);
+
+      // 3. Alternativas da primeira questão (pré-carregamento)
+      const primeiraAlt = questoes.length > 0
+        ? await getAlternativasQuestao(questoes[0].id)
+        : [];
+
+      return {
+        id: aula.id,
+        titulo: aula.titulo,
+        tipo: aula.tipo,
+        data_hora: aula.data_hora,
+        duracao_minutos: aula.duracao_minutos,
+        link_aula: aula.link_aula,
+        descricao: aula.descricao,
+        polos: aula.polos,
+        ordem: aula.ordem,
+        materiais: materiaisComUrl,
+        questoes,
+        primeiraAlt,
+      } satisfies AulaCompleta;
+    }),
+  );
 
   return (
     <div className="space-y-6">
@@ -113,61 +115,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
         )}
       </div>
 
-      {aulas.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            Nenhuma aula publicada ainda. Volte em breve!
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {aulas
-            .sort((a, b) => a.ordem - b.ordem)
-            .map((aula, idx) => (
-              <Link
-                key={aula.id}
-                href={`/aluno/aula/${aula.id}`}
-                className="group flex items-center gap-3 rounded-lg border border-border bg-card p-3 hover:border-ring transition-colors"
-              >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-card">
-                  {tipoIcon(aula.tipo)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    <span className="mr-2 text-muted-foreground">{idx + 1}.</span>
-                    {aula.titulo}
-                  </p>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    {aula.data_hora && <span>{fmtDateTime(aula.data_hora)}</span>}
-                    {aula.duracao_minutos && (
-                      <span>
-                        · {String(Math.floor(aula.duracao_minutos / 3600)).padStart(2, "0")}:
-                        {String(Math.floor((aula.duracao_minutos % 3600) / 60)).padStart(2, "0")}:
-                        {String(aula.duracao_minutos % 60).padStart(2, "0")}
-                      </span>
-                    )}
-                    {aula.materiais.length > 0 && (
-                      <span>
-                        · {aula.materiais.length}{" "}
-                        {aula.materiais.length === 1 ? "material" : "materiais"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <svg
-                  className="h-4 w-4 shrink-0 text-muted-foreground"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </Link>
-            ))}
-        </div>
-      )}
+      <ProjetoPageClient projetoId={id} aulas={aulasCompletas} />
     </div>
   );
 }
