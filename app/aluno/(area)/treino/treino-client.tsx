@@ -50,6 +50,7 @@ export function TreinoClient({
 
   /* ── Finalizar treino ────────────────────────────────────────────────────── */
   const [finalizado, setFinalizado] = useState(false);
+  const [mostrarDesempenhoAula, setMostrarDesempenhoAula] = useState(false);
 
   /* ── Server action ───────────────────────────────────────────────────────── */
   const [estado, action, isPending] = useActionState(responderQuestao, null);
@@ -113,6 +114,103 @@ export function TreinoClient({
   const respondidas = Object.keys(respostas).length;
 
   if (finalizado || idx >= total) {
+    // ── Desempenho inline da sessão da aula ──────────────────────────────────
+    if (completionUrl && mostrarDesempenhoAula) {
+      const acertosTotal = Object.values(respostas).filter((r) => r.correta).length;
+      const errosTotal = respondidas - acertosTotal;
+      const pctGeral = respondidas > 0 ? Math.round((acertosTotal / respondidas) * 100) : 0;
+
+      // Agrupar por tópico
+      const porTopico: Record<string, { total: number; acertos: number }> = {};
+      questoes.forEach((q) => {
+        if (respostas[q.id]) {
+          const t = (q as any).topico ?? "Sem tópico";
+          if (!porTopico[t]) porTopico[t] = { total: 0, acertos: 0 };
+          porTopico[t].total++;
+          if (respostas[q.id].correta) porTopico[t].acertos++;
+        }
+      });
+
+      return (
+        <div className="rounded-xl border border-border bg-card p-8 space-y-6">
+          <div className="text-center">
+            <p className="text-lg font-bold text-foreground mb-1">Desempenho desta aula</p>
+            <p className="text-xs text-muted-foreground">{respondidas} de {total} questões respondidas</p>
+          </div>
+
+          {/* Resumo */}
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-xl border border-border bg-background p-4">
+              <p className="text-2xl font-black text-foreground">{respondidas}</p>
+              <p className="text-xs text-muted-foreground mt-1">Respondidas</p>
+            </div>
+            <div className="rounded-xl border border-border bg-background p-4">
+              <p className="text-2xl font-black text-emerald-400">{acertosTotal}</p>
+              <p className="text-xs text-muted-foreground mt-1">Acertos</p>
+            </div>
+            <div className="rounded-xl border border-border bg-background p-4">
+              <p
+                className="text-2xl font-black"
+                style={{
+                  color: pctGeral >= 70 ? "#4ade80" : pctGeral >= 50 ? "#fbbf24" : "#f87171",
+                }}
+              >
+                {pctGeral}%
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Acerto</p>
+            </div>
+          </div>
+
+          {/* Por tópico */}
+          {Object.keys(porTopico).length > 0 && (
+            <div className="rounded-xl border border-border bg-background overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Por tópico
+                </p>
+              </div>
+              <div className="divide-y divide-border/40">
+                {Object.entries(porTopico).map(([topico, data]) => {
+                  const pctT = Math.round((data.acertos / data.total) * 100);
+                  return (
+                    <div key={topico} className="flex items-center justify-between px-4 py-3">
+                      <span className="text-sm text-foreground">{topico}</span>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="text-muted-foreground">{data.total} questão{data.total !== 1 ? "ões" : ""}</span>
+                        <span
+                          className="font-bold"
+                          style={{ color: pctT >= 70 ? "#4ade80" : pctT >= 50 ? "#fbbf24" : "#f87171" }}
+                        >
+                          {pctT}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={() => setMostrarDesempenhoAula(false)}
+              className="rounded-lg border border-border px-5 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Fechar
+            </button>
+            <Link
+              href={completionUrl}
+              className="rounded-lg px-5 py-2.5 text-sm font-bold text-[#0f172a]"
+              style={{ background: TEAL }}
+            >
+              Concluir
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Tela de conclusão padrão ─────────────────────────────────────────────
     return (
       <div className="rounded-xl border border-border bg-card p-12 text-center">
         <p className="text-xl font-bold text-foreground mb-2">Sessão concluída!</p>
@@ -121,13 +219,24 @@ export function TreinoClient({
         </p>
         <div className="flex justify-center gap-3">
           {completionUrl ? (
-            <Link
-              href={completionUrl}
-              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-            >
-              {completionLabel ?? "Voltar"}
-            </Link>
+            // Contexto de aula: Ver desempenho + Concluir
+            <>
+              <button
+                onClick={() => setMostrarDesempenhoAula(true)}
+                className="rounded-lg border border-border px-5 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Ver desempenho
+              </button>
+              <Link
+                href={completionUrl}
+                className="rounded-lg px-5 py-2.5 text-sm font-bold text-[#0f172a]"
+                style={{ background: TEAL }}
+              >
+                Concluir
+              </Link>
+            </>
           ) : (
+            // Contexto de treino livre: Ver meu desempenho + Nova sessão
             <>
               <Link
                 href="/aluno/treino/dashboard"
