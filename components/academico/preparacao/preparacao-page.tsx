@@ -1314,9 +1314,14 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
               const aulaCount = projeto.aulas.filter((a) => a.tipo !== "simulado").length;
               const simCount  = projeto.aulas.filter((a) => a.tipo === "simulado").length;
               const series    = projeto.series_elegiveis ?? [];
-              const segmentos = Object.entries(SERIES_POR_SEGMENTO)
+              // Segmentos das séries elegíveis; se vazio, usa os do catálogo da olimpíada
+              let segmentos = Object.entries(SERIES_POR_SEGMENTO)
                 .filter(([, s]) => s.some((v) => series.includes(v)))
                 .map(([seg]) => seg);
+              if (segmentos.length === 0) {
+                const ol = CATALOGO.find((o) => o.sigla === projeto.olimpiada_sigla);
+                segmentos = ol?.segmentos ?? [];
+              }
               const parts: string[] = [String(projeto.ano_letivo)];
               if (segmentos.length > 0) parts.push(segmentos.join(" · "));
               else if (series.length > 0) parts.push(series.join(", "));
