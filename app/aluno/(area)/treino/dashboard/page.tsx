@@ -167,16 +167,9 @@ export default async function TreinoDashboardPage() {
     string,
     { topico: string; total: number; acertos: number; erros: number }
   > = {};
-  const origens = [banco, aulas, simulados].filter(Boolean);
-  for (const o of origens) {
-    for (const t of o.por_topico ?? o.por_aula ?? []) {
-      const key = t.topico ?? t.titulo;
-      if (!key) continue;
-      if (!topicoMap[key]) topicoMap[key] = { topico: key, total: 0, acertos: 0, erros: 0 };
-      topicoMap[key].total += t.total;
-      topicoMap[key].acertos += t.acertos;
-      topicoMap[key].erros += t.total - t.acertos;
-    }
+  for (const t of banco?.por_topico ?? []) {
+    if (!t.topico) continue;
+    topicoMap[t.topico] = { topico: t.topico, total: t.total, acertos: t.acertos, erros: t.erros };
   }
   const todosTopicos = Object.values(topicoMap).filter((t) => t.total > 0);
   const topicosParaRevisar = [...todosTopicos]
