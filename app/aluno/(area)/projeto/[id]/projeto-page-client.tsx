@@ -181,13 +181,6 @@ export function ProjetoPageClient({
                   </div>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setExpandida(null)}
-                  className="w-full rounded-lg border border-border py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Fechar aula
-                </button>
               </div>
             )}
           </div>
