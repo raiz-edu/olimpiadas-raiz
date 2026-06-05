@@ -38,6 +38,13 @@ export function AlternativasEditor({
   );
 }
 
+const LARGURA_MAP: Record<string, string> = {
+  pequena: "120px",
+  media: "220px",
+  grande: "360px",
+  completa: "100%",
+};
+
 function AlternativaRow({
   letra,
   questaoId,
@@ -53,6 +60,7 @@ function AlternativaRow({
 }) {
   const [, action, isPending] = useActionState(salvarAlternativa, null);
   const [imagemUrl, setImagemUrl] = useState<string | null>(alternativa?.imagem_url ?? null);
+  const [largura, setLargura] = useState<string>(alternativa?.imagem_largura ?? "media");
   const [isUploading, startUploadTransition] = useTransition();
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -80,6 +88,7 @@ function AlternativaRow({
         <input type="hidden" name="questao_id" value={questaoId} />
         <input type="hidden" name="letra" value={letra} />
         <input type="hidden" name="imagem_url" value={imagemUrl ?? ""} />
+        <input type="hidden" name="imagem_largura" value={largura} />
 
         {/* Linha principal: círculo + texto + correta + salvar + stats */}
         <div className="flex items-start gap-3">
@@ -129,22 +138,48 @@ function AlternativaRow({
         {/* Imagem da alternativa */}
         <div className="ml-11 space-y-2">
           {imagemUrl && (
-            <div className="relative inline-block">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imagemUrl}
-                alt={`Alternativa ${letra}`}
-                className="max-h-32 rounded border border-border object-contain"
-                style={{ maxWidth: "320px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setImagemUrl(null)}
-                className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-red-500/50 bg-card text-[10px] text-red-400 hover:text-red-300"
-                title="Remover imagem"
-              >
-                ✕
-              </button>
+            <div className="space-y-2">
+              <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagemUrl}
+                  alt={`Alternativa ${letra}`}
+                  className="rounded border border-border object-contain"
+                  style={{ width: LARGURA_MAP[largura] ?? "220px", maxWidth: "100%" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setImagemUrl(null)}
+                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-red-500/50 bg-card text-[10px] text-red-400 hover:text-red-300"
+                  title="Remover imagem"
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Seletor de largura */}
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground">Largura:</span>
+                {(["pequena", "media", "grande", "completa"] as const).map((op) => (
+                  <button
+                    key={op}
+                    type="button"
+                    onClick={() => setLargura(op)}
+                    className={`rounded px-2 py-0.5 text-[11px] capitalize transition-colors ${
+                      largura === op
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {op === "media"
+                      ? "Média"
+                      : op === "pequena"
+                        ? "Pequena"
+                        : op === "grande"
+                          ? "Grande"
+                          : "Completa"}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

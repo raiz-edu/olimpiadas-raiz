@@ -154,7 +154,7 @@ export async function getOrCreateSessao(aulaId: string): Promise<{
       ? ((
           await db
             .from("alternativa")
-            .select("id, letra, texto, imagem_url")
+            .select("id, letra, texto, imagem_url, imagem_largura")
             .eq("questao_id", questoes[0].id)
             .order("letra")
         ).data ?? [])

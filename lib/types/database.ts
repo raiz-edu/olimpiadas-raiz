@@ -592,8 +592,20 @@ export type Database = {
       };
       preparacao_aula_questao: {
         Row: { id: string; aula_id: string; questao_id: string; ordem: number; criado_em: string };
-        Insert: { id?: string; aula_id: string; questao_id: string; ordem?: number; criado_em?: string };
-        Update: { id?: string; aula_id?: string; questao_id?: string; ordem?: number; criado_em?: string };
+        Insert: {
+          id?: string;
+          aula_id: string;
+          questao_id: string;
+          ordem?: number;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          aula_id?: string;
+          questao_id?: string;
+          ordem?: number;
+          criado_em?: string;
+        };
         Relationships: [];
       };
       preparacao_material: {
@@ -729,6 +741,7 @@ export type Database = {
           letra: string;
           texto: string | null;
           imagem_url: string | null;
+          imagem_largura: string | null;
           correta: boolean;
         };
         Insert: {
@@ -737,6 +750,7 @@ export type Database = {
           letra: string;
           texto?: string | null;
           imagem_url?: string | null;
+          imagem_largura?: string | null;
           correta?: boolean;
         };
         Update: {
@@ -745,6 +759,7 @@ export type Database = {
           letra?: string;
           texto?: string | null;
           imagem_url?: string | null;
+          imagem_largura?: string | null;
           correta?: boolean;
         };
         Relationships: [];

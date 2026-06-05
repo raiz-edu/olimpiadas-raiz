@@ -253,6 +253,7 @@ export async function salvarAlternativa(
   const texto = ((formData.get("texto") as string) ?? "").trim() || null;
   const correta = formData.get("correta") === "true";
   const imagem_url = ((formData.get("imagem_url") as string) ?? "").trim() || null;
+  const imagem_largura = ((formData.get("imagem_largura") as string) ?? "").trim() || null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
@@ -264,7 +265,10 @@ export async function salvarAlternativa(
 
   const { error } = await supabase
     .from("alternativa")
-    .upsert({ questao_id, letra, texto, imagem_url, correta }, { onConflict: "questao_id,letra" });
+    .upsert(
+      { questao_id, letra, texto, imagem_url, imagem_largura, correta },
+      { onConflict: "questao_id,letra" },
+    );
 
   if (error) return { error: error.message };
   revalidatePath(`/academico/banco-questoes/${questao_id}`);

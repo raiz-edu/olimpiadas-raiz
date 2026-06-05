@@ -98,7 +98,7 @@ export async function getAlternativasQuestao(questaoId: string) {
   // Retorna apenas id, letra e texto — NÃO retorna "correta" para o client
   const { data } = await supabase
     .from("alternativa")
-    .select("id, letra, texto, imagem_url")
+    .select("id, letra, texto, imagem_url, imagem_largura")
     .eq("questao_id", questaoId)
     .order("letra");
   return data ?? [];

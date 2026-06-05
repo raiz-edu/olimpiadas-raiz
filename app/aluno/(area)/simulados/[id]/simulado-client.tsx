@@ -421,7 +421,19 @@ export function SimuladoClient({
                               <img
                                 src={alt.imagem_url}
                                 alt={`Alt ${alt.letra}`}
-                                className="mt-2 max-w-xs rounded border border-border"
+                                className="mt-2 rounded border border-border"
+                                style={{
+                                  width:
+                                    (
+                                      {
+                                        pequena: "120px",
+                                        media: "220px",
+                                        grande: "360px",
+                                        completa: "100%",
+                                      } as Record<string, string>
+                                    )[(alt as any).imagem_largura ?? "media"] ?? "220px",
+                                  maxWidth: "100%",
+                                }}
                               />
                             )}
                           </div>
