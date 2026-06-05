@@ -82,9 +82,15 @@ function toDatetimeLocal(iso: string | null): string {
   // Converte o timestamp UTC para horário de Brasília antes de montar o valor do input
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "America/Sao_Paulo",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hour12: false,
-  }).format(new Date(iso)).replace(" ", "T");
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(new Date(iso))
+    .replace(" ", "T");
 }
 
 // ─── Ícone lápis ─────────────────────────────────────────────────────────────
@@ -107,17 +113,32 @@ function PencilIcon() {
 
 // ─── Badge tipo aula ─────────────────────────────────────────────────────────
 
-function TipoBadge({ tipo, modalidade, polos }: { tipo: string; modalidade?: string | null; polos?: string | null }) {
+function TipoBadge({
+  tipo,
+  modalidade,
+  polos,
+}: {
+  tipo: string;
+  modalidade?: string | null;
+  polos?: string | null;
+}) {
   if (tipo === "simulado") {
-    return polos
-      ? <span className="rounded-full bg-violet-400/10 px-2 py-0.5 text-[11px] font-medium text-violet-400">Presencial</span>
-      : <span className="rounded-full bg-sky-400/10 px-2 py-0.5 text-[11px] font-medium text-sky-400">Online</span>;
+    return polos ? (
+      <span className="rounded-full bg-violet-400/10 px-2 py-0.5 text-[11px] font-medium text-violet-400">
+        Presencial
+      </span>
+    ) : (
+      <span className="rounded-full bg-sky-400/10 px-2 py-0.5 text-[11px] font-medium text-sky-400">
+        Online
+      </span>
+    );
   }
   if (tipo === "online") {
     if (modalidade === "ao_vivo")
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />Ao vivo
+          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+          Ao vivo
         </span>
       );
     return (
@@ -293,9 +314,17 @@ function NovaAulaForm({ projetoId, onClose }: { projetoId: string; onClose: () =
           <div className="mt-1 flex gap-3">
             {(["online", "presencial"] as const).map((t) => (
               <label key={t} className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="tipo" value={t} checked={tipo === t}
-                  onChange={() => setTipo(t)} className="accent-[rgb(91,184,193)]" />
-                <span className="text-sm text-foreground">{t === "online" ? "Online" : "Presencial"}</span>
+                <input
+                  type="radio"
+                  name="tipo"
+                  value={t}
+                  checked={tipo === t}
+                  onChange={() => setTipo(t)}
+                  className="accent-[rgb(91,184,193)]"
+                />
+                <span className="text-sm text-foreground">
+                  {t === "online" ? "Online" : "Presencial"}
+                </span>
               </label>
             ))}
           </div>
@@ -303,9 +332,16 @@ function NovaAulaForm({ projetoId, onClose }: { projetoId: string; onClose: () =
             <div className="mt-2 flex gap-4 pl-1">
               {(["gravada", "ao_vivo"] as const).map((m) => (
                 <label key={m} className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="modalidade_online" value={m} defaultChecked={m === "gravada"}
-                    className="accent-[rgb(91,184,193)]" />
-                  <span className="text-xs text-muted-foreground">{m === "gravada" ? "Gravada" : "Ao vivo"}</span>
+                  <input
+                    type="radio"
+                    name="modalidade_online"
+                    value={m}
+                    defaultChecked={m === "gravada"}
+                    className="accent-[rgb(91,184,193)]"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {m === "gravada" ? "Gravada" : "Ao vivo"}
+                  </span>
                 </label>
               ))}
             </div>
@@ -387,6 +423,7 @@ function NovaAulaForm({ projetoId, onClose }: { projetoId: string; onClose: () =
 
 // ─── Formulário de módulo online ──────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function NovoModuloOnlineForm({ projetoId, onClose }: { projetoId: string; onClose: () => void }) {
   const bound = criarAula.bind(null, projetoId);
   const [state, formAction, isPending] = useActionState(bound, null);
@@ -408,23 +445,38 @@ function NovoModuloOnlineForm({ projetoId, onClose }: { projetoId: string; onClo
 
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-foreground">Título *</label>
-        <input name="titulo" type="text" required placeholder="Ex: Lista de exercícios — Aritmética"
-          className={inputClass} />
+        <input
+          name="titulo"
+          type="text"
+          required
+          placeholder="Ex: Lista de exercícios — Aritmética"
+          className={inputClass}
+        />
       </div>
 
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-foreground">Descrição</label>
-        <textarea name="descricao" rows={2} placeholder="Instruções ou contexto do módulo…"
-          className={inputClass} />
+        <textarea
+          name="descricao"
+          rows={2}
+          placeholder="Instruções ou contexto do módulo…"
+          className={inputClass}
+        />
       </div>
 
       <div className="flex gap-2">
-        <button type="submit" disabled={isPending}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-50 bg-emerald-500 text-white">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-50 bg-emerald-500 text-white"
+        >
           {isPending ? "Salvando…" : "Criar módulo"}
         </button>
-        <button type="button" onClick={onClose}
-          className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
           Cancelar
         </button>
       </div>
@@ -434,6 +486,7 @@ function NovoModuloOnlineForm({ projetoId, onClose }: { projetoId: string; onClo
 
 // ─── Formulários de simulado ─────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function NovoSimuladoForm({ projetoId, onClose }: { projetoId: string; onClose: () => void }) {
   const bound = criarAula.bind(null, projetoId);
   const [state, formAction, isPending] = useActionState(bound, null);
@@ -712,9 +765,17 @@ function EditarAulaForm({ aula, onClose }: { aula: Aula; onClose: () => void }) 
           <div className="mt-1 flex gap-3">
             {(["online", "presencial"] as const).map((t) => (
               <label key={t} className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="tipo" value={t} checked={tipo === t}
-                  onChange={() => setTipo(t)} className="accent-[rgb(91,184,193)]" />
-                <span className="text-sm text-foreground">{t === "online" ? "Online" : "Presencial"}</span>
+                <input
+                  type="radio"
+                  name="tipo"
+                  value={t}
+                  checked={tipo === t}
+                  onChange={() => setTipo(t)}
+                  className="accent-[rgb(91,184,193)]"
+                />
+                <span className="text-sm text-foreground">
+                  {t === "online" ? "Online" : "Presencial"}
+                </span>
               </label>
             ))}
           </div>
@@ -722,10 +783,16 @@ function EditarAulaForm({ aula, onClose }: { aula: Aula; onClose: () => void }) 
             <div className="mt-2 flex gap-4 pl-1">
               {(["gravada", "ao_vivo"] as const).map((m) => (
                 <label key={m} className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="modalidade_online" value={m}
+                  <input
+                    type="radio"
+                    name="modalidade_online"
+                    value={m}
                     defaultChecked={(aula.modalidade_online ?? "gravada") === m}
-                    className="accent-[rgb(91,184,193)]" />
-                  <span className="text-xs text-muted-foreground">{m === "gravada" ? "Gravada" : "Ao vivo"}</span>
+                    className="accent-[rgb(91,184,193)]"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {m === "gravada" ? "Gravada" : "Ao vivo"}
+                  </span>
                 </label>
               ))}
             </div>
@@ -960,14 +1027,18 @@ function AulaCard({ aula }: { aula: Aula }) {
               </p>
               <div className="space-y-1.5">
                 {(aula.questoes as AulaQuestao[]).map((aq) => (
-                  <div key={aq.id} className="flex items-start gap-3 rounded-lg border border-border bg-card/50 px-3 py-2">
+                  <div
+                    key={aq.id}
+                    className="flex items-start gap-3 rounded-lg border border-border bg-card/50 px-3 py-2"
+                  >
                     <span className="shrink-0 w-5 text-center text-xs font-bold text-muted-foreground">
                       {aq.questao.numero}
                     </span>
                     <div className="flex-1 min-w-0">
                       {aq.questao.topico && (
                         <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide mb-0.5">
-                          {aq.questao.topico}{aq.questao.subtopico ? ` · ${aq.questao.subtopico}` : ""}
+                          {aq.questao.topico}
+                          {aq.questao.subtopico ? ` · ${aq.questao.subtopico}` : ""}
                         </p>
                       )}
                       <p className="text-xs text-foreground line-clamp-2">{aq.questao.enunciado}</p>
@@ -984,7 +1055,12 @@ function AulaCard({ aula }: { aula: Aula }) {
                       className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-red-400 transition-colors disabled:opacity-40"
                       title="Remover questão"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="h-3.5 w-3.5"
+                      >
                         <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
                       </svg>
                     </button>
@@ -1010,7 +1086,12 @@ function AulaCard({ aula }: { aula: Aula }) {
                 onClick={() => setShowQuestaoForm(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-dashed border-amber-500/30 px-3 py-2 text-xs text-amber-500/70 hover:border-amber-500 hover:text-amber-500 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                >
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
                 Nova questão
@@ -1020,8 +1101,17 @@ function AulaCard({ aula }: { aula: Aula }) {
                 onClick={() => setShowBuscaForm(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-dashed border-sky-500/30 px-3 py-2 text-xs text-sky-500/70 hover:border-sky-500 hover:text-sky-500 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                  <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Buscar no banco
               </button>
@@ -1044,7 +1134,10 @@ function NovaQuestaoAulaForm({ aulaId, onClose }: { aulaId: string; onClose: () 
   }, [state, onClose]);
 
   return (
-    <form action={action} className="mt-3 space-y-3 rounded-xl border border-border bg-background p-4">
+    <form
+      action={action}
+      className="mt-3 space-y-3 rounded-xl border border-border bg-background p-4"
+    >
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Nova Questão
       </p>
@@ -1056,21 +1149,41 @@ function NovaQuestaoAulaForm({ aulaId, onClose }: { aulaId: string; onClose: () 
       )}
 
       <datalist id={`dl-orig-${aulaId}`}>
-        <option value="obmep" /><option value="obmep_mirim" /><option value="obm" />
-        <option value="obf" /><option value="obi" /><option value="obq" /><option value="onhb" />
+        <option value="obmep" />
+        <option value="obmep_mirim" />
+        <option value="obm" />
+        <option value="obf" />
+        <option value="obi" />
+        <option value="obq" />
+        <option value="onhb" />
       </datalist>
       <datalist id={`dl-niv-${aulaId}`}>
-        <option value="nivel_1" /><option value="nivel_2" /><option value="nivel_3" /><option value="mirim" />
+        <option value="nivel_1" />
+        <option value="nivel_2" />
+        <option value="nivel_3" />
+        <option value="mirim" />
       </datalist>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="block text-xs font-medium text-foreground">Origem da questão</label>
-          <input name="olimpiada" type="text" list={`dl-orig-${aulaId}`} placeholder="obmep, obm…" className={inputClass} />
+          <input
+            name="olimpiada"
+            type="text"
+            list={`dl-orig-${aulaId}`}
+            placeholder="obmep, obm…"
+            className={inputClass}
+          />
         </div>
         <div className="space-y-1">
           <label className="block text-xs font-medium text-foreground">Nível</label>
-          <input name="nivel" type="text" list={`dl-niv-${aulaId}`} placeholder="nivel_1, mirim…" className={inputClass} />
+          <input
+            name="nivel"
+            type="text"
+            list={`dl-niv-${aulaId}`}
+            placeholder="nivel_1, mirim…"
+            className={inputClass}
+          />
         </div>
       </div>
 
@@ -1081,7 +1194,14 @@ function NovaQuestaoAulaForm({ aulaId, onClose }: { aulaId: string; onClose: () 
         </div>
         <div className="space-y-1">
           <label className="block text-xs font-medium text-foreground">Ano</label>
-          <input name="ano" type="number" min={2000} max={2100} placeholder={String(new Date().getFullYear())} className={inputClass} />
+          <input
+            name="ano"
+            type="number"
+            min={2000}
+            max={2100}
+            placeholder={String(new Date().getFullYear())}
+            className={inputClass}
+          />
         </div>
         <div className="space-y-1">
           <label className="block text-xs font-medium text-foreground">Número</label>
@@ -1249,9 +1369,7 @@ function BuscarQuestaoAulaForm({
                       {q.olimpiada} · {q.fase}ª fase · {q.ano} · Q{q.numero}
                     </span>
                     {q.topico && (
-                      <span className="text-[10px] font-semibold text-amber-400">
-                        {q.topico}
-                      </span>
+                      <span className="text-[10px] font-semibold text-amber-400">{q.topico}</span>
                     )}
                   </div>
                   <p className="text-xs text-foreground line-clamp-2">{q.enunciado}</p>
@@ -1291,7 +1409,6 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showAulaForm, setShowAulaForm] = useState(false);
-  const [showSimuladoForm, setShowSimuladoForm] = useState(false);
   const [deleting, startDelete] = useTransition();
   const [publishing, startPublish] = useTransition();
 
@@ -1335,8 +1452,8 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
           <p className="text-[11px] text-muted-foreground/70">
             {(() => {
               const aulaCount = projeto.aulas.filter((a) => a.tipo !== "simulado").length;
-              const simCount  = projeto.aulas.filter((a) => a.tipo === "simulado").length;
-              const series    = projeto.series_elegiveis ?? [];
+              const simCount = projeto.aulas.filter((a) => a.tipo === "simulado").length;
+              const series = projeto.series_elegiveis ?? [];
               // Segmentos das séries elegíveis; se vazio, usa os do catálogo da olimpíada
               let segmentos = Object.entries(SERIES_POR_SEGMENTO)
                 .filter(([, s]) => s.some((v) => series.includes(v)))
@@ -1349,7 +1466,7 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
               if (segmentos.length > 0) parts.push(segmentos.join(" · "));
               else if (series.length > 0) parts.push(series.join(", "));
               if (aulaCount > 0) parts.push(`${aulaCount} aula${aulaCount !== 1 ? "s" : ""}`);
-              if (simCount  > 0) parts.push(`${simCount} simulado${simCount !== 1 ? "s" : ""}`);
+              if (simCount > 0) parts.push(`${simCount} simulado${simCount !== 1 ? "s" : ""}`);
               return parts.join(" · ");
             })()}
           </p>
@@ -1430,8 +1547,6 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
 
           {showAulaForm ? (
             <NovaAulaForm projetoId={projeto.id} onClose={() => setShowAulaForm(false)} />
-          ) : showSimuladoForm ? (
-            <NovoSimuladoForm projetoId={projeto.id} onClose={() => setShowSimuladoForm(false)} />
           ) : (
             <div className="flex flex-wrap gap-2">
               <button
@@ -1439,20 +1554,15 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
                 onClick={() => setShowAulaForm(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:border-ring hover:text-foreground transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                >
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
                 Adicionar aula
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowSimuladoForm(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-dashed border-indigo-400/30 px-3 py-2 text-xs text-indigo-400/70 hover:border-indigo-400 hover:text-indigo-400 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
-                Adicionar simulado
               </button>
             </div>
           )}

@@ -52,21 +52,38 @@ export async function getSimuladosDisponiveis(): Promise<SimuladoDisponivel[]> {
 
   const db = admin();
 
-  // Busca aulas do tipo simulado publicadas de projetos publicados
+  // ── 1. Simulados vinculados a projeto (modelo antigo: projeto_id) ────────────
   const { data: aulas } = await db
     .from("preparacao_aula")
     .select(
       "id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada, projeto:projeto_id(id, nome, olimpiada_sigla, publicado)",
     )
     .eq("tipo", "simulado")
-    .eq("publicada", true);
+    .eq("publicada", true)
+    .not("projeto_id", "is", null);
 
-  if (!aulas?.length) return [];
+  const porProjeto = (aulas ?? []).filter((a: any) => a.projeto?.publicado);
 
-  const simuladosPublicados = aulas.filter((a: any) => a.projeto?.publicado);
+  // ── 2. Simulados standalone por turma (turma_ids contém turma do aluno) ──────
+  const turmaId = (session.aluno as any).turma_id;
+  let porTurma: any[] = [];
+  if (turmaId) {
+    const { data: standalone } = await db
+      .from("preparacao_aula")
+      .select("id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada")
+      .eq("tipo", "simulado")
+      .eq("publicada", true)
+      .is("projeto_id", null)
+      .filter("turma_ids", "cs", JSON.stringify([turmaId]));
+    porTurma = standalone ?? [];
+  }
 
-  // Busca sessões do aluno para esses simulados
-  const aulaIds = simuladosPublicados.map((a: any) => a.id);
+  const todos = [...porProjeto, ...porTurma.map((a: any) => ({ ...a, projeto: null }))];
+
+  if (!todos.length) return [];
+
+  // Busca sessões do aluno
+  const aulaIds = todos.map((a: any) => a.id);
   const { data: sessoes } = await db
     .from("simulado_sessao")
     .select("*")
@@ -76,7 +93,7 @@ export async function getSimuladosDisponiveis(): Promise<SimuladoDisponivel[]> {
   const sessaoMap: Record<string, SimuladoSessao> = {};
   for (const s of sessoes ?? []) sessaoMap[s.aula_id] = s;
 
-  return simuladosPublicados.map((a: any) => ({
+  return todos.map((a: any) => ({
     id: a.id,
     titulo: a.titulo,
     tipo: a.tipo,
