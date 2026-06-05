@@ -14,6 +14,7 @@ import {
   vincularQuestao,
   desvincularQuestao,
   buscarQuestoes,
+  criarQuestaoParaSimulado,
 } from "../actions";
 import { SimuladoForm } from "../simulado-form";
 import { inputClass } from "@/components/ui/form-field";
@@ -55,6 +56,11 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
   const [busca, setBusca] = useState("");
   const [resultados, setResultados] = useState<Questao[]>([]);
   const [buscando, startBusca] = useTransition();
+  const [showNovaQuestao, setShowNovaQuestao] = useState(false);
+  const [novaQuestaoState, novaQuestaoAction] = useActionState(
+    id ? criarQuestaoParaSimulado.bind(null, id ?? "") : async () => null,
+    null,
+  );
   const [, startPublish] = useTransition();
   const [, startDelete] = useTransition();
 
@@ -66,6 +72,12 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
       getTurmas().then(setTurmas);
     });
   }, [params]);
+
+  useEffect(() => {
+    if (novaQuestaoState && "ok" in novaQuestaoState && id) {
+      getSimuladoDetalhe(id).then(setSimulado);
+    }
+  }, [novaQuestaoState, id]);
 
   const action = id ? atualizarSimulado.bind(null, id) : async () => null;
   const [state, formAction] = useActionState(action as any, null);
@@ -216,61 +228,199 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
           </div>
         )}
 
-        {/* Busca para adicionar */}
-        <div className="space-y-2 border-t border-border pt-4">
-          <p className="text-xs font-medium text-muted-foreground">Adicionar questão do banco</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleBusca()}
-              placeholder="Número, palavra do enunciado…"
-              className={`${inputClass} flex-1`}
-            />
+        {/* Tabs: Nova questão / Buscar no banco */}
+        <div className="border-t border-border pt-4 space-y-3">
+          <div className="flex gap-1 rounded-lg border border-border bg-background p-1 w-fit">
             <button
               type="button"
-              onClick={handleBusca}
-              disabled={buscando}
-              className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+              onClick={() => setShowNovaQuestao(false)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                !showNovaQuestao
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              {buscando ? "…" : "Buscar"}
+              Buscar no banco
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNovaQuestao(true)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                showNovaQuestao
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Nova questão
             </button>
           </div>
-          {resultados.length > 0 && (
-            <div className="space-y-1 max-h-60 overflow-y-auto">
-              {resultados.map((q) => {
-                const jaVinculada = vinculadasIds.has(q.id);
-                return (
-                  <div
-                    key={q.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">
-                        {q.olimpiada?.toUpperCase()} {q.fase != null ? `· ${q.fase}ª Fase` : ""} ·{" "}
-                        {q.ano}
-                        {q.numero != null ? ` · Q${q.numero}` : ""}
-                      </p>
-                      <p className="text-sm text-foreground truncate">{q.enunciado}</p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={jaVinculada}
-                      onClick={async () => {
-                        if (jaVinculada) return;
-                        await vincularQuestao(id, q.id);
-                        const atualizado = await getSimuladoDetalhe(id);
-                        setSimulado(atualizado);
-                      }}
-                      className="shrink-0 text-xs font-medium disabled:opacity-40 text-primary hover:underline transition-colors"
-                    >
-                      {jaVinculada ? "Já adicionada" : "Adicionar"}
-                    </button>
-                  </div>
-                );
-              })}
+
+          {!showNovaQuestao && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                Adicionar questão do banco
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleBusca()}
+                  placeholder="Número, palavra do enunciado…"
+                  className={`${inputClass} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={handleBusca}
+                  disabled={buscando}
+                  className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+                >
+                  {buscando ? "…" : "Buscar"}
+                </button>
+              </div>
+              {resultados.length > 0 && (
+                <div className="space-y-1 max-h-60 overflow-y-auto">
+                  {resultados.map((q) => {
+                    const jaVinculada = vinculadasIds.has(q.id);
+                    return (
+                      <div
+                        key={q.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            {q.olimpiada?.toUpperCase()} {q.fase != null ? `· ${q.fase}ª Fase` : ""}{" "}
+                            · {q.ano}
+                            {q.numero != null ? ` · Q${q.numero}` : ""}
+                          </p>
+                          <p className="text-sm text-foreground truncate">{q.enunciado}</p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={jaVinculada}
+                          onClick={async () => {
+                            if (jaVinculada) return;
+                            await vincularQuestao(id, q.id);
+                            const atualizado = await getSimuladoDetalhe(id);
+                            setSimulado(atualizado);
+                          }}
+                          className="shrink-0 text-xs font-medium disabled:opacity-40 text-primary hover:underline transition-colors"
+                        >
+                          {jaVinculada ? "Já adicionada" : "Adicionar"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+          )}
+
+          {showNovaQuestao && (
+            <form
+              action={novaQuestaoAction as any}
+              className="space-y-3"
+              onSubmit={() => {
+                if (novaQuestaoState && "ok" in novaQuestaoState) {
+                  getSimuladoDetalhe(id).then(setSimulado);
+                }
+              }}
+            >
+              {novaQuestaoState && "error" in novaQuestaoState && (
+                <p className="text-xs text-destructive">{(novaQuestaoState as any).error}</p>
+              )}
+              {novaQuestaoState && "ok" in novaQuestaoState && (
+                <p className="text-xs text-emerald-400">Questão criada e vinculada.</p>
+              )}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div>
+                  <label className="text-xs text-muted-foreground">Origem</label>
+                  <input
+                    name="olimpiada"
+                    type="text"
+                    placeholder="obmep…"
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Nível</label>
+                  <input
+                    name="nivel"
+                    type="text"
+                    placeholder="nivel_1…"
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Fase</label>
+                  <input
+                    name="fase"
+                    type="number"
+                    placeholder="opcional"
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Ano</label>
+                  <input
+                    name="ano"
+                    type="number"
+                    defaultValue={new Date().getFullYear()}
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Nº</label>
+                  <input
+                    name="numero"
+                    type="number"
+                    placeholder="opcional"
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Tipo</label>
+                  <select name="tipo" className={`${inputClass} mt-1`}>
+                    <option value="multipla_escolha">M. Escolha</option>
+                    <option value="aberta">Aberta</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Tópico</label>
+                  <input
+                    name="topico"
+                    type="text"
+                    placeholder="opcional"
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Subtópico</label>
+                  <input
+                    name="subtopico"
+                    type="text"
+                    placeholder="opcional"
+                    className={`${inputClass} mt-1`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Enunciado *</label>
+                <textarea
+                  name="enunciado"
+                  required
+                  rows={3}
+                  placeholder="Texto da questão…"
+                  className={`${inputClass} mt-1 w-full resize-none`}
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+              >
+                Criar e vincular
+              </button>
+            </form>
           )}
         </div>
       </div>

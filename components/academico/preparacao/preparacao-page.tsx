@@ -1420,10 +1420,12 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
     });
   }
 
-  const aulasSorted = [...projeto.aulas].sort((a, b) => {
-    if (a.data_hora && b.data_hora) return a.data_hora.localeCompare(b.data_hora);
-    return a.ordem - b.ordem;
-  });
+  const aulasSorted = [...projeto.aulas]
+    .filter((a) => a.tipo !== "simulado")
+    .sort((a, b) => {
+      if (a.data_hora && b.data_hora) return a.data_hora.localeCompare(b.data_hora);
+      return a.ordem - b.ordem;
+    });
 
   function handleDelete() {
     if (!confirm(`Excluir o projeto "${projeto.nome}" e todas as suas aulas?`)) return;
@@ -1452,7 +1454,6 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
           <p className="text-[11px] text-muted-foreground/70">
             {(() => {
               const aulaCount = projeto.aulas.filter((a) => a.tipo !== "simulado").length;
-              const simCount = projeto.aulas.filter((a) => a.tipo === "simulado").length;
               const series = projeto.series_elegiveis ?? [];
               // Segmentos das séries elegíveis; se vazio, usa os do catálogo da olimpíada
               let segmentos = Object.entries(SERIES_POR_SEGMENTO)
@@ -1466,7 +1467,6 @@ function ProjetoCard({ projeto }: { projeto: Projeto }) {
               if (segmentos.length > 0) parts.push(segmentos.join(" · "));
               else if (series.length > 0) parts.push(series.join(", "));
               if (aulaCount > 0) parts.push(`${aulaCount} aula${aulaCount !== 1 ? "s" : ""}`);
-              if (simCount > 0) parts.push(`${simCount} simulado${simCount !== 1 ? "s" : ""}`);
               return parts.join(" · ");
             })()}
           </p>

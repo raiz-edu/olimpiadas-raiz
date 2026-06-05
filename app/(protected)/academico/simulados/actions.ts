@@ -249,6 +249,62 @@ export async function desvincularQuestao(simuladoId: string, questaoId: string):
   revalidatePath(`${PATH}/${simuladoId}`);
 }
 
+export async function criarQuestaoParaSimulado(
+  simuladoId: string,
+  _prev: SimuladoAdminState,
+  formData: FormData,
+): Promise<SimuladoAdminState> {
+  await requireSession();
+
+  const olimpiada = (formData.get("olimpiada") as string) ?? "";
+  const nivel = (formData.get("nivel") as string) || null;
+  const faseRaw = (formData.get("fase") as string)?.trim();
+  const fase = faseRaw ? Number(faseRaw) : null;
+  const ano = Number(formData.get("ano")) || new Date().getFullYear();
+  const numeroRaw = (formData.get("numero") as string)?.trim();
+  const numero = numeroRaw ? Number(numeroRaw) : null;
+  const enunciado = ((formData.get("enunciado") as string) ?? "").trim();
+  const topico = ((formData.get("topico") as string) ?? "").trim() || null;
+  const subtopico = ((formData.get("subtopico") as string) ?? "").trim() || null;
+  const tipo = (formData.get("tipo") as string) || "multipla_escolha";
+
+  if (!enunciado) return { error: "Enunciado é obrigatório" };
+
+  const supabase = createAdminClient() as any;
+
+  const { data: questao, error: qErr } = await supabase
+    .from("questao")
+    .insert({
+      olimpiada,
+      nivel,
+      fase,
+      ano,
+      numero,
+      enunciado,
+      topico,
+      subtopico,
+      tipo,
+      ativo: true,
+    })
+    .select("id")
+    .single();
+
+  if (qErr) return { error: qErr.message };
+
+  const { count } = await supabase
+    .from("preparacao_aula_questao")
+    .select("id", { count: "exact", head: true })
+    .eq("aula_id", simuladoId);
+
+  const { error: lErr } = await supabase
+    .from("preparacao_aula_questao")
+    .insert({ aula_id: simuladoId, questao_id: questao.id, ordem: (count ?? 0) + 1 });
+
+  if (lErr) return { error: lErr.message };
+  revalidatePath(`${PATH}/${simuladoId}`);
+  return { ok: true };
+}
+
 export async function buscarQuestoes(busca: string, origem?: string) {
   const supabase = createAdminClient() as any;
   let query = supabase
