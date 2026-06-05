@@ -247,6 +247,58 @@ export async function getDashboardAluno() {
     }
   }
 
+  // ── Sessões de simulado (tempo + data) ────────────────────────────────────
+  const simAulaIds = [...new Set(deSimulados.map((r: any) => r.aula_id).filter(Boolean))];
+  const sessaoSimMap: Record<
+    string,
+    { concluido_em: string | null; tempo_restante: number; duracao: number }
+  > = {};
+
+  if (simAulaIds.length > 0) {
+    const [{ data: sessoes }, { data: aulasSimulado }] = await Promise.all([
+      admin
+        .from("simulado_sessao")
+        .select("aula_id, concluido_em, tempo_restante")
+        .eq("aluno_id", session.aluno.id)
+        .eq("status", "concluido")
+        .in("aula_id", simAulaIds),
+      admin.from("preparacao_aula").select("id, duracao_minutos").in("id", simAulaIds),
+    ]);
+    for (const s of sessoes ?? []) {
+      sessaoSimMap[s.aula_id] = {
+        concluido_em: s.concluido_em,
+        tempo_restante: s.tempo_restante,
+        duracao: 0,
+      };
+    }
+    for (const a of aulasSimulado ?? []) {
+      const entry = sessaoSimMap[a.id];
+      if (entry) entry.duracao = a.duracao_minutos ?? 0;
+    }
+  }
+
+  // Por simulado detalhado
+  const porSimuladoMapa: Record<string, any> = {};
+  for (const r of deSimulados) {
+    const key = (r as any).aula_id ?? "desconhecido";
+    if (!porSimuladoMapa[key]) {
+      const sess = sessaoSimMap[key];
+      porSimuladoMapa[key] = {
+        aula_id: key,
+        titulo: aulasMeta[key]?.titulo ?? "Simulado",
+        total: 0,
+        acertos: 0,
+        concluido_em: sess?.concluido_em ?? null,
+        tempo_usado: sess ? Math.max(0, (sess.duracao ?? 0) - (sess.tempo_restante ?? 0)) : null,
+      };
+    }
+    porSimuladoMapa[key].total++;
+    if ((r as any).correta) porSimuladoMapa[key].acertos++;
+  }
+  const porSimuladoDetalhe = Object.values(porSimuladoMapa).sort((a: any, b: any) =>
+    (b.concluido_em ?? "").localeCompare(a.concluido_em ?? ""),
+  );
+
   const total_geral = todas.length;
   const acertos_geral = todas.filter((r: any) => r.correta).length;
 
@@ -267,6 +319,7 @@ export async function getDashboardAluno() {
       total: deSimulados.length,
       acertos: deSimulados.filter((r: any) => r.correta).length,
       por_topico: agruparPorTopico(deSimulados),
+      por_simulado: porSimuladoDetalhe,
     },
   };
 }
