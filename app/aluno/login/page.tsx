@@ -140,7 +140,7 @@ export default async function LoginAlunoPage({
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
-      <div className="flex w-full flex-col items-center justify-center bg-background py-12 sm:w-1/3">
+      <div className="flex w-full flex-col items-center justify-center bg-background py-8 sm:w-1/3 sm:py-12">
         <div className="w-full max-w-sm px-6">
           {/* Header com logo da marca */}
           <div className="mb-8 text-center">
@@ -148,7 +148,7 @@ export default async function LoginAlunoPage({
             <img
               src={logoFile ? `/marcas/${logoFile}.png` : "/logo-raiz.png"}
               alt={marcaNome ?? "Raiz Educação"}
-              className={`mx-auto mb-4 block max-w-full ${marca === "uniao" ? "max-h-32" : "max-h-40"}`}
+              className={`mx-auto mb-4 block max-w-full ${marca === "uniao" ? "max-h-20 sm:max-h-32" : "max-h-24 sm:max-h-40"}`}
             />
             <h1 className="text-xl font-bold text-foreground">Plataforma Olímpica</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -157,7 +157,7 @@ export default async function LoginAlunoPage({
           </div>
 
           {/* Card de login */}
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
             <h2 className="mb-6 text-lg font-semibold text-foreground">Entrar</h2>
             <LoginAlunoForm />
           </div>

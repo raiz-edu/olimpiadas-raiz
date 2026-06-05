@@ -72,9 +72,9 @@ function GraficoTopicos({
           const pct = row.total > 0 ? Math.round((row.acertos / row.total) * 100) : 0;
           return (
             <div key={row.topico} className="px-5 py-3 space-y-1.5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-sm font-medium text-foreground">{row.topico}</span>
-                <div className="flex items-center gap-3 text-xs shrink-0 ml-3">
+                <div className="flex items-center gap-3 text-xs shrink-0">
                   <span className="text-muted-foreground">{row.total}q</span>
                   <span className="font-bold text-emerald-400">{row.acertos}✓</span>
                   {row.erros > 0 && <span className="font-bold text-red-400">{row.erros}✗</span>}
@@ -259,9 +259,9 @@ function SecaoSimulados({
               const p = row.total > 0 ? Math.round((row.acertos / row.total) * 100) : 0;
               return (
                 <div key={row.topico} className="px-5 py-3 space-y-1.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm font-medium text-foreground">{row.topico}</span>
-                    <div className="flex items-center gap-3 text-xs shrink-0 ml-3">
+                    <div className="flex items-center gap-3 text-xs shrink-0">
                       <span className="text-muted-foreground">{row.total}q</span>
                       <span className="font-bold text-emerald-400">{row.acertos}✓</span>
                       {row.erros > 0 && (

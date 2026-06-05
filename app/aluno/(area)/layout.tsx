@@ -12,7 +12,7 @@ export default async function AlunoLayout({ children }: { children: React.ReactN
       <div className="flex min-h-screen flex-col bg-background">
         <AlunoNav aluno={session.aluno} marcaSlug={session.marcaSlug} />
         <main className="flex-1">
-          <div className="px-6 py-6 sm:px-10 max-w-5xl">{children}</div>
+          <div className="mx-auto w-full px-4 py-6 sm:px-10 max-w-5xl">{children}</div>
         </main>
       </div>
     </AlunoProvider>

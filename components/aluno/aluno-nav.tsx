@@ -95,7 +95,7 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
       }}
     >
       {/* ── Barra principal ─────────────────────────────────────────────── */}
-      <div className="flex h-20 w-full items-center justify-between gap-4 px-6 sm:px-10">
+      <div className="flex h-14 w-full items-center justify-between gap-4 px-4 sm:h-20 sm:px-10">
         {/* Logo */}
         <Link href="/aluno/dashboard" className="flex shrink-0 items-center gap-3">
           {logoFile ? (
@@ -103,7 +103,7 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
             <img
               src={`/marcas/${logoFile}.png`}
               alt={marcaSlug ?? ""}
-              className="block max-h-14 max-w-[200px] object-contain"
+              className="block max-h-9 max-w-[160px] object-contain sm:max-h-14 sm:max-w-[200px]"
             />
           ) : (
             <>
@@ -211,7 +211,11 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
           <MobileNavLink href="/aluno/dashboard" label="Projetos" onClick={closeMenu} />
           <MobileNavLink href="/aluno/simulados" label="Simulados" onClick={closeMenu} />
           <MobileNavLink href="/aluno/treino" label="Banco de Questões" exact onClick={closeMenu} />
-          <MobileNavLink href="/aluno/treino/dashboard" label="Meu Desempenho" onClick={closeMenu} />
+          <MobileNavLink
+            href="/aluno/treino/dashboard"
+            label="Meu Desempenho"
+            onClick={closeMenu}
+          />
 
           <div
             className="mt-3 pt-3 flex items-center justify-between"

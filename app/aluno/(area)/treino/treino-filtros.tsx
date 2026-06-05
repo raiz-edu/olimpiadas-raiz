@@ -47,7 +47,7 @@ export function TreinoFiltros({
   return (
     <form
       method="GET"
-      className="mb-6 flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4"
+      className="mb-6 grid grid-cols-2 gap-3 rounded-xl border border-border bg-card p-4 sm:flex sm:flex-wrap"
     >
       <div className="flex flex-col gap-1">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -57,7 +57,7 @@ export function TreinoFiltros({
           name="olimpiada"
           value={olimpiadaSel}
           onChange={(e) => handleOlimpiadaChange(e.target.value)}
-          className={`${cls} min-w-[120px]`}
+          className={`${cls} w-full sm:min-w-[120px]`}
         >
           <option value="">Todas</option>
           {olimpiadas.map((o) => (
@@ -76,7 +76,7 @@ export function TreinoFiltros({
           name="topico"
           value={topicoSel}
           onChange={(e) => handleTopicoChange(e.target.value)}
-          className={`${cls} min-w-[140px]`}
+          className={`${cls} w-full sm:min-w-[140px]`}
         >
           <option value="">Todos</option>
           {topicos.map((t) => (
@@ -88,7 +88,7 @@ export function TreinoFiltros({
       </div>
 
       {topicoSel && (
-        <div className="flex flex-col gap-1">
+        <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Subtópico
           </span>
@@ -96,7 +96,7 @@ export function TreinoFiltros({
             name="subtopico"
             value={subtopico}
             onChange={(e) => setSubtopico(e.target.value)}
-            className={`${cls} min-w-[160px]`}
+            className={`${cls} w-full sm:min-w-[160px]`}
           >
             <option value="">Todos</option>
             {subtopicos.map((s) => (
@@ -155,7 +155,7 @@ export function TreinoFiltros({
         </select>
       </div>
 
-      <div className="flex items-end gap-2">
+      <div className="col-span-2 flex items-end gap-2 sm:col-span-1">
         <button
           type="submit"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
