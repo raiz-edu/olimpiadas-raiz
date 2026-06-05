@@ -42,7 +42,7 @@ export type SimuladoAdmin = {
   descricao: string | null;
   projeto_id: string | null;
   projeto_ids: string[];
-  turma_ids: string[];
+  series_elegiveis: string[];
   criado_em: string;
 };
 
@@ -51,7 +51,7 @@ export async function getSimulados(): Promise<SimuladoAdmin[]> {
   const { data } = await supabase
     .from("preparacao_aula")
     .select(
-      "id, titulo, publicada, data_hora, duracao_minutos, descricao, projeto_id, projeto_ids, turma_ids, criado_em",
+      "id, titulo, publicada, data_hora, duracao_minutos, descricao, projeto_id, projeto_ids, series_elegiveis, criado_em",
     )
     .eq("tipo", "simulado")
     .order("criado_em", { ascending: false });
@@ -64,7 +64,7 @@ export async function getSimuladoDetalhe(id: string) {
     .from("preparacao_aula")
     .select(
       `id, titulo, publicada, data_hora, duracao_minutos, link_aula, polos, descricao,
-       projeto_id, projeto_ids, turma_ids, criado_em,
+       projeto_id, projeto_ids, series_elegiveis, criado_em,
        questoes:preparacao_aula_questao(
          id, ordem, questao_id, visivel_aluno, questao:questao_id(
            id, olimpiada, nivel, fase, ano, numero, enunciado, topico, subtopico
@@ -119,7 +119,7 @@ export async function criarSimulado(
   const descricao = (formData.get("descricao") as string)?.trim() || null;
   const publicada = formData.get("publicada") === "true";
   const projetoIds = formData.getAll("projeto_ids[]") as string[];
-  const turmaIds = formData.getAll("turma_ids[]") as string[];
+  const seriesElegiveis = formData.getAll("series_elegiveis[]") as string[];
 
   const supabase = createAdminClient() as any;
   const { data, error } = await supabase
@@ -135,7 +135,7 @@ export async function criarSimulado(
       descricao,
       publicada,
       projeto_ids: projetoIds,
-      turma_ids: turmaIds,
+      series_elegiveis: seriesElegiveis,
       ordem: 0,
     })
     .select("id")
@@ -164,7 +164,7 @@ export async function atualizarSimulado(
   const descricao = (formData.get("descricao") as string)?.trim() || null;
   const publicada = formData.get("publicada") === "true";
   const projetoIds = formData.getAll("projeto_ids[]") as string[];
-  const turmaIds = formData.getAll("turma_ids[]") as string[];
+  const seriesElegiveis = formData.getAll("series_elegiveis[]") as string[];
 
   const supabase = createAdminClient() as any;
   const { error } = await supabase
@@ -179,7 +179,7 @@ export async function atualizarSimulado(
       descricao,
       publicada,
       projeto_ids: projetoIds,
-      turma_ids: turmaIds,
+      series_elegiveis: seriesElegiveis,
     })
     .eq("id", id)
     .eq("tipo", "simulado");

@@ -63,7 +63,7 @@ export default async function SimuladosPage() {
             <tbody className="divide-y divide-border">
               {simulados.map((s) => {
                 const temProjetos = (s.projeto_ids?.length ?? 0) > 0 || s.projeto_id != null;
-                const temTurmas = (s.turma_ids?.length ?? 0) > 0;
+                const temSeries = (s.series_elegiveis?.length ?? 0) > 0;
 
                 return (
                   <tr key={s.id} className="hover:bg-muted/30 transition-colors">
@@ -81,9 +81,10 @@ export default async function SimuladosPage() {
                           {(s.projeto_ids?.length ?? 0) + (s.projeto_id ? 1 : 0)} projeto
                           {(s.projeto_ids?.length ?? 0) + (s.projeto_id ? 1 : 0) !== 1 ? "s" : ""}
                         </span>
-                      ) : temTurmas ? (
+                      ) : temSeries ? (
                         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
-                          {s.turma_ids.length} turma{s.turma_ids.length !== 1 ? "s" : ""}
+                          {s.series_elegiveis.length} série
+                          {s.series_elegiveis.length !== 1 ? "s" : ""}
                         </span>
                       ) : (
                         <span className="text-xs text-muted-foreground">Sem vínculo</span>

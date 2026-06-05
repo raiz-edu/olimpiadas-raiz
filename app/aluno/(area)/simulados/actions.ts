@@ -64,21 +64,25 @@ export async function getSimuladosDisponiveis(): Promise<SimuladoDisponivel[]> {
 
   const porProjeto = (aulas ?? []).filter((a: any) => a.projeto?.publicado);
 
-  // ── 2. Simulados standalone por turma (turma_ids contém turma do aluno) ──────
+  // ── 2. Simulados standalone por série (series_elegiveis contém série do aluno) ─
   const turmaId = (session.aluno as any).turma_id;
-  let porTurma: any[] = [];
+  let porSerie: any[] = [];
   if (turmaId) {
-    const { data: standalone } = await db
-      .from("preparacao_aula")
-      .select("id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada")
-      .eq("tipo", "simulado")
-      .eq("publicada", true)
-      .is("projeto_id", null)
-      .filter("turma_ids", "cs", JSON.stringify([turmaId]));
-    porTurma = standalone ?? [];
+    const { data: turmaRow } = await db.from("turma").select("serie").eq("id", turmaId).single();
+    const serie = turmaRow?.serie;
+    if (serie) {
+      const { data: standalone } = await db
+        .from("preparacao_aula")
+        .select("id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada")
+        .eq("tipo", "simulado")
+        .eq("publicada", true)
+        .is("projeto_id", null)
+        .filter("series_elegiveis", "cs", JSON.stringify([serie]));
+      porSerie = standalone ?? [];
+    }
   }
 
-  const todos = [...porProjeto, ...porTurma.map((a: any) => ({ ...a, projeto: null }))];
+  const todos = [...porProjeto, ...porSerie.map((a: any) => ({ ...a, projeto: null }))];
 
   if (!todos.length) return [];
 
