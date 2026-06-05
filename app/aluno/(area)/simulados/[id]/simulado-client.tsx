@@ -336,7 +336,8 @@ export function SimuladoClient({
               </span>
             )}
             <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
-              {questao.fase}ª Fase · {questao.ano}
+              {questao.fase != null ? `${questao.fase}ª Fase · ` : ""}
+              {questao.ano}
             </span>
           </div>
 
@@ -354,6 +355,7 @@ export function SimuladoClient({
                     {b.conteudo}
                   </p>
                 ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={i}
                     src={b.url}
@@ -415,6 +417,7 @@ export function SimuladoClient({
                           <div className="flex-1">
                             {alt.texto && <p className="text-sm text-foreground">{alt.texto}</p>}
                             {alt.imagem_url && (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={alt.imagem_url}
                                 alt={`Alt ${alt.letra}`}
@@ -460,6 +463,7 @@ export function SimuladoClient({
                   <p className="text-sm text-muted-foreground italic">Resolução não disponível.</p>
                 )}
                 {gabarito?.imagem_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={gabarito.imagem_url}
                     alt="Resolução"

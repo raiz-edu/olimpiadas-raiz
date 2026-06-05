@@ -23,7 +23,7 @@ export function TreinoClient({
   primeiraAlt,
   numeracaoSequencial = false,
   completionUrl,
-  completionLabel,
+  completionLabel: _completionLabel,
   contexto = "banco",
   aulaId,
 }: {
@@ -121,7 +121,6 @@ export function TreinoClient({
     // ── Desempenho inline da sessão da aula ──────────────────────────────────
     if (completionUrl && mostrarDesempenhoAula) {
       const acertosTotal = Object.values(respostas).filter((r) => r.correta).length;
-      const errosTotal = respondidas - acertosTotal;
       const pctGeral = respondidas > 0 ? Math.round((acertosTotal / respondidas) * 100) : 0;
 
       // Agrupar por tópico
@@ -139,7 +138,9 @@ export function TreinoClient({
         <div className="rounded-xl border border-border bg-card p-8 space-y-6">
           <div className="text-center">
             <p className="text-lg font-bold text-foreground mb-1">Desempenho desta aula</p>
-            <p className="text-xs text-muted-foreground">{respondidas} de {total} questões respondidas</p>
+            <p className="text-xs text-muted-foreground">
+              {respondidas} de {total} questões respondidas
+            </p>
           </div>
 
           {/* Resumo */}
@@ -180,10 +181,14 @@ export function TreinoClient({
                     <div key={topico} className="flex items-center justify-between px-4 py-3">
                       <span className="text-sm text-foreground">{topico}</span>
                       <div className="flex items-center gap-3 text-xs">
-                        <span className="text-muted-foreground">{data.total} questão{data.total !== 1 ? "ões" : ""}</span>
+                        <span className="text-muted-foreground">
+                          {data.total} questão{data.total !== 1 ? "ões" : ""}
+                        </span>
                         <span
                           className="font-bold"
-                          style={{ color: pctT >= 70 ? "#4ade80" : pctT >= 50 ? "#fbbf24" : "#f87171" }}
+                          style={{
+                            color: pctT >= 70 ? "#4ade80" : pctT >= 50 ? "#fbbf24" : "#f87171",
+                          }}
                         >
                           {pctT}%
                         </span>
@@ -203,7 +208,11 @@ export function TreinoClient({
               Fechar
             </button>
             <button
-              onClick={() => { setFinalizado(false); setIdx(0); setMostrarDesempenhoAula(false); }}
+              onClick={() => {
+                setFinalizado(false);
+                setIdx(0);
+                setMostrarDesempenhoAula(false);
+              }}
               className="rounded-lg px-5 py-2.5 text-sm font-bold text-[#0f172a]"
               style={{ background: TEAL }}
             >
@@ -232,7 +241,11 @@ export function TreinoClient({
                 Ver desempenho
               </button>
               <button
-                onClick={() => { setFinalizado(false); setIdx(0); setMostrarDesempenhoAula(false); }}
+                onClick={() => {
+                  setFinalizado(false);
+                  setIdx(0);
+                  setMostrarDesempenhoAula(false);
+                }}
                 className="rounded-lg px-5 py-2.5 text-sm font-bold text-[#0f172a]"
                 style={{ background: TEAL }}
               >
@@ -306,9 +319,11 @@ export function TreinoClient({
               ] ?? questao.nivel}
             </span>
           )}
-          <span className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-bold text-violet-400">
-            {questao.fase}ª Fase
-          </span>
+          {questao.fase != null && (
+            <span className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-bold text-violet-400">
+              {questao.fase}ª Fase
+            </span>
+          )}
           <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-0.5 text-[11px] text-muted-foreground">
             {questao.ano}
           </span>

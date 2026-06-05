@@ -53,7 +53,8 @@ export default async function RevisaoQuestaoPage({
             {OLIMPIADA_LABEL[questao.olimpiada] ?? questao.olimpiada}
           </span>
           <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
-            {questao.fase}ª Fase · {questao.ano}
+            {questao.fase != null ? `${questao.fase}ª Fase · ` : ""}
+            {questao.ano}
           </span>
           {questao.assunto && (
             <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-400">
