@@ -116,9 +116,7 @@ export async function loginAluno(
   }
 
   // Define o cookie de sessão próprio do aluno (7 dias, independente do admin)
-  const cookieVal = signStudentCookie(aluno.id);
-  cookieStore.set(ALUNO_SESSION_COOKIE, cookieVal, cookieSessionOpts());
-  console.log("[loginAluno] cookie set for aluno:", aluno.id, "prefix:", cookieVal.slice(0, 20));
+  cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());
   redirect("/aluno/dashboard");
 }
 
