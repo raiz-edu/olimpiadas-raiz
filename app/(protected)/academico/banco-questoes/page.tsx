@@ -17,7 +17,7 @@ const DIFICULDADE_LABEL: Record<string, string> = {
   facil: "Fácil",
   medio: "Médio",
   dificil: "Difícil",
-  muito_dificil: "M. Difícil",
+  muito_dificil: "Muito Difícil",
 };
 
 const RESOLUCAO_ICON: Record<string, string> = {
@@ -27,9 +27,9 @@ const RESOLUCAO_ICON: Record<string, string> = {
 };
 
 const TIPO_LABEL: Record<string, string> = {
-  multipla_escolha: "M.E.",
+  multipla_escolha: "M. Escolha",
   aberta: "Aberta",
-  verdadeiro_ou_falso: "V/F",
+  verdadeiro_ou_falso: "V. ou Falso",
 };
 
 export default async function BancoQuestoesPage({
@@ -83,89 +83,92 @@ export default async function BancoQuestoesPage({
       />
 
       {/* Filtros */}
-      <form method="GET" className="mb-4 flex flex-wrap gap-2">
-        {/* Busca textual */}
-        <input
-          name="busca"
-          type="text"
-          defaultValue={sp.busca ?? ""}
-          placeholder="Buscar por enunciado, tópico…"
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground w-64"
-        />
+      <form method="GET" className="mb-4 space-y-2">
+        {/* Linha 1: busca + ações */}
+        <div className="flex gap-2">
+          <input
+            name="busca"
+            type="text"
+            defaultValue={sp.busca ?? ""}
+            placeholder="Buscar por enunciado, tópico…"
+            className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            Filtrar
+          </button>
+          <Link
+            href="/academico/banco-questoes"
+            className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+          >
+            Limpar
+          </Link>
+        </div>
+        {/* Linha 2: dropdowns */}
+        <div className="flex flex-wrap gap-2">
+          <select name="olimpiada" defaultValue={sp.olimpiada ?? ""} className={seletorClass}>
+            <option value="">Origem</option>
+            <option value="obmep">OBMEP</option>
+            <option value="obmep_mirim">OBMEP Mirim</option>
+            <option value="obm">OBM</option>
+            <option value="obf">OBF</option>
+            <option value="obi">OBI</option>
+          </select>
 
-        <select name="olimpiada" defaultValue={sp.olimpiada ?? ""} className={seletorClass}>
-          <option value="">Origem</option>
-          <option value="obmep">OBMEP</option>
-          <option value="obmep_mirim">OBMEP Mirim</option>
-          <option value="obm">OBM</option>
-          <option value="obf">OBF</option>
-          <option value="obi">OBI</option>
-        </select>
+          <select name="fase" defaultValue={sp.fase ?? ""} className={seletorClass}>
+            <option value="">Fase</option>
+            <option value="1">1ª Fase</option>
+            <option value="2">2ª Fase</option>
+          </select>
 
-        <select name="fase" defaultValue={sp.fase ?? ""} className={seletorClass}>
-          <option value="">Fase</option>
-          <option value="1">1ª Fase</option>
-          <option value="2">2ª Fase</option>
-        </select>
+          <select name="ano" defaultValue={sp.ano ?? ""} className={seletorClass}>
+            <option value="">Ano</option>
+            {Array.from({ length: 11 }, (_, i) => 2015 + i).map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
 
-        <select name="ano" defaultValue={sp.ano ?? ""} className={seletorClass}>
-          <option value="">Ano</option>
-          {Array.from({ length: 11 }, (_, i) => 2015 + i).map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-        </select>
+          <select name="dificuldade" defaultValue={sp.dificuldade ?? ""} className={seletorClass}>
+            <option value="">Dificuldade</option>
+            <option value="elementar">Elementar</option>
+            <option value="facil">Fácil</option>
+            <option value="medio">Médio</option>
+            <option value="dificil">Difícil</option>
+            <option value="muito_dificil">Muito Difícil</option>
+          </select>
 
-        <select name="dificuldade" defaultValue={sp.dificuldade ?? ""} className={seletorClass}>
-          <option value="">Dificuldade</option>
-          <option value="elementar">Elementar</option>
-          <option value="facil">Fácil</option>
-          <option value="medio">Médio</option>
-          <option value="dificil">Difícil</option>
-          <option value="muito_dificil">Muito Difícil</option>
-        </select>
+          <select name="publico_alvo" defaultValue={sp.publico_alvo ?? ""} className={seletorClass}>
+            <option value="">Público-alvo</option>
+            <option value="EFAI">EFAI</option>
+            <option value="EFAF">EFAF</option>
+            <option value="EM">EM</option>
+            <option value="Todos">Todos</option>
+          </select>
 
-        <select name="publico_alvo" defaultValue={sp.publico_alvo ?? ""} className={seletorClass}>
-          <option value="">Público-alvo</option>
-          <option value="EFAI">EFAI</option>
-          <option value="EFAF">EFAF</option>
-          <option value="EM">EM</option>
-          <option value="Todos">Todos</option>
-        </select>
+          <select
+            name="status_cadastro"
+            defaultValue={sp.status_cadastro ?? ""}
+            className={seletorClass}
+          >
+            <option value="">Revisão</option>
+            <option value="publicado">Publicado</option>
+            <option value="aguardando_revisao">Aguardando revisão</option>
+          </select>
 
-        <select
-          name="status_cadastro"
-          defaultValue={sp.status_cadastro ?? ""}
-          className={seletorClass}
-        >
-          <option value="">Revisão</option>
-          <option value="publicado">Publicado</option>
-          <option value="aguardando_revisao">Aguardando revisão</option>
-        </select>
-
-        <select name="status" defaultValue={sp.status ?? ""} className={seletorClass}>
-          <option value="">Ativo/Inativo</option>
-          <option value="ativa">Ativa</option>
-          <option value="inativa">Inativa</option>
-        </select>
-
-        <button
-          type="submit"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-        >
-          Filtrar
-        </button>
-        <Link
-          href="/academico/banco-questoes"
-          className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          Limpar
-        </Link>
+          <select name="status" defaultValue={sp.status ?? ""} className={seletorClass}>
+            <option value="">Ativo/Inativo</option>
+            <option value="ativa">Ativa</option>
+            <option value="inativa">Inativa</option>
+          </select>
+        </div>
       </form>
 
       <p className="mb-3 text-xs text-muted-foreground">
-        {questoes.length} questão{questoes.length !== 1 ? "ões" : ""}
+        {questoes.length} {questoes.length !== 1 ? "questões" : "questão"}
       </p>
 
       {questoes.length === 0 ? (
@@ -189,13 +192,14 @@ export default async function BancoQuestoesPage({
                 <th className="px-3 py-3 text-left font-semibold">Nº</th>
                 <th className="px-3 py-3 text-left font-semibold hidden md:table-cell">Tipo</th>
                 <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">Tópico</th>
-                <th className="px-3 py-3 text-left font-semibold hidden md:table-cell">Dific.</th>
-                <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">Público</th>
-                <th
-                  className="px-3 py-3 text-center font-semibold hidden lg:table-cell"
-                  title="Resolução vídeo / texto"
-                >
-                  Res.
+                <th className="px-3 py-3 text-left font-semibold hidden md:table-cell">
+                  Dificuldade
+                </th>
+                <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">
+                  Público-alvo
+                </th>
+                <th className="px-3 py-3 text-center font-semibold hidden lg:table-cell">
+                  Resolução
                 </th>
                 <th className="px-3 py-3 text-left font-semibold">Status</th>
                 <th className="px-3 py-3"></th>
