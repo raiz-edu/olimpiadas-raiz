@@ -52,3 +52,4 @@ next-env.d.ts
 # Scripts com chaves hardcoded — nunca commitar
 process-q14-q18.mjs
 public/preview-questao-*.html
+/scripts/
