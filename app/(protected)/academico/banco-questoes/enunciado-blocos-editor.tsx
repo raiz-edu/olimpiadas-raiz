@@ -16,6 +16,45 @@ export function imgStyle(largura?: BlocoLargura): React.CSSProperties {
   return largura && map[largura] ? { maxWidth: map[largura] } : {};
 }
 
+function wrapSelection(
+  el: HTMLTextAreaElement,
+  marker: string,
+  value: string,
+  onChange: (next: string) => void,
+) {
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  const selected = value.slice(start, end);
+  const before = value.slice(0, start);
+  const after = value.slice(end);
+
+  const jaFormatado =
+    selected.length >= marker.length * 2 &&
+    selected.startsWith(marker) &&
+    selected.endsWith(marker);
+
+  let next: string;
+  let selStart: number;
+  let selEnd: number;
+
+  if (jaFormatado) {
+    const miolo = selected.slice(marker.length, selected.length - marker.length);
+    next = before + miolo + after;
+    selStart = start;
+    selEnd = start + miolo.length;
+  } else {
+    next = before + marker + selected + marker + after;
+    selStart = start + marker.length;
+    selEnd = selStart + selected.length;
+  }
+
+  onChange(next);
+  requestAnimationFrame(() => {
+    el.focus();
+    el.setSelectionRange(selStart, selEnd);
+  });
+}
+
 export function EnunciadoBlocosEditor({
   initialBlocos,
   initialEnunciado,
@@ -41,6 +80,7 @@ export function EnunciadoBlocosEditor({
   const [isPending, startTransition] = useTransition();
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
 
   const update = (i: number, bloco: BlocoEnunciado) =>
     setBlocos((prev) => prev.map((b, j) => (j === i ? bloco : b)));
@@ -122,12 +162,65 @@ export function EnunciadoBlocosEditor({
                   Texto
                 </p>
                 <textarea
+                  ref={(el) => {
+                    textareaRefs.current[i] = el;
+                  }}
                   value={bloco.conteudo}
                   onChange={(e) => update(i, { tipo: "texto", conteudo: e.target.value })}
+                  onKeyDown={(e) => {
+                    const mod = e.ctrlKey || e.metaKey;
+                    if (!mod) return;
+                    const tecla = e.key.toLowerCase();
+                    if (tecla === "b" || tecla === "i") {
+                      e.preventDefault();
+                      wrapSelection(
+                        e.currentTarget,
+                        tecla === "b" ? "**" : "*",
+                        bloco.conteudo,
+                        (next) => update(i, { tipo: "texto", conteudo: next }),
+                      );
+                    }
+                  }}
                   rows={4}
                   placeholder={placeholder}
                   className={inputClass + " pr-16"}
                 />
+                <div className="mt-1.5 flex items-center gap-2">
+                  <button
+                    type="button"
+                    title="Negrito (Ctrl+B)"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      const el = textareaRefs.current[i];
+                      if (!el) return;
+                      wrapSelection(el, "**", bloco.conteudo, (next) =>
+                        update(i, { tipo: "texto", conteudo: next }),
+                      );
+                    }}
+                    className="rounded border border-border px-2 py-0.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-background"
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    title="Itálico (Ctrl+I)"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      const el = textareaRefs.current[i];
+                      if (!el) return;
+                      wrapSelection(el, "*", bloco.conteudo, (next) =>
+                        update(i, { tipo: "texto", conteudo: next }),
+                      );
+                    }}
+                    className="rounded border border-border px-2 py-0.5 text-xs italic text-muted-foreground hover:text-foreground hover:bg-background"
+                  >
+                    I
+                  </button>
+                  <p className="text-[10px] text-muted-foreground">
+                    Selecione um trecho e use <span className="font-bold">Ctrl+B</span> (negrito) ou{" "}
+                    <span className="italic">Ctrl+I</span> (itálico) — ou os botões.
+                  </p>
+                </div>
               </>
             ) : (
               <>

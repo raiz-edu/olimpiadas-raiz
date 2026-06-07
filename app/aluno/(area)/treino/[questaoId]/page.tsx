@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { getRespostaAluno, getSolucaoQuestao, getAlternativasQuestao } from "../actions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { FormattedText } from "@/components/ui/formatted-text";
 
 const OLIMPIADA_LABEL: Record<string, string> = { obmep_mirim: "OBMEP Mirim", obmep: "OBMEP" };
 const TEAL = "rgb(91,184,193)";
@@ -78,7 +79,7 @@ export default async function RevisaoQuestaoPage({
                 key={i}
                 className="text-[15px] leading-relaxed text-foreground whitespace-pre-wrap"
               >
-                {b.conteudo}
+                <FormattedText text={b.conteudo ?? ""} />
               </p>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
@@ -184,7 +185,49 @@ export default async function RevisaoQuestaoPage({
             </span>
           </div>
           <div className="p-5 space-y-4">
-            {solucao?.texto ? (
+            {(solucao as any)?.blocos?.length ? (
+              <div className="space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                  Resolução
+                </p>
+                {(
+                  (solucao as any).blocos as Array<{
+                    tipo: string;
+                    conteudo?: string;
+                    url?: string;
+                    largura?: string;
+                  }>
+                ).map((b, i) =>
+                  b.tipo === "texto" ? (
+                    <p
+                      key={i}
+                      className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
+                    >
+                      <FormattedText text={b.conteudo ?? ""} />
+                    </p>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={i}
+                      src={b.url!}
+                      alt="Resolução"
+                      className="rounded-lg border border-border"
+                      style={{
+                        width:
+                          (
+                            {
+                              pequena: "180px",
+                              media: "360px",
+                              grande: "560px",
+                            } as Record<string, string>
+                          )[b.largura ?? ""] ?? "100%",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  ),
+                )}
+              </div>
+            ) : solucao?.texto ? (
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
                   Resolução
@@ -193,12 +236,7 @@ export default async function RevisaoQuestaoPage({
                   {solucao.texto}
                 </p>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                Resolução em texto não disponível.
-              </p>
-            )}
-            {solucao?.imagem_url && (
+            ) : solucao?.imagem_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={solucao.imagem_url}
@@ -217,6 +255,8 @@ export default async function RevisaoQuestaoPage({
                   maxWidth: "100%",
                 }}
               />
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Resolução não disponível.</p>
             )}
             {questao.video_url && (
               <div>

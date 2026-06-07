@@ -5,6 +5,7 @@
 import { useState, useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { responderQuestao, getSolucaoQuestao, getAlternativasQuestao } from "./actions";
+import { FormattedText } from "@/components/ui/formatted-text";
 import type { Questao, Alternativa } from "@/lib/types/database";
 
 const OLIMPIADA_LABEL: Record<string, string> = { obmep_mirim: "OBMEP Mirim", obmep: "OBMEP" };
@@ -16,7 +17,14 @@ type RespostaLocal = {
   alternativa_correta_id: string | null;
 };
 
-type GabaritoLocal = { texto: string | null; imagem_url: string | null } | null;
+type BlocoRes =
+  | { tipo: "texto"; conteudo: string }
+  | { tipo: "imagem"; url: string; largura?: string };
+type GabaritoLocal = {
+  texto: string | null;
+  imagem_url: string | null;
+  blocos?: BlocoRes[] | null;
+} | null;
 
 export function TreinoClient({
   questoes,
@@ -354,7 +362,7 @@ export function TreinoClient({
                   key={i}
                   className="text-[15px] leading-relaxed text-foreground mb-3 whitespace-pre-wrap"
                 >
-                  {b.conteudo}
+                  <FormattedText text={b.conteudo ?? ""} />
                 </p>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -497,7 +505,42 @@ export function TreinoClient({
               )}
             </div>
             <div className="p-5 space-y-4">
-              {gabarito?.texto ? (
+              {gabarito?.blocos?.length ? (
+                <div className="space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                    Resolução
+                  </p>
+                  {gabarito.blocos.map((b, i) =>
+                    b.tipo === "texto" ? (
+                      <p
+                        key={i}
+                        className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
+                      >
+                        <FormattedText text={b.conteudo} />
+                      </p>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={i}
+                        src={b.url}
+                        alt="Resolução"
+                        className="rounded-lg border border-border"
+                        style={{
+                          width:
+                            (
+                              {
+                                pequena: "180px",
+                                media: "360px",
+                                grande: "560px",
+                              } as Record<string, string>
+                            )[b.largura ?? ""] ?? "100%",
+                          maxWidth: "100%",
+                        }}
+                      />
+                    ),
+                  )}
+                </div>
+              ) : gabarito?.texto ? (
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
                     Resolução
@@ -506,12 +549,7 @@ export function TreinoClient({
                     {gabarito.texto}
                   </p>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">
-                  Resolução em texto não disponível para esta questão.
-                </p>
-              )}
-              {gabarito?.imagem_url && (
+              ) : gabarito?.imagem_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={gabarito.imagem_url}
@@ -530,6 +568,10 @@ export function TreinoClient({
                     maxWidth: "100%",
                   }}
                 />
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Resolução não disponível para esta questão.
+                </p>
               )}
               {questao.video_url && (
                 <div>

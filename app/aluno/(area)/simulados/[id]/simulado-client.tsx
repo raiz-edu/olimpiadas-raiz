@@ -14,6 +14,7 @@ import {
   type RespostasSalvas,
 } from "../actions";
 import { responderQuestao } from "@/app/aluno/(area)/treino/actions";
+import { FormattedText } from "@/components/ui/formatted-text";
 import type { Questao, Alternativa } from "@/lib/types/database";
 
 const TEAL = "rgb(91,184,193)";
@@ -352,7 +353,7 @@ export function SimuladoClient({
                     key={i}
                     className="text-[15px] leading-relaxed text-foreground mb-3 whitespace-pre-wrap"
                   >
-                    {b.conteudo}
+                    <FormattedText text={b.conteudo} />
                   </p>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -467,14 +468,47 @@ export function SimuladoClient({
                 </span>
               </div>
               <div className="p-5 space-y-3">
-                {gabarito?.texto ? (
+                {(gabarito as any)?.blocos?.length ? (
+                  <div className="space-y-3">
+                    {(
+                      (gabarito as any).blocos as Array<{
+                        tipo: string;
+                        conteudo?: string;
+                        url?: string;
+                        largura?: string;
+                      }>
+                    ).map((b, i) =>
+                      b.tipo === "texto" ? (
+                        <p key={i} className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          <FormattedText text={b.conteudo ?? ""} />
+                        </p>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={i}
+                          src={b.url!}
+                          alt="Resolução"
+                          className="rounded-lg border border-border"
+                          style={{
+                            width:
+                              (
+                                {
+                                  pequena: "180px",
+                                  media: "360px",
+                                  grande: "560px",
+                                } as Record<string, string>
+                              )[b.largura ?? ""] ?? "100%",
+                            maxWidth: "100%",
+                          }}
+                        />
+                      ),
+                    )}
+                  </div>
+                ) : gabarito?.texto ? (
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                     {gabarito.texto}
                   </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">Resolução não disponível.</p>
-                )}
-                {gabarito?.imagem_url && (
+                ) : gabarito?.imagem_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={gabarito.imagem_url}
@@ -493,6 +527,8 @@ export function SimuladoClient({
                       maxWidth: "100%",
                     }}
                   />
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Resolução não disponível.</p>
                 )}
               </div>
             </div>
