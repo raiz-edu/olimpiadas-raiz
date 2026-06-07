@@ -182,27 +182,34 @@ export default async function BancoQuestoesPage({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full min-w-[900px] text-sm">
+          <table className="w-full min-w-[1080px] text-sm">
             <thead>
               <tr className="border-b border-border text-xs text-muted-foreground">
-                <th className="px-3 py-3 text-left font-semibold">Origem</th>
-                <th className="px-3 py-3 text-left font-semibold">Nível</th>
-                <th className="px-3 py-3 text-left font-semibold">Fase</th>
-                <th className="px-3 py-3 text-left font-semibold">Ano</th>
-                <th className="px-3 py-3 text-left font-semibold">Nº</th>
-                <th className="px-3 py-3 text-left font-semibold hidden md:table-cell">Tipo</th>
-                <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">Tópico</th>
-                <th className="px-3 py-3 text-left font-semibold hidden md:table-cell">
+                <th className="w-[88px] px-3 py-3 text-left font-semibold">Origem</th>
+                <th className="w-[68px] px-3 py-3 text-left font-semibold">Nível</th>
+                <th className="w-[44px] px-3 py-3 text-left font-semibold">Fase</th>
+                <th className="w-[48px] px-3 py-3 text-left font-semibold">Ano</th>
+                <th className="w-[36px] px-3 py-3 text-left font-semibold">Nº</th>
+                <th className="w-[88px] px-3 py-3 text-left font-semibold hidden md:table-cell">
+                  Tipo
+                </th>
+                <th className="w-[116px] px-3 py-3 text-left font-semibold hidden lg:table-cell">
+                  Tópico
+                </th>
+                <th className="w-[116px] px-3 py-3 text-left font-semibold hidden xl:table-cell">
+                  Subtópico
+                </th>
+                <th className="w-[92px] px-3 py-3 text-left font-semibold hidden md:table-cell">
                   Dificuldade
                 </th>
-                <th className="px-3 py-3 text-left font-semibold hidden lg:table-cell">
+                <th className="w-[72px] px-3 py-3 text-left font-semibold hidden lg:table-cell">
                   Público-alvo
                 </th>
-                <th className="px-3 py-3 text-center font-semibold hidden lg:table-cell">
+                <th className="w-[72px] px-3 py-3 text-center font-semibold hidden lg:table-cell">
                   Resolução
                 </th>
-                <th className="px-3 py-3 text-left font-semibold">Status</th>
-                <th className="px-3 py-3"></th>
+                <th className="w-[80px] px-3 py-3 text-left font-semibold">Status</th>
+                <th className="w-[110px] px-3 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -213,26 +220,33 @@ export default async function BancoQuestoesPage({
                     q.status_cadastro === "aguardando_revisao" ? "bg-amber-500/5" : ""
                   }`}
                 >
-                  <td className="px-3 py-2.5 font-medium text-xs">
+                  <td className="px-3 py-2.5 font-medium text-xs whitespace-nowrap">
                     {OLIMPIADA_LABEL[q.olimpiada] ?? q.olimpiada}
                   </td>
-                  <td className="px-3 py-2.5 text-muted-foreground text-xs">{q.nivel ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-xs">{q.fase != null ? `${q.fase}ª` : "—"}</td>
-                  <td className="px-3 py-2.5 text-xs">{q.ano}</td>
-                  <td className="px-3 py-2.5 text-xs">{q.numero ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                    {q.nivel ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs whitespace-nowrap">
+                    {q.fase != null ? `${q.fase}ª` : "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs whitespace-nowrap">{q.ano}</td>
+                  <td className="px-3 py-2.5 text-xs whitespace-nowrap">{q.numero ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">
                     {TIPO_LABEL[q.tipo] ?? q.tipo}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[140px] truncate">
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell truncate max-w-[116px]">
                     {q.topico ?? q.assunto ?? "—"}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden xl:table-cell truncate max-w-[116px]">
+                    {q.subtopico ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">
                     {DIFICULDADE_LABEL[q.dificuldade] ?? "—"}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
                     {q.publico_alvo ?? "—"}
                   </td>
-                  <td className="px-3 py-2.5 text-center hidden lg:table-cell">
+                  <td className="px-3 py-2.5 text-center hidden lg:table-cell whitespace-nowrap">
                     <span
                       className="text-xs text-muted-foreground"
                       title={`Vídeo: ${q.tem_resolucao_video} | Texto: ${q.tem_resolucao_texto}`}
