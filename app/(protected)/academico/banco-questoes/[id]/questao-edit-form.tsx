@@ -21,47 +21,6 @@ const PUBLICO_OPTIONS = [
   { value: "Todos", label: "Todos" },
 ];
 
-const RESOLUCAO_STATUS = [
-  { value: "nao", label: "Não" },
-  { value: "em_producao", label: "Em produção" },
-  { value: "sim", label: "Sim" },
-];
-
-function RadioGroup({
-  name,
-  label,
-  defaultValue = "nao",
-}: {
-  name: string;
-  label: string;
-  defaultValue?: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        {label}
-      </label>
-      <div className="flex gap-3">
-        {RESOLUCAO_STATUS.map((opt) => (
-          <label
-            key={opt.value}
-            className="flex items-center gap-1.5 cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-          >
-            <input
-              type="radio"
-              name={name}
-              value={opt.value}
-              defaultChecked={opt.value === (defaultValue || "nao")}
-              className="accent-primary"
-            />
-            {opt.label}
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   publicado: { label: "Publicado", className: "bg-emerald-500/10 text-emerald-400" },
   aguardando_revisao: { label: "Aguardando revisão", className: "bg-amber-500/10 text-amber-400" },
@@ -275,23 +234,6 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
                 : null
           }
           initialEnunciado={questao.enunciado}
-        />
-      </div>
-
-      {/* Resolução — flags de status */}
-      <div className="rounded-lg border border-border/60 bg-background/40 p-4 space-y-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Resolução
-        </p>
-        <RadioGroup
-          name="tem_resolucao_video"
-          label="Tem resolução em vídeo?"
-          defaultValue={questao.tem_resolucao_video}
-        />
-        <RadioGroup
-          name="tem_resolucao_texto"
-          label="Tem resolução em texto/imagem?"
-          defaultValue={questao.tem_resolucao_texto}
         />
       </div>
 
