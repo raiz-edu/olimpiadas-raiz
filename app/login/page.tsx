@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { LoginForm } from "@/components/auth/login-form";
+import { PresentationPanel } from "@/components/auth/presentation-panel";
 
 export const metadata = {
   title: "Login — Olimpíadas do Conhecimento",
@@ -39,9 +40,9 @@ export default async function LoginPage({
 
   return (
     <main className="relative flex min-h-screen">
-      {/* ── Divisor vertical sutil ──────────────────────────────────────── */}
+      {/* ── Divisor vertical sutil (apenas desktop, alinhado ao split 2/3-1/3) ── */}
       <div
-        className="pointer-events-none absolute z-10"
+        className="pointer-events-none absolute z-10 hidden md:block"
         style={{
           left: "66.666%",
           top: "17.5%",
@@ -51,28 +52,16 @@ export default async function LoginPage({
             "linear-gradient(to bottom, transparent, rgba(148,163,184,0.25) 20%, rgba(148,163,184,0.25) 80%, transparent)",
         }}
       />
-      {/* ── Lado esquerdo: apresentação ───────────────────────────────── */}
-      <div className="relative w-2/3 overflow-hidden" style={{ background: "#0f172a" }}>
-        <iframe
-          srcDoc={presentationHtml}
-          className="absolute inset-0 h-full w-full"
-          style={{ border: "none", pointerEvents: "none" }}
-          title="A Trilha Olímpica"
-        />
-        {/* Vinheta — fades em todas as bordas */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: [
-              "linear-gradient(to right,  #0f172a 0%, transparent 15%, transparent 80%, #0f172a 100%)",
-              "linear-gradient(to bottom, #0f172a 0%, transparent 12%, transparent 88%, #0f172a 100%)",
-            ].join(", "),
-          }}
-        />
+      {/* ── Lado esquerdo: apresentação (somente desktop — não carrega/roda no mobile) ── */}
+      <div
+        className="relative hidden overflow-hidden md:block md:w-2/3"
+        style={{ background: "#0f172a" }}
+      >
+        <PresentationPanel html={presentationHtml} />
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
-      <div className="flex w-1/3 flex-col items-center justify-center bg-background py-12">
+      <div className="flex w-full flex-col items-center justify-center bg-background py-12 md:w-1/3">
         <div className="w-full max-w-sm px-6">
           <div className="mb-8 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
