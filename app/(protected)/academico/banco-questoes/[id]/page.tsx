@@ -13,13 +13,23 @@ const OLIMPIADA_LABEL: Record<string, string> = {
   obmep: "OBMEP",
 };
 
-export default async function QuestaoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuestaoDetalhePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ ret?: string }>;
+}) {
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:read")) redirect("/dashboard");
 
   const { id } = await params;
+  const { ret } = await searchParams;
+  const voltarHref = ret
+    ? `/academico/banco-questoes?${decodeURIComponent(ret)}`
+    : "/academico/banco-questoes";
   const { questao, alternativas, solucao, stats } = await getQuestaoDetalhe(id);
-  if (!questao) redirect("/academico/banco-questoes");
+  if (!questao) redirect(voltarHref);
 
   const total = stats.length;
   const acertos = // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,7 +40,7 @@ export default async function QuestaoDetalhePage({ params }: { params: Promise<{
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/academico/banco-questoes" className="hover:text-foreground">
+          <Link href={voltarHref} className="hover:text-foreground">
             Banco de Questões
           </Link>
           <span>/</span>

@@ -67,6 +67,10 @@ export default async function BancoQuestoesPage({
 
   const pendentes = questoes.filter((q: any) => q.status_cadastro === "aguardando_revisao").length;
 
+  const filtrosAtivos = Object.entries(sp).filter(([, v]) => v);
+  const filtrosQS = new URLSearchParams(filtrosAtivos as [string, string][]).toString();
+  const retParam = filtrosQS ? `?ret=${encodeURIComponent(filtrosQS)}` : "";
+
   const seletorClass =
     "rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground min-w-0";
 
@@ -299,7 +303,7 @@ export default async function BancoQuestoesPage({
                           </form>
                         )}
                       <Link
-                        href={`/academico/banco-questoes/${q.id}`}
+                        href={`/academico/banco-questoes/${q.id}${retParam}`}
                         className="text-primary hover:underline text-xs"
                       >
                         Editar

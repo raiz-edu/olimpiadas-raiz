@@ -116,6 +116,7 @@ const PERSIST_BASES = [
   "/olimpiadas",
   "/academico/olimpiadas",
   "/academico/preparacao",
+  "/academico/banco-questoes",
 ] as const;
 
 function SidebarContent() {
@@ -133,7 +134,7 @@ function SidebarContent() {
 
   useEffect(() => {
     for (const base of PERSIST_BASES) {
-      if (pathname.startsWith(base)) {
+      if (pathname === base) {
         localStorage.setItem(`nav-search:${base}`, searchParams.toString());
         break;
       }
@@ -141,7 +142,7 @@ function SidebarContent() {
   }, [pathname, searchParams]);
 
   function hrefFor(base: string) {
-    if (pathname.startsWith(base)) {
+    if (pathname === base) {
       const s = searchParams.toString();
       return s ? `${base}?${s}` : base;
     }
