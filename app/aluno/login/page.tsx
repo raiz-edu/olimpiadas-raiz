@@ -154,7 +154,7 @@ export default async function LoginAlunoPage({
             <img
               src={logoFile ? `/marcas/${logoFile}.png` : "/logo-raiz.png"}
               alt={marcaNome ?? "Raiz Educação"}
-              className={`mx-auto mb-4 block max-w-full ${effectiveMarca === "uniao" ? "max-h-20 sm:max-h-32" : "max-h-24 sm:max-h-40"}`}
+              className={`mx-auto mb-6 block max-w-full ${effectiveMarca === "uniao" ? "max-h-20 sm:max-h-32" : "max-h-24 sm:max-h-40"}`}
             />
             <h1 className="text-xl font-bold text-foreground">Plataforma Olímpica</h1>
           </div>
