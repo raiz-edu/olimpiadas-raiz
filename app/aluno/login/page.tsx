@@ -1,7 +1,9 @@
 import { readFileSync } from "fs";
 import { join } from "path";
+import { cookies } from "next/headers";
 import { LoginAlunoForm } from "@/components/aluno/login-form";
 import { getConfigValue } from "@/app/(protected)/configuracoes/actions";
+import { ALUNO_PENDING_COOKIE } from "@/lib/auth/student-cookie";
 
 export const metadata = {
   title: "Acesso do Aluno — Plataforma Olímpica",
@@ -93,6 +95,8 @@ export default async function LoginAlunoPage({
   const logoFile = marca ? SLUG_TO_LOGO[marca] : null;
   const marcaNome = marca ? SLUG_TO_NOME[marca] : null;
   const videoSrc = await getConfigValue("video_login_url");
+  const cookieStore = await cookies();
+  const initialNeedsConsent = !!cookieStore.get(ALUNO_PENDING_COOKIE)?.value;
   const presentationHtml = readFileSync(
     join(process.cwd(), "public", "trilha-olimpica.html"),
     "utf-8",
@@ -159,7 +163,7 @@ export default async function LoginAlunoPage({
           {/* Card de login */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
             <h2 className="mb-6 text-lg font-semibold text-foreground">Entrar</h2>
-            <LoginAlunoForm />
+            <LoginAlunoForm initialNeedsConsent={initialNeedsConsent} />
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">

@@ -8,13 +8,15 @@ import { createClient } from "@/lib/supabase/client";
 const TEAL = "rgb(91,184,193)";
 
 const ERROS_OAUTH: Record<string, string> = {
-  "nao-cadastrado":
-    "Este e-mail não está cadastrado na plataforma. Fale com a coordenação da sua escola.",
   oauth: "Não foi possível autenticar com o Google. Tente novamente.",
+  dominio: "Este e-mail não pertence a uma instituição parceira. Use seu e-mail institucional.",
 };
 
-export function LoginAlunoForm() {
-  const [state, formAction, isPending] = useActionState(loginAluno, null);
+export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsConsent?: boolean }) {
+  const [state, formAction, isPending] = useActionState(
+    loginAluno,
+    initialNeedsConsent ? ({ needsConsent: true } as { needsConsent: true }) : null,
+  );
   const needsConsent = state !== null && "needsConsent" in state;
   const errorMsg = state !== null && "error" in state ? state.error : null;
   const formRef = useRef<HTMLFormElement>(null);

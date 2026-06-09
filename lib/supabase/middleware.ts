@@ -33,9 +33,15 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = pathname.startsWith("/login");
   const isAlunoAuth = pathname.startsWith("/aluno/login");
   const isAlunoCallback = pathname.startsWith("/aluno/auth/callback");
+  const isStaffCallback = pathname.startsWith("/auth/callback");
   const isAcceptInvite = pathname.startsWith("/aceitar-convite");
   const isPublicPath =
-    pathname === "/" || isAuthPage || isAlunoAuth || isAlunoCallback || isAcceptInvite;
+    pathname === "/" ||
+    isAuthPage ||
+    isAlunoAuth ||
+    isAlunoCallback ||
+    isStaffCallback ||
+    isAcceptInvite;
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
