@@ -551,7 +551,7 @@ export function TreinoClient({
         )}
 
         {/* Gabarito expandido */}
-        {respondido && mostrarGabarito && (
+        {respondidoQuestao && mostrarGabarito && (
           <div className="rounded-xl border border-border bg-background overflow-hidden mb-4">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-border">
               <svg
