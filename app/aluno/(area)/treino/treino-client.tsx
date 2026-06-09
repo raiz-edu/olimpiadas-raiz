@@ -27,7 +27,7 @@ type RespostaLocal = {
 
 type RespostaAbertaLocal = {
   correta: boolean;
-  feedback: FeedbackIA;
+  feedback: FeedbackIA | null;
 };
 
 type BlocoRes =
@@ -113,13 +113,14 @@ export function TreinoClient({
 
   // Captura resposta aberta avaliada
   useEffect(() => {
-    if (estadoAberta && !("error" in estadoAberta) && "feedback" in estadoAberta) {
+    if (estadoAberta && !("error" in estadoAberta) && "questao_id" in estadoAberta) {
       const qid = estadoAberta.questao_id;
+      const feedback = "feedback" in estadoAberta ? estadoAberta.feedback : null;
       setRespostasAbertas((prev) => ({
         ...prev,
         [qid]: {
-          correta: estadoAberta.feedback.itens.every((i) => i.status === "correto"),
-          feedback: estadoAberta.feedback,
+          correta: feedback ? feedback.itens.every((i) => i.status === "correto") : false,
+          feedback,
         },
       }));
     }
@@ -546,9 +547,16 @@ export function TreinoClient({
         )}
 
         {/* Feedback — questão aberta */}
-        {questao.tipo === "aberta" && respondidoAberto && respostaAbertaAtual && (
-          <FeedbackAberto feedback={respostaAbertaAtual.feedback} />
-        )}
+        {questao.tipo === "aberta" &&
+          respondidoAberto &&
+          respostaAbertaAtual &&
+          (respostaAbertaAtual.feedback ? (
+            <FeedbackAberto feedback={respostaAbertaAtual.feedback} />
+          ) : (
+            <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground mb-4">
+              Resposta registrada — avalie pelo gabarito acima.
+            </div>
+          ))}
 
         {/* Gabarito expandido */}
         {respondidoQuestao && mostrarGabarito && (

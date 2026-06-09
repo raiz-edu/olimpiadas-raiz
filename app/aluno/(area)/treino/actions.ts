@@ -410,6 +410,7 @@ export async function getUltimasErradas(limit = 10) {
 
 export type RespostaAbertaState =
   | { feedback: FeedbackIA; questao_id: string }
+  | { questao_id: string }
   | { error: string }
   | null;
 
@@ -431,10 +432,19 @@ export async function responderQuestaoAberta(
 
   const [{ data: questao }, { data: solucao }] = await Promise.all([
     admin.from("questao").select("enunciado").eq("id", questao_id).single(),
-    admin.from("solucao").select("texto").eq("questao_id", questao_id).maybeSingle(),
+    admin.from("solucao").select("texto, blocos").eq("questao_id", questao_id).maybeSingle(),
   ]);
 
-  if (!solucao?.texto) {
+  const textoSolucao =
+    solucao?.texto ||
+    (solucao?.blocos as Array<{ tipo: string; conteudo?: string }> | null)
+      ?.filter((b) => b.tipo === "texto")
+      .map((b) => b.conteudo ?? "")
+      .join("\n")
+      .trim() ||
+    "";
+
+  if (!textoSolucao) {
     await admin.from("resposta_aluno").insert({
       aluno_id: session.aluno.id,
       questao_id,
@@ -443,7 +453,7 @@ export async function responderQuestaoAberta(
       contexto,
       aula_id,
     });
-    return { error: "Gabarito ainda não disponível para avaliação automática." };
+    return { questao_id };
   }
 
   let feedback: FeedbackIA;
