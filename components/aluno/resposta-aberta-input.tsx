@@ -159,6 +159,17 @@ export function RespostaAbertaInput({
         {aulaId && <input type="hidden" name="aula_id" value={aulaId} />}
         <input type="hidden" name="resposta_texto" value={respostaFinal} />
 
+        {/* Textarea do item ativo */}
+        <textarea
+          ref={textareaRef}
+          key={itemAtivo}
+          value={textos[itemAtivo]}
+          onChange={(e) => setTextoItem(itemAtivo, e.target.value)}
+          placeholder={`Resolução do item ${itemAtivo})…`}
+          rows={4}
+          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[rgb(91,184,193)] resize-none mb-2"
+        />
+
         {/* Toolbar matemática */}
         <div className="flex flex-wrap gap-1 mb-2">
           {SIMBOLOS_MATH.map((s) => (
@@ -172,17 +183,6 @@ export function RespostaAbertaInput({
             </button>
           ))}
         </div>
-
-        {/* Textarea do item ativo */}
-        <textarea
-          ref={textareaRef}
-          key={itemAtivo}
-          value={textos[itemAtivo]}
-          onChange={(e) => setTextoItem(itemAtivo, e.target.value)}
-          placeholder={`Resolução do item ${itemAtivo})…`}
-          rows={4}
-          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[rgb(91,184,193)] resize-none mb-2"
-        />
 
         {/* Botão foto inline */}
         <div className="flex flex-wrap items-center gap-2 mb-3">
