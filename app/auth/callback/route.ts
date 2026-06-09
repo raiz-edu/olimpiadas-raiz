@@ -9,6 +9,7 @@ import {
   getRoleForEmail,
   getEmailDomain,
   DOMAIN_TO_MARCA_SLUG,
+  ADMIN_EMAILS,
 } from "@/lib/auth/domains";
 
 export async function GET(request: NextRequest) {
@@ -52,6 +53,12 @@ export async function GET(request: NextRequest) {
   if (!isAllowedDomain(user.email)) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?erro=dominio`);
+  }
+
+  // Área administrativa restrita: apenas os 2 admins designados
+  if (!ADMIN_EMAILS.has(user.email.toLowerCase())) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(`${origin}/aluno/login?erro=portal`);
   }
 
   const admin = createAdminClient();

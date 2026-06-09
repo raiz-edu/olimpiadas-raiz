@@ -10,6 +10,8 @@ const TEAL = "rgb(91,184,193)";
 const ERROS_OAUTH: Record<string, string> = {
   oauth: "Não foi possível autenticar com o Google. Tente novamente.",
   dominio: "Este e-mail não pertence a uma instituição parceira. Use seu e-mail institucional.",
+  portal:
+    "A área administrativa é exclusiva para administradores. Acesse a Plataforma Olímpica aqui.",
 };
 
 export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsConsent?: boolean }) {
