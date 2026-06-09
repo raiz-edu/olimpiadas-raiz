@@ -92,11 +92,13 @@ export default async function LoginAlunoPage({
   searchParams: Promise<{ marca?: string }>;
 }) {
   const { marca } = await searchParams;
-  const logoFile = marca ? SLUG_TO_LOGO[marca] : null;
-  const marcaNome = marca ? SLUG_TO_NOME[marca] : null;
   const videoSrc = await getConfigValue("video_login_url");
   const cookieStore = await cookies();
   const initialNeedsConsent = !!cookieStore.get(ALUNO_PENDING_COOKIE)?.value;
+  const marcaHint = cookieStore.get("marca_hint")?.value || null;
+  const effectiveMarca = marca ?? marcaHint;
+  const logoFile = effectiveMarca ? SLUG_TO_LOGO[effectiveMarca] : null;
+  const marcaNome = effectiveMarca ? SLUG_TO_NOME[effectiveMarca] : null;
   const presentationHtml = readFileSync(
     join(process.cwd(), "public", "trilha-olimpica.html"),
     "utf-8",
@@ -152,17 +154,13 @@ export default async function LoginAlunoPage({
             <img
               src={logoFile ? `/marcas/${logoFile}.png` : "/logo-raiz.png"}
               alt={marcaNome ?? "Raiz Educação"}
-              className={`mx-auto mb-4 block max-w-full ${marca === "uniao" ? "max-h-20 sm:max-h-32" : "max-h-24 sm:max-h-40"}`}
+              className={`mx-auto mb-4 block max-w-full ${effectiveMarca === "uniao" ? "max-h-20 sm:max-h-32" : "max-h-24 sm:max-h-40"}`}
             />
             <h1 className="text-xl font-bold text-foreground">Plataforma Olímpica</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {marcaNome ? `${marcaNome} — Área do Aluno` : "Raiz Educação — Área do Aluno"}
-            </p>
           </div>
 
           {/* Card de login */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <h2 className="mb-6 text-lg font-semibold text-foreground">Entrar</h2>
             <LoginAlunoForm initialNeedsConsent={initialNeedsConsent} />
           </div>
 

@@ -12,6 +12,15 @@ import {
   cookieSessionOpts,
   cookiePendingOpts,
 } from "@/lib/auth/student-cookie";
+import { getEmailDomain, DOMAIN_TO_MARCA_SLUG } from "@/lib/auth/domains";
+
+const MARCA_HINT_COOKIE = "marca_hint";
+const MARCA_HINT_OPTS = {
+  maxAge: 365 * 24 * 60 * 60,
+  path: "/",
+  sameSite: "lax" as const,
+  httpOnly: true,
+};
 
 export type LoginAlunoState = { error: string } | { needsConsent: true } | null;
 
@@ -114,6 +123,10 @@ export async function loginAluno(
     cookieStore.set(ALUNO_PENDING_COOKIE, signStudentCookie(aluno.id), cookiePendingOpts());
     return { needsConsent: true };
   }
+
+  // Hint de marca para personalizar logo na próxima visita ao login
+  const marcaSlug = DOMAIN_TO_MARCA_SLUG[getEmailDomain(email)] ?? null;
+  if (marcaSlug) cookieStore.set(MARCA_HINT_COOKIE, marcaSlug, MARCA_HINT_OPTS);
 
   // Define o cookie de sessão próprio do aluno (7 dias, independente do admin)
   cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());

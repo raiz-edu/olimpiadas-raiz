@@ -85,16 +85,17 @@ export async function GET(request: NextRequest) {
       user.email.split("@")[0] ??
       user.email;
 
+    const alunoInsert = {
+      email: user.email as string,
+      nome,
+      supabase_auth_id: user.id,
+      marca_id: marcaId,
+      ativo: true,
+    };
     const { data: novoAluno } = await admin
       .from("aluno")
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert({
-        email: user.email as string,
-        nome,
-        supabase_auth_id: user.id,
-        marca_id: marcaId,
-        ativo: true,
-      } as any)
+      .insert(alunoInsert as any)
       .select("id, consentimento_responsavel, supabase_auth_id")
       .single();
 
@@ -110,11 +111,21 @@ export async function GET(request: NextRequest) {
     await admin.from("aluno").update({ supabase_auth_id: user.id }).eq("id", aluno.id);
   }
 
+  const marcaSlugHint = DOMAIN_TO_MARCA_SLUG[getEmailDomain(user.email)] ?? null;
+  const marcaHintOpts = {
+    maxAge: 365 * 24 * 60 * 60,
+    path: "/",
+    sameSite: "lax" as const,
+    httpOnly: true,
+  };
+
   if (!aluno.consentimento_responsavel) {
+    if (marcaSlugHint) cookieStore.set("marca_hint", marcaSlugHint, marcaHintOpts);
     cookieStore.set(ALUNO_PENDING_COOKIE, signStudentCookie(aluno.id), cookiePendingOpts());
     return NextResponse.redirect(`${origin}/aluno/login`);
   }
 
+  if (marcaSlugHint) cookieStore.set("marca_hint", marcaSlugHint, marcaHintOpts);
   cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());
   return NextResponse.redirect(`${origin}/aluno/dashboard`);
 }
