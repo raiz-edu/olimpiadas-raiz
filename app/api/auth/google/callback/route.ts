@@ -32,7 +32,7 @@ interface GooglePayload {
 }
 
 function parseIdToken(token: string): GooglePayload {
-  const payload = token.split(".")[1];
+  const payload = token.split(".")[1] ?? "";
   const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
   return JSON.parse(Buffer.from(normalized, "base64").toString()) as GooglePayload;
 }
