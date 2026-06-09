@@ -3,6 +3,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStudentSession } from "@/lib/auth/student-session";
+import { avaliarRespostaAberta } from "@/lib/ai/groq";
+import type { FeedbackIA } from "@/lib/ai/types";
 
 // ─── Questões para treino ────────────────────────────────────────────────────
 
@@ -403,6 +405,78 @@ export async function getUltimasErradas(limit = 10) {
 
   return deduped.slice(0, limit);
 }
+
+// ─── Responder questão aberta ────────────────────────────────────────────────
+
+export type RespostaAbertaState =
+  | { feedback: FeedbackIA; questao_id: string }
+  | { error: string }
+  | null;
+
+export async function responderQuestaoAberta(
+  _prev: RespostaAbertaState,
+  formData: FormData,
+): Promise<RespostaAbertaState> {
+  const session = await getStudentSession();
+  if (!session) return { error: "Não autenticado" };
+
+  const questao_id = formData.get("questao_id") as string;
+  const resposta_texto = ((formData.get("resposta_texto") as string) ?? "").trim();
+  const contexto = (formData.get("contexto") as string) || "banco";
+  const aula_id = (formData.get("aula_id") as string) || null;
+
+  if (!questao_id || !resposta_texto) return { error: "Escreva sua resposta antes de enviar." };
+
+  const admin = createAdminClient() as any;
+
+  const [{ data: questao }, { data: solucao }] = await Promise.all([
+    admin.from("questao").select("enunciado").eq("id", questao_id).single(),
+    admin.from("solucao").select("texto").eq("questao_id", questao_id).maybeSingle(),
+  ]);
+
+  if (!solucao?.texto) {
+    await admin.from("resposta_aluno").insert({
+      aluno_id: session.aluno.id,
+      questao_id,
+      resposta_texto,
+      correta: false,
+      contexto,
+      aula_id,
+    });
+    return { error: "Gabarito ainda não disponível para avaliação automática." };
+  }
+
+  let feedback: FeedbackIA;
+  try {
+    feedback = await avaliarRespostaAberta(questao?.enunciado ?? "", solucao.texto, resposta_texto);
+  } catch {
+    await admin.from("resposta_aluno").insert({
+      aluno_id: session.aluno.id,
+      questao_id,
+      resposta_texto,
+      correta: false,
+      contexto,
+      aula_id,
+    });
+    return { error: "Avaliação temporariamente indisponível. Resposta registrada." };
+  }
+
+  const correta = feedback.itens.length > 0 && feedback.itens.every((i) => i.status === "correto");
+
+  await admin.from("resposta_aluno").insert({
+    aluno_id: session.aluno.id,
+    questao_id,
+    resposta_texto,
+    correta,
+    feedback_ia: feedback,
+    contexto,
+    aula_id,
+  });
+
+  return { feedback, questao_id };
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
 
 export async function getRespostaAluno(questaoId: string) {
   const session = await getStudentSession();

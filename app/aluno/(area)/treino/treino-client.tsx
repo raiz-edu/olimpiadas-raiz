@@ -4,8 +4,16 @@
 
 import { useState, useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { responderQuestao, getSolucaoQuestao, getAlternativasQuestao } from "./actions";
+import {
+  responderQuestao,
+  getSolucaoQuestao,
+  getAlternativasQuestao,
+  responderQuestaoAberta,
+} from "./actions";
+import type { RespostaAbertaState } from "./actions";
 import { FormattedText } from "@/components/ui/formatted-text";
+import { RespostaAbertaInput, FeedbackAberto } from "@/components/aluno/resposta-aberta-input";
+import type { FeedbackIA } from "@/lib/ai/types";
 import type { Questao, Alternativa } from "@/lib/types/database";
 
 const OLIMPIADA_LABEL: Record<string, string> = { obmep_mirim: "OBMEP Mirim", obmep: "OBMEP" };
@@ -15,6 +23,11 @@ type RespostaLocal = {
   correta: boolean;
   alternativa_id: string;
   alternativa_correta_id: string | null;
+};
+
+type RespostaAbertaLocal = {
+  correta: boolean;
+  feedback: FeedbackIA;
 };
 
 type BlocoRes =
@@ -55,6 +68,7 @@ export function TreinoClient({
 
   /* ── Respostas da sessão (persistem ao navegar) ───────────────────────────── */
   const [respostas, setRespostas] = useState<Record<string, RespostaLocal>>({});
+  const [respostasAbertas, setRespostasAbertas] = useState<Record<string, RespostaAbertaLocal>>({});
   // Ref que captura qual alternativa o aluno clicou antes da resposta do servidor
   const altSelecionadaRef = useRef<Record<string, string>>({});
 
@@ -66,8 +80,12 @@ export function TreinoClient({
   const [finalizado, setFinalizado] = useState(false);
   const [mostrarDesempenhoAula, setMostrarDesempenhoAula] = useState(false);
 
-  /* ── Server action ───────────────────────────────────────────────────────── */
+  /* ── Server actions ─────────────────────────────────────────────────────── */
   const [estado, action, isPending] = useActionState(responderQuestao, null);
+  const [estadoAberta, actionAberta, isPendingAberta] = useActionState<
+    RespostaAbertaState,
+    FormData
+  >(responderQuestaoAberta, null);
 
   // Quando chega nova resposta do servidor, persiste no mapa local
   useEffect(() => {
@@ -93,6 +111,20 @@ export function TreinoClient({
     }
   }, [idx, questoes, altsMap]);
 
+  // Captura resposta aberta avaliada
+  useEffect(() => {
+    if (estadoAberta && !("error" in estadoAberta) && "feedback" in estadoAberta) {
+      const qid = estadoAberta.questao_id;
+      setRespostasAbertas((prev) => ({
+        ...prev,
+        [qid]: {
+          correta: estadoAberta.feedback.itens.every((i) => i.status === "correto"),
+          feedback: estadoAberta.feedback,
+        },
+      }));
+    }
+  }, [estadoAberta]);
+
   // Fecha gabarito ao trocar de questão
   useEffect(() => {
     setMostrarGabarito(false);
@@ -110,6 +142,12 @@ export function TreinoClient({
 
   const gabarito: GabaritoLocal = questao ? (gabaritoMap[questao.id] ?? null) : null;
   const altCorretaLetra = alts.find((a) => a.id === altCorretaId)?.letra ?? null;
+
+  const respostaAbertaAtual: RespostaAbertaLocal | undefined = questao
+    ? respostasAbertas[questao.id]
+    : undefined;
+  const respondidoAberto = !!respostaAbertaAtual;
+  const respondidoQuestao = questao?.tipo === "aberta" ? respondidoAberto : respondido;
 
   async function handleGabarito() {
     if (!questao) return;
@@ -415,6 +453,24 @@ export function TreinoClient({
           )}
         </div>
 
+        {/* Input — questão aberta */}
+        {questao.tipo === "aberta" && !respondidoAberto && (
+          <>
+            {estadoAberta && "error" in estadoAberta && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/8 px-4 py-3 text-sm text-amber-400 mb-3">
+                {(estadoAberta as { error: string }).error}
+              </div>
+            )}
+            <RespostaAbertaInput
+              questaoId={questao.id}
+              contexto={contexto}
+              aulaId={aulaId}
+              action={actionAberta}
+              isPending={isPendingAberta}
+            />
+          </>
+        )}
+
         {/* Alternativas */}
         {questao.tipo === "multipla_escolha" && (
           <div className="space-y-2.5 mb-5">
@@ -480,13 +536,18 @@ export function TreinoClient({
           </div>
         )}
 
-        {/* Feedback */}
-        {respondido && (
+        {/* Feedback — múltipla escolha */}
+        {respondido && questao.tipo !== "aberta" && (
           <div
             className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold mb-4 ${correta ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-red-500/30 bg-red-500/10 text-red-400"}`}
           >
             {correta ? "✓ Correto!" : "✗ Resposta incorreta."}
           </div>
+        )}
+
+        {/* Feedback — questão aberta */}
+        {questao.tipo === "aberta" && respondidoAberto && respostaAbertaAtual && (
+          <FeedbackAberto feedback={respostaAbertaAtual.feedback} />
         )}
 
         {/* Gabarito expandido */}
@@ -616,7 +677,7 @@ export function TreinoClient({
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleGabarito}
-            disabled={!respondido}
+            disabled={!respondidoQuestao}
             className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${mostrarGabarito ? "border-sky-400 text-sky-400 bg-sky-400/8" : "border-border text-muted-foreground hover:border-sky-400 hover:text-sky-400"}`}
           >
             {mostrarGabarito ? "Fechar resolução" : "Resolução"}
@@ -635,13 +696,13 @@ export function TreinoClient({
           <button
             onClick={() => setIdx((i) => i + 1)}
             className={
-              respondido
+              respondidoQuestao
                 ? "rounded-lg px-5 py-2 text-sm font-bold text-[#0f172a]"
                 : "rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
             }
-            style={respondido ? { background: TEAL } : {}}
+            style={respondidoQuestao ? { background: TEAL } : {}}
           >
-            {respondido
+            {respondidoQuestao
               ? idx + 1 < total
                 ? "Próxima questão →"
                 : "Concluir sessão →"
