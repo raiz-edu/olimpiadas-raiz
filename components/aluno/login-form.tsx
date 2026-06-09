@@ -3,7 +3,6 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loginAluno } from "@/app/aluno/login/actions";
-import { createClient } from "@/lib/supabase/client";
 
 const TEAL = "rgb(91,184,193)";
 
@@ -26,17 +25,9 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
   const searchParams = useSearchParams();
   const erroOAuth = searchParams.get("erro") ? ERROS_OAUTH[searchParams.get("erro")!] : null;
 
-  async function handleGoogle() {
+  function handleGoogle() {
     setGooglePending(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/aluno/auth/callback`,
-        queryParams: { prompt: "select_account" },
-      },
-    });
-    // Não precisa de setGooglePending(false) — a página vai redirecionar
+    window.location.href = "/api/auth/google?mode=aluno";
   }
 
   useEffect(() => {

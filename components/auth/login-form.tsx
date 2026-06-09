@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { login } from "@/app/login/actions";
 import { inputClass } from "@/components/ui/form-field";
-import { createClient } from "@/lib/supabase/client";
 
 type LoginState = {
   error?: string;
@@ -23,16 +22,9 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const erroOAuth = searchParams.get("erro") ? ERROS_OAUTH[searchParams.get("erro")!] : null;
 
-  async function handleGoogle() {
+  function handleGoogle() {
     setGooglePending(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: { prompt: "select_account" },
-      },
-    });
+    window.location.href = "/api/auth/google?mode=staff";
   }
 
   useEffect(() => {
