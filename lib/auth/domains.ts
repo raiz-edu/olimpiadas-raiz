@@ -1,5 +1,5 @@
 export const ALLOWED_DOMAINS = [
-  "apogeu.com.br",
+  "colegioapogeu.com.br",
   "matrizeducacao.com.br",
   "colegioqi.com.br",
   "colegiouniao.com.br",
@@ -17,7 +17,7 @@ export const ADMIN_EMAILS = new Set([
 ]);
 
 export const DOMAIN_TO_MARCA_SLUG: Record<string, string | null> = {
-  "apogeu.com.br": "apogeu",
+  "colegioapogeu.com.br": "apogeu",
   "matrizeducacao.com.br": "matriz-educacao",
   "colegioqi.com.br": "qi-bilingue",
   "colegiouniao.com.br": "uniao",
