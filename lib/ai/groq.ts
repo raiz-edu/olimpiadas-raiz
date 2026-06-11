@@ -10,7 +10,7 @@ function getClient() {
 const SYSTEM_PROMPT =
   "Você é um avaliador de olimpíadas de matemática para estudantes do ensino fundamental (6º e 7º ano). Avalie com precisão mas de forma encorajadora. Considere raciocínio parcialmente correto.";
 
-const INSTRUCOES_FORMATO = `Identifique os itens (a, b, c…) na solução oficial e avalie cada um na resposta do aluno.
+const INSTRUCOES_FORMATO = `Identifique TODOS os itens (a, b, c…) que aparecem no ENUNCIADO da questão — não apenas os cobertos pela solução oficial ou pela resposta do aluno — e avalie cada um deles. Um item do enunciado sem resposta correspondente deve ser marcado como "nao_respondido", mas NUNCA pode ser omitido da lista.
 Responda SOMENTE com JSON válido, sem markdown:
 {"itens":[{"item":"a","status":"correto","comentario":"..."},{"item":"b","status":"parcial","comentario":"..."}],"resumo":"..."}
 
@@ -60,15 +60,18 @@ ${INSTRUCOES_FORMATO}`,
 export async function avaliarFotoAberta(
   enunciado: string,
   textoSolucao: string,
-  imagemSolucaoUrl: string | null,
+  imagensSolucaoUrls: string[],
   fotoAlunoBase64: string,
 ): Promise<FeedbackIA> {
   const groq = getClient();
 
   const partesSolucao = textoSolucao ? `\nSOLUÇÃO OFICIAL:\n${textoSolucao}\n` : "";
-  const refImagemSolucao = imagemSolucaoUrl
-    ? "\nA primeira imagem anexada contém a solução oficial. A última imagem é a resolução manuscrita do aluno."
-    : "\nA imagem anexada contém a resolução manuscrita do aluno.";
+  const refImagemSolucao =
+    imagensSolucaoUrls.length === 0
+      ? "\nA imagem anexada contém a resolução manuscrita do aluno."
+      : imagensSolucaoUrls.length === 1
+        ? "\nA primeira imagem anexada contém a solução oficial. A última imagem é a resolução manuscrita do aluno."
+        : `\nAs ${imagensSolucaoUrls.length} primeiras imagens anexadas contêm a solução oficial (em partes). A última imagem é a resolução manuscrita do aluno.`;
 
   const content: Array<
     { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
@@ -87,7 +90,7 @@ ${INSTRUCOES_FORMATO}`,
     },
   ];
 
-  if (imagemSolucaoUrl) content.push({ type: "image_url", image_url: { url: imagemSolucaoUrl } });
+  for (const url of imagensSolucaoUrls) content.push({ type: "image_url", image_url: { url } });
   content.push({ type: "image_url", image_url: { url: fotoAlunoBase64 } });
 
   const completion = await groq.chat.completions.create({
@@ -106,10 +109,15 @@ ${INSTRUCOES_FORMATO}`,
 // Avalia quando a solução oficial está disponível apenas como imagem (sem texto extraído).
 export async function avaliarRespostaAbertaComImagem(
   enunciado: string,
-  imagemSolucaoUrl: string,
+  imagensSolucaoUrls: string[],
   resposta: string,
 ): Promise<FeedbackIA> {
   const groq = getClient();
+
+  const refImagens =
+    imagensSolucaoUrls.length > 1
+      ? "As imagens anexadas contêm a solução oficial (em partes)."
+      : "A imagem anexada contém a solução oficial.";
 
   const completion = await groq.chat.completions.create({
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
@@ -130,11 +138,11 @@ ${enunciado}
 RESPOSTA DO ALUNO:
 ${resposta}
 
-A imagem anexada contém a solução oficial.
+${refImagens}
 
 ${INSTRUCOES_FORMATO}`,
           },
-          { type: "image_url", image_url: { url: imagemSolucaoUrl } },
+          ...imagensSolucaoUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
         ],
       },
     ],

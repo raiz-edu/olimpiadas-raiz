@@ -456,9 +456,11 @@ export async function responderQuestaoAberta(
       .trim() ||
     "";
 
-  const imagemSolucao = blocos.find((b) => b.tipo === "imagem" && b.url)?.url ?? null;
+  const imagensSolucao = blocos
+    .filter((b) => b.tipo === "imagem" && b.url)
+    .map((b) => b.url as string);
 
-  if (!textoSolucao && !imagemSolucao) {
+  if (!textoSolucao && imagensSolucao.length === 0) {
     await admin.from("resposta_aluno").insert({
       aluno_id: session.aluno.id,
       questao_id,
@@ -476,14 +478,14 @@ export async function responderQuestaoAberta(
       ? await avaliarFotoAberta(
           questao?.enunciado ?? "",
           textoSolucao,
-          imagemSolucao,
+          imagensSolucao,
           imagem_base64,
         )
       : textoSolucao
         ? await avaliarRespostaAberta(questao?.enunciado ?? "", textoSolucao, resposta_texto)
         : await avaliarRespostaAbertaComImagem(
             questao?.enunciado ?? "",
-            imagemSolucao!,
+            imagensSolucao,
             resposta_texto,
           );
   } catch {
