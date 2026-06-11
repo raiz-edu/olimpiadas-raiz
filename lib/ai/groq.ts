@@ -11,6 +11,9 @@ const SYSTEM_PROMPT =
   "Você é um avaliador de olimpíadas de matemática para estudantes do ensino fundamental (6º e 7º ano). Avalie com precisão mas de forma encorajadora. Considere raciocínio parcialmente correto.";
 
 const INSTRUCOES_FORMATO = `Identifique TODOS os itens (a, b, c…) que aparecem no ENUNCIADO da questão — não apenas os cobertos pela solução oficial ou pela resposta do aluno — e avalie cada um deles. Um item do enunciado sem resposta correspondente deve ser marcado como "nao_respondido", mas NUNCA pode ser omitido da lista.
+
+IMPORTANTE: avalie exclusivamente o conteúdo identificado como RESPOSTA DO ALUNO (texto e/ou a imagem indicada como tal). Imagens ou textos de SOLUÇÃO OFICIAL servem apenas de gabarito para comparação — NUNCA descreva ou pontue o conteúdo da solução oficial como se fosse a resposta do aluno. Se a resposta do aluno estiver vazia, ilegível, ou não tiver relação com o item (ex.: texto aleatório como "teste", "asdf", letras repetidas), marque esse item como "incorreto" — nunca "correto" ou "parcial" nesse caso, mesmo que a solução oficial esteja correta.
+
 Responda SOMENTE com JSON válido, sem markdown:
 {"itens":[{"item":"a","status":"correto","comentario":"..."},{"item":"b","status":"parcial","comentario":"..."}],"resumo":"..."}
 
@@ -106,47 +109,47 @@ ${INSTRUCOES_FORMATO}`,
   return parseFeedback(completion.choices[0]?.message?.content ?? "{}");
 }
 
-// Avalia quando a solução oficial está disponível apenas como imagem (sem texto extraído).
-export async function avaliarRespostaAbertaComImagem(
+// Transcreve o conteúdo da solução oficial a partir de imagens — não avalia nada.
+// Mantida separada da avaliação para evitar que o modelo de visão confunda as
+// imagens da solução com a resposta do aluno (ele tende a "avaliar a si mesmo").
+async function extrairTextoSolucaoDeImagens(
   enunciado: string,
   imagensSolucaoUrls: string[],
-  resposta: string,
-): Promise<FeedbackIA> {
+): Promise<string> {
   const groq = getClient();
 
-  const refImagens =
-    imagensSolucaoUrls.length > 1
-      ? "As imagens anexadas contêm a solução oficial (em partes)."
-      : "A imagem anexada contém a solução oficial.";
+  const content: Array<
+    { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
+  > = [
+    {
+      type: "text",
+      text: `As imagens anexadas contêm a solução oficial de uma questão de olimpíada de matemática.
+
+ENUNCIADO (apenas para contexto):
+${enunciado}
+
+Transcreva o conteúdo da solução oficial em texto corrido, descrevendo o raciocínio e o resultado de cada item (a, b, c…). Apenas descreva o que está escrito/desenhado nas imagens — não avalie nada.`,
+    },
+  ];
+  for (const url of imagensSolucaoUrls) content.push({ type: "image_url", image_url: { url } });
 
   const completion = await groq.chat.completions.create({
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
     temperature: 0.1,
     max_tokens: 800,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Avalie a resposta do aluno para esta questão da OBMEP.
-
-ENUNCIADO:
-${enunciado}
-
-RESPOSTA DO ALUNO:
-${resposta}
-
-${refImagens}
-
-${INSTRUCOES_FORMATO}`,
-          },
-          ...imagensSolucaoUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
-        ],
-      },
-    ],
+    messages: [{ role: "user", content }],
   });
 
-  return parseFeedback(completion.choices[0]?.message?.content ?? "{}");
+  return completion.choices[0]?.message?.content?.trim() ?? "";
+}
+
+// Avalia quando a solução oficial está disponível apenas como imagem (sem texto extraído).
+// Primeiro transcreve a solução via visão, depois avalia em texto com avaliarRespostaAberta.
+export async function avaliarRespostaAbertaComImagem(
+  enunciado: string,
+  imagensSolucaoUrls: string[],
+  resposta: string,
+): Promise<FeedbackIA> {
+  const textoSolucao = await extrairTextoSolucaoDeImagens(enunciado, imagensSolucaoUrls);
+  return avaliarRespostaAberta(enunciado, textoSolucao, resposta);
 }
