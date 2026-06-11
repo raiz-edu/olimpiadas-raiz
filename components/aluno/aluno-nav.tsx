@@ -138,7 +138,7 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
           <nav className="flex items-center gap-1">
             <NavLink href="/aluno/dashboard" label="Projetos" />
             <NavLink href="/aluno/simulados" label="Simulados" />
-            <NavLink href="/aluno/treino" label="Banco de Questões" exact />
+            <NavLink href="/aluno/treino" label="Questões" exact />
             <NavLink href="/aluno/treino/dashboard" label="Meu Desempenho" />
           </nav>
 
@@ -210,7 +210,7 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
         >
           <MobileNavLink href="/aluno/dashboard" label="Projetos" onClick={closeMenu} />
           <MobileNavLink href="/aluno/simulados" label="Simulados" onClick={closeMenu} />
-          <MobileNavLink href="/aluno/treino" label="Banco de Questões" exact onClick={closeMenu} />
+          <MobileNavLink href="/aluno/treino" label="Questões" exact onClick={closeMenu} />
           <MobileNavLink
             href="/aluno/treino/dashboard"
             label="Meu Desempenho"
