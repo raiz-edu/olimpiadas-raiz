@@ -31,24 +31,23 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAuthPage = pathname.startsWith("/login");
-  const isAlunoAuth = pathname.startsWith("/aluno/login");
-  const isAlunoCallback = pathname.startsWith("/aluno/auth/callback");
+  // A área do aluno tem sessão própria (cookie aluno_session, ver getStudentSession),
+  // completamente independente do Supabase Auth — não deve ser bloqueada aqui.
+  const isAlunoArea = pathname.startsWith("/aluno/");
   const isStaffCallback = pathname.startsWith("/auth/callback");
   const isAcceptInvite = pathname.startsWith("/aceitar-convite");
   const isGoogleOAuth = pathname.startsWith("/api/auth/google");
   const isPublicPath =
     pathname === "/" ||
     isAuthPage ||
-    isAlunoAuth ||
-    isAlunoCallback ||
+    isAlunoArea ||
     isStaffCallback ||
     isAcceptInvite ||
     isGoogleOAuth;
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
-    // Rotas do aluno redirecionam para o login do aluno, não o login do staff
-    url.pathname = pathname.startsWith("/aluno/") ? "/aluno/login" : "/login";
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
