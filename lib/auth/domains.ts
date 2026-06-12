@@ -32,7 +32,14 @@ export function getEmailDomain(email: string): string {
 
 export function isAllowedDomain(email: string): boolean {
   const domain = getEmailDomain(email);
-  return (ALLOWED_DOMAINS as readonly string[]).includes(domain);
+  if (!(ALLOWED_DOMAINS as readonly string[]).includes(domain)) return false;
+
+  // raizeducacao.com.br (domínio da rede) é restrito aos admins designados, por enquanto.
+  if (domain === "raizeducacao.com.br") {
+    return ADMIN_EMAILS.has(email.toLowerCase());
+  }
+
+  return true;
 }
 
 export function getRoleForEmail(email: string): "admin_rede" | "professor" {
