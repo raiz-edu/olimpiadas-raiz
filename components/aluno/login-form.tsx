@@ -144,8 +144,27 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
         {/* ── Passo 2: consentimento (primeiro acesso) ─────────── */}
         {needsConsent && (
           <div className="space-y-4">
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.704 5.29a1 1 0 010 1.415l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414l2.793 2.793 6.793-6.793a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Login com Google verificado! Falta só mais um passo.</span>
+            </div>
+
             <div className="rounded-xl border border-border bg-muted/20 p-4">
-              <p className="text-sm font-semibold text-foreground">Autorização do responsável</p>
+              <p className="text-sm font-semibold text-foreground">
+                Passo 2 de 2 — Autorização do responsável
+              </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Necessária uma única vez para liberar o acesso ao portal.
               </p>
