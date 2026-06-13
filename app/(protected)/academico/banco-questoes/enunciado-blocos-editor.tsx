@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition } from "react";
 import { uploadQuestaoImagem } from "./actions";
 import { inputClass } from "@/components/ui/form-field";
+import { MathToolbar, insertAtCursor } from "@/components/ui/math-toolbar";
 
 type UploadFn = (fd: FormData) => Promise<{ url: string } | { error: string }>;
 
@@ -81,6 +82,7 @@ export function EnunciadoBlocosEditor({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+  const focoAtualRef = useRef(0);
 
   const update = (i: number, bloco: BlocoEnunciado) =>
     setBlocos((prev) => prev.map((b, j) => (j === i ? bloco : b)));
@@ -120,6 +122,23 @@ export function EnunciadoBlocosEditor({
     .filter((b): b is { tipo: "texto"; conteudo: string } => b.tipo === "texto")
     .map((b) => b.conteudo)
     .join("\n\n");
+
+  function inserirSimboloMath(simbolo: string) {
+    let i = focoAtualRef.current;
+    if (blocos[i]?.tipo !== "texto") {
+      i = blocos.findIndex((b) => b.tipo === "texto");
+    }
+    if (i < 0) return;
+    const bloco = blocos[i] as { tipo: "texto"; conteudo: string };
+    const el = textareaRefs.current[i];
+    if (!el) {
+      update(i, { tipo: "texto", conteudo: bloco.conteudo + simbolo });
+      return;
+    }
+    insertAtCursor(el, simbolo, bloco.conteudo, (next) =>
+      update(i, { tipo: "texto", conteudo: next }),
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -166,6 +185,9 @@ export function EnunciadoBlocosEditor({
                     textareaRefs.current[i] = el;
                   }}
                   value={bloco.conteudo}
+                  onFocus={() => {
+                    focoAtualRef.current = i;
+                  }}
                   onChange={(e) => update(i, { tipo: "texto", conteudo: e.target.value })}
                   onKeyDown={(e) => {
                     const mod = e.ctrlKey || e.metaKey;
@@ -253,6 +275,14 @@ export function EnunciadoBlocosEditor({
             )}
           </div>
         ))}
+      </div>
+
+      {/* Toolbar de notação matemática — insere no bloco de texto em foco */}
+      <div className="rounded-lg border border-border bg-background p-2.5 space-y-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Notação matemática
+        </p>
+        <MathToolbar onInsert={inserirSimboloMath} />
       </div>
 
       {isPending && <p className="text-xs text-muted-foreground">Enviando imagem…</p>}
