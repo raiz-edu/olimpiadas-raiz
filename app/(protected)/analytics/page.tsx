@@ -882,6 +882,39 @@ export default async function AnalyticsPage() {
         )}
       </div>
 
+      {/* ── CONTEÚDO — Banco de Questões ─────────────────────────────────── */}
+      <Divider label="Conteúdo" />
+
+      <Link
+        href="/analytics/banco-questoes"
+        className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-6 transition-colors hover:border-ring"
+      >
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+            Banco de Questões
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Cobertura do acervo por tópico, dificuldade e pipeline de revisão — segmentado por
+            olimpíada, nível e fase.
+          </p>
+        </div>
+        <span className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
+          Abrir
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="h-4 w-4"
+          >
+            <path
+              fillRule="evenodd"
+              d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </span>
+      </Link>
+
       {/* ── SPRINT 3 ──────────────────────────────────────────────────────── */}
       <Divider label="Preparação" />
 
