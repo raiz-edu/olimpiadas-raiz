@@ -333,19 +333,29 @@ export default async function AnalyticsPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (projetosPrep ?? []).map((p: any) => [p.id as string, p.ano_letivo as number]),
   );
-  const prepStats: Record<
-    number,
-    { projetos: Set<string>; aulas: number; simulados: number; minutos: number }
-  > = {};
+
+  // "Projetos ativos por ano" vem direto de preparacao_projeto (ativo=true),
+  // não do número de projetos que têm aula cadastrada.
+  const projetosAtivosPorAno: Record<number, number> = {};
+  for (const p of projetosPrep ?? []) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anoP = (p as any).ano_letivo as number;
+    if (anoP == null) continue;
+    projetosAtivosPorAno[anoP] = (projetosAtivosPorAno[anoP] ?? 0) + 1;
+  }
+
+  const prepStats: Record<number, { aulas: number; simulados: number; minutos: number }> = {};
+  // Garante que todo ano com projeto ativo apareça, mesmo sem aulas.
+  for (const anoP of Object.keys(projetosAtivosPorAno)) {
+    prepStats[Number(anoP)] = { aulas: 0, simulados: 0, minutos: 0 };
+  }
   for (const a of aulasPrep ?? []) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const row = a as any;
     const anoA = projetoAnoMap.get(row.projeto_id);
     if (!anoA) continue;
-    if (!prepStats[anoA])
-      prepStats[anoA] = { projetos: new Set(), aulas: 0, simulados: 0, minutos: 0 };
+    if (!prepStats[anoA]) prepStats[anoA] = { aulas: 0, simulados: 0, minutos: 0 };
     const s = prepStats[anoA]!;
-    s.projetos.add(row.projeto_id);
     if (row.tipo === "simulado") s.simulados++;
     else s.aulas++;
     s.minutos += row.duracao_minutos ?? 0;
@@ -354,7 +364,7 @@ export default async function AnalyticsPage() {
     .sort(([a], [b]) => Number(b) - Number(a))
     .map(([anoStr, s]) => ({
       ano: Number(anoStr),
-      projetos: s.projetos.size,
+      projetos: projetosAtivosPorAno[Number(anoStr)] ?? 0,
       aulas: s.aulas,
       simulados: s.simulados,
       minutos: s.minutos,
@@ -364,12 +374,17 @@ export default async function AnalyticsPage() {
   const prepAno = prepStats[ano];
   const prepAnoStats = prepAno
     ? {
-        projetos: prepAno.projetos.size,
+        projetos: projetosAtivosPorAno[ano] ?? 0,
         aulas: prepAno.aulas,
         simulados: prepAno.simulados,
         horas: Math.round((prepAno.minutos / 60) * 10) / 10,
       }
-    : { projetos: 0, aulas: 0, simulados: 0, horas: 0 };
+    : {
+        projetos: projetosAtivosPorAno[ano] ?? 0,
+        aulas: 0,
+        simulados: 0,
+        horas: 0,
+      };
 
   // ─── Sprint 5 — Atividade na Plataforma do Aluno ─────────────────────────
 
