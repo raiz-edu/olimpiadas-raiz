@@ -606,3 +606,105 @@ export async function getRespostaAluno(questaoId: string) {
     .maybeSingle();
   return data;
 }
+
+// ─── Ranking de questões (sem deduplicação — conta todas as tentativas) ───────
+
+export type QuestaoRankEntry = {
+  questao_id: string;
+  olimpiada: string;
+  nivel: string | null;
+  fase: number | null;
+  ano: number;
+  numero: number;
+  topico: string | null;
+  assunto: string | null;
+  total: number;
+  acertos: number;
+  erros: number;
+};
+
+export type TopicoRankEntry = { topico: string; peso: number };
+
+export async function getQuestoesRanking(): Promise<{
+  maisErradas: QuestaoRankEntry[];
+  maisAcertadas: QuestaoRankEntry[];
+  topicosMaisErrados: TopicoRankEntry[];
+  topicosMaisAcertados: TopicoRankEntry[];
+}> {
+  const vazio = {
+    maisErradas: [],
+    maisAcertadas: [],
+    topicosMaisErrados: [],
+    topicosMaisAcertados: [],
+  };
+  const session = await getStudentSession();
+  if (!session) return vazio;
+
+  const admin = createAdminClient() as any;
+  const { data: raw } = await admin
+    .from("resposta_aluno")
+    .select(
+      "questao_id, correta, questao:questao_id(olimpiada, nivel, fase, ano, numero, topico, assunto)",
+    )
+    .eq("aluno_id", session.aluno.id);
+
+  const perQuestao: Record<string, QuestaoRankEntry> = {};
+  for (const r of raw ?? []) {
+    if (!r.questao) continue;
+    const q = Array.isArray(r.questao) ? r.questao[0] : r.questao;
+    if (!q) continue;
+    if (!perQuestao[r.questao_id]) {
+      perQuestao[r.questao_id] = {
+        questao_id: r.questao_id,
+        olimpiada: q.olimpiada ?? "",
+        nivel: q.nivel ?? null,
+        fase: q.fase ?? null,
+        ano: q.ano ?? 0,
+        numero: q.numero ?? 0,
+        topico: q.topico ?? null,
+        assunto: q.assunto ?? null,
+        total: 0,
+        acertos: 0,
+        erros: 0,
+      };
+    }
+    const entry = perQuestao[r.questao_id];
+    if (!entry) continue;
+    entry.total++;
+    if (r.correta) entry.acertos++;
+    else entry.erros++;
+  }
+
+  const questoes = Object.values(perQuestao);
+
+  const maisErradas = questoes
+    .filter((q) => q.erros > 0)
+    .sort((a, b) => b.erros - a.erros || b.total - a.total)
+    .slice(0, 5);
+
+  const maisAcertadas = questoes
+    .filter((q) => q.acertos > 0)
+    .sort((a, b) => b.acertos - a.acertos || a.erros - b.erros)
+    .slice(0, 5);
+
+  function derivarTopicos(
+    itens: QuestaoRankEntry[],
+    campo: "erros" | "acertos",
+  ): TopicoRankEntry[] {
+    const mapa: Record<string, number> = {};
+    for (const q of itens) {
+      const key = q.topico ?? q.assunto ?? "Sem tópico";
+      mapa[key] = (mapa[key] ?? 0) + q[campo];
+    }
+    return Object.entries(mapa)
+      .map(([topico, peso]) => ({ topico, peso }))
+      .sort((a, b) => b.peso - a.peso);
+  }
+
+  return {
+    maisErradas,
+    maisAcertadas,
+    topicosMaisErrados: derivarTopicos(maisErradas, "erros"),
+    topicosMaisAcertados: derivarTopicos(maisAcertadas, "acertos"),
+  };
+}
