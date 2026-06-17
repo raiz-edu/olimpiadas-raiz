@@ -23,12 +23,16 @@ import {
   ImageRun,
 } from "docx";
 import { createClient } from "@supabase/supabase-js";
+import { config as loadEnv } from "dotenv";
+loadEnv({ path: ".env.local" });
 
 // ─── Supabase ────────────────────────────────────────────────────────────────
 
-const SUPABASE_URL = "https://ebdazvyyunilbkygtevn.supabase.co";
-const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViZGF6dnl5dW5pbGJreWd0ZXZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTIxOTg3NywiZXhwIjoyMDk0Nzk1ODc3fQ.lUFt2cs8nBYvVTPNGzuaSk20xbcTXqcVHzMTdMB5X8c";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY)
+  throw new Error("NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são obrigatórios no .env.local");
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 

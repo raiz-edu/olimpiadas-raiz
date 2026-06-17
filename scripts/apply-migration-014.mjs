@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
+config({ path: ".env.local" });
 
-const URL = "https://ebdazvyyunilbkygtevn.supabase.co";
-const KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViZGF6dnl5dW5pbGJreWd0ZXZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTIxOTg3NywiZXhwIjoyMDk0Nzk1ODc3fQ.lUFt2cs8nBYvVTPNGzuaSk20xbcTXqcVHzMTdMB5X8c";
+const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+if (!URL || !KEY) throw new Error("NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são obrigatórios no .env.local");
 
 const sb = createClient(URL, KEY);
 
