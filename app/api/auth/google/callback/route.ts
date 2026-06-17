@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RoleUsuario } from "@/lib/types/database";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   isAllowedDomain,
   getRoleForEmail,
@@ -31,10 +32,15 @@ interface GooglePayload {
   name: string;
 }
 
-function parseIdToken(token: string): GooglePayload {
-  const payload = token.split(".")[1] ?? "";
-  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-  return JSON.parse(Buffer.from(normalized, "base64").toString()) as GooglePayload;
+// JWKS do Google — criado uma vez no nível do módulo para aproveitar o cache interno do jose
+const GOOGLE_JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
+
+async function verifyIdToken(token: string): Promise<GooglePayload> {
+  const { payload } = await jwtVerify(token, GOOGLE_JWKS, {
+    issuer: "https://accounts.google.com",
+    audience: process.env.GOOGLE_CLIENT_ID!,
+  });
+  return payload as unknown as GooglePayload;
 }
 
 export async function GET(request: NextRequest) {
@@ -69,7 +75,14 @@ export async function GET(request: NextRequest) {
   }
 
   const tokens = (await tokenRes.json()) as GoogleTokens;
-  const payload = parseIdToken(tokens.id_token);
+
+  let payload: GooglePayload;
+  try {
+    payload = await verifyIdToken(tokens.id_token);
+  } catch {
+    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
+  }
+
   const email = payload.email?.toLowerCase();
 
   if (!email || !payload.email_verified) {
