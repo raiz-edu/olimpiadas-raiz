@@ -2,7 +2,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
-import { getDashboardAluno } from "../actions";
+import { getDashboardAluno, getQuestoesRanking } from "../actions";
+import type { QuestaoRankEntry, TopicoRankEntry } from "../actions";
 
 const TEAL = "rgb(91,184,193)";
 
@@ -12,17 +13,40 @@ function pctColor(pct: number) {
   return "#f87171";
 }
 
-function PctBar({ pct, max = 100 }: { pct: number; max?: number }) {
-  const w = Math.round((pct / max) * 100);
-  return (
-    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-      <div
-        className="h-full rounded-full transition-all"
-        style={{ width: `${w}%`, background: pctColor(pct) }}
-      />
-    </div>
-  );
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function posStyle(pos: number) {
+  if (pos === 1)
+    return { cls: "text-amber-400 border-amber-400/40 bg-amber-400/10", barCls: "bg-amber-400" };
+  if (pos === 2)
+    return { cls: "text-zinc-300 border-zinc-400/40 bg-zinc-400/10", barCls: "bg-zinc-400" };
+  if (pos === 3)
+    return {
+      cls: "text-orange-400 border-orange-500/40 bg-orange-500/10",
+      barCls: "bg-orange-500",
+    };
+  return {
+    cls: "text-muted-foreground border-border bg-muted/20",
+    barCls: "bg-muted-foreground/40",
+  };
 }
+
+const OLIMP_LABEL: Record<string, string> = { obmep: "OBMEP", obmep_mirim: "Mirim" };
+const NIVEL_SHORT: Record<string, string> = {
+  nivel_1: "N1",
+  nivel_2: "N2",
+  nivel_3: "N3",
+  mirim: "Mirim",
+};
+
+function labelQuestao(q: QuestaoRankEntry): string {
+  const olimp = OLIMP_LABEL[q.olimpiada] ?? q.olimpiada.toUpperCase();
+  const nivel = q.nivel ? (NIVEL_SHORT[q.nivel] ?? q.nivel) : null;
+  const fase = q.fase ? `${q.fase}ª Fase` : null;
+  return [olimp, nivel, fase, q.ano, `Q${q.numero}`].filter(Boolean).join(" · ");
+}
+
+// ── Componentes ───────────────────────────────────────────────────────────────
 
 function ResumoCards({ total, acertos }: { total: number; acertos: number }) {
   const erros = total - acertos;
@@ -48,60 +72,161 @@ function ResumoCards({ total, acertos }: { total: number; acertos: number }) {
   );
 }
 
-/* ── Gráfico de barras horizontal ───────────────────────────────────────────── */
-function GraficoTopicos({
-  titulo,
-  subtitulo,
-  items,
-  tipo,
+function RankingItem({
+  pos,
+  item,
+  campo,
+  max,
 }: {
-  titulo: string;
-  subtitulo: string;
-  items: { topico: string; total: number; acertos: number; erros: number }[];
-  tipo: "revisar" | "forte";
+  pos: number;
+  item: QuestaoRankEntry;
+  campo: "erros" | "acertos";
+  max: number;
 }) {
-  if (!items.length) return null;
+  const count = item[campo];
+  const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+  const { cls, barCls } = posStyle(pos);
+  const topico = item.topico ?? item.assunto;
+
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="px-5 py-4 border-b border-border">
-        <p className="text-sm font-semibold text-foreground">{titulo}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{subtitulo}</p>
-      </div>
-      <div className="divide-y divide-border/40">
-        {items.map((row) => {
-          const pct = row.total > 0 ? Math.round((row.acertos / row.total) * 100) : 0;
-          return (
-            <div key={row.topico} className="px-5 py-3 space-y-1.5">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-sm font-medium text-foreground">{row.topico}</span>
-                <div className="flex items-center gap-3 text-xs shrink-0">
-                  <span className="text-muted-foreground">{row.total}q</span>
-                  <span className="font-bold text-emerald-400">{row.acertos}✓</span>
-                  {row.erros > 0 && <span className="font-bold text-red-400">{row.erros}✗</span>}
-                  <span className="font-bold w-8 text-right" style={{ color: pctColor(pct) }}>
-                    {pct}%
-                  </span>
-                </div>
-              </div>
-              <PctBar pct={pct} />
-              {tipo === "revisar" && (
-                <Link
-                  href={`/aluno/treino?topico=${encodeURIComponent(row.topico)}&modo=aleatorio`}
-                  className="inline-flex items-center gap-1 text-[10px] font-semibold transition-colors hover:opacity-80"
-                  style={{ color: TEAL }}
-                >
-                  Treinar este tópico →
-                </Link>
-              )}
-            </div>
-          );
-        })}
+    <div className="flex items-start gap-3 px-4 py-3">
+      {/* Posição */}
+      <span
+        className={`mt-0.5 shrink-0 rounded-md border px-1.5 py-0.5 text-[11px] font-black tabular-nums ${cls}`}
+      >
+        #{pos}
+      </span>
+
+      {/* Conteúdo */}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[13px] font-semibold text-foreground truncate">
+            {labelQuestao(item)}
+          </span>
+          <span
+            className={`shrink-0 text-xs font-black tabular-nums ${campo === "erros" ? "text-red-400" : "text-emerald-400"}`}
+          >
+            {count}
+            {campo === "erros" ? "×" : "✓"}
+          </span>
+        </div>
+        {/* Barra */}
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${barCls}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {topico && (
+          <span className="inline-block rounded-full bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {topico}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-/* ── Seção de simulados (robusta) ───────────────────────────────────────────── */
+function TopicosDerived({
+  topicos,
+  tipo,
+}: {
+  topicos: TopicoRankEntry[];
+  tipo: "revisar" | "forte";
+}) {
+  if (!topicos.length) return null;
+  const max = topicos[0]?.peso ?? 1;
+  return (
+    <div className="border-t border-border/50 px-4 py-3 space-y-2">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {tipo === "revisar" ? "Tópicos a revisar" : "Tópicos fortes"}
+      </p>
+      {topicos.map((t, i) => {
+        const pct = Math.round((t.peso / max) * 100);
+        return (
+          <div key={t.topico} className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className={`text-[10px] font-bold tabular-nums ${i === 0 ? "text-amber-400" : "text-muted-foreground"}`}
+                >
+                  {i + 1}.
+                </span>
+                <span className="text-xs font-medium text-foreground truncate">{t.topico}</span>
+              </div>
+              {tipo === "revisar" ? (
+                <Link
+                  href={`/aluno/treino?topico=${encodeURIComponent(t.topico)}&modo=aleatorio`}
+                  className="shrink-0 text-[10px] font-semibold transition-colors"
+                  style={{ color: TEAL }}
+                >
+                  Treinar →
+                </Link>
+              ) : (
+                <span className="shrink-0 text-[10px] text-emerald-400 font-bold">{t.peso}✓</span>
+              )}
+            </div>
+            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full ${tipo === "revisar" ? "bg-red-400/70" : "bg-emerald-400/70"}`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RankingCard({
+  titulo,
+  subtitulo,
+  icone,
+  itens,
+  campo,
+  topicos,
+  tipo,
+  vazio,
+}: {
+  titulo: string;
+  subtitulo: string;
+  icone: string;
+  itens: QuestaoRankEntry[];
+  campo: "erros" | "acertos";
+  topicos: TopicoRankEntry[];
+  tipo: "revisar" | "forte";
+  vazio: string;
+}) {
+  const max = itens.length > 0 ? (itens[0]?.[campo] ?? 1) : 1;
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-border">
+        <p className="text-sm font-bold text-foreground flex items-center gap-2">
+          <span>{icone}</span> {titulo}
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{subtitulo}</p>
+      </div>
+
+      {itens.length === 0 ? (
+        <p className="px-4 py-6 text-sm text-muted-foreground italic">{vazio}</p>
+      ) : (
+        <>
+          <div className="divide-y divide-border/40">
+            {itens.map((item, i) => (
+              <RankingItem key={item.questao_id} pos={i + 1} item={item} campo={campo} max={max} />
+            ))}
+          </div>
+          <TopicosDerived topicos={topicos} tipo={tipo} />
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Simulados (sem alterações) ─────────────────────────────────────────────────
+
 function fmtTempo(seg: number) {
   const h = Math.floor(seg / 3600);
   const m = Math.floor((seg % 3600) / 60);
@@ -130,6 +255,17 @@ type SimuladoDetalhe = {
   tempo_usado: number | null;
 };
 
+function PctBar({ pct }: { pct: number }) {
+  return (
+    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+      <div
+        className="h-full rounded-full"
+        style={{ width: `${pct}%`, background: pctColor(pct) }}
+      />
+    </div>
+  );
+}
+
 function SecaoSimulados({
   total,
   acertos,
@@ -151,7 +287,6 @@ function SecaoSimulados({
 
   return (
     <div className="space-y-5">
-      {/* Header com resumo acumulado */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Simulados", value: porSimulado.length, cls: "text-foreground" },
@@ -184,7 +319,6 @@ function SecaoSimulados({
         ))}
       </div>
 
-      {/* Tabela por simulado */}
       {porSimulado.length > 0 && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
@@ -196,24 +330,14 @@ function SecaoSimulados({
             <table className="w-full min-w-[500px] text-sm">
               <thead>
                 <tr className="border-b border-border/50">
-                  <th className="px-5 py-2 text-left text-[11px] font-medium text-muted-foreground">
-                    Simulado
-                  </th>
-                  <th className="px-4 py-2 text-center text-[11px] font-medium text-muted-foreground">
-                    Data
-                  </th>
-                  <th className="px-4 py-2 text-center text-[11px] font-medium text-muted-foreground">
-                    Questões
-                  </th>
-                  <th className="px-4 py-2 text-center text-[11px] font-medium text-muted-foreground">
-                    Acertos
-                  </th>
-                  <th className="px-4 py-2 text-center text-[11px] font-medium text-muted-foreground">
-                    Score
-                  </th>
-                  <th className="px-4 py-2 text-center text-[11px] font-medium text-muted-foreground">
-                    Tempo
-                  </th>
+                  {["Simulado", "Data", "Questões", "Acertos", "Score", "Tempo"].map((h) => (
+                    <th
+                      key={h}
+                      className={`px-4 py-2 text-[11px] font-medium text-muted-foreground ${h === "Simulado" ? "text-left" : "text-center"}`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -221,7 +345,7 @@ function SecaoSimulados({
                   const pct = s.total > 0 ? Math.round((s.acertos / s.total) * 100) : 0;
                   return (
                     <tr key={s.aula_id}>
-                      <td className="px-5 py-3 font-medium text-foreground">{s.titulo}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{s.titulo}</td>
                       <td className="px-4 py-3 text-center text-muted-foreground tabular-nums text-xs">
                         {fmtData(s.concluido_em)}
                       </td>
@@ -246,7 +370,6 @@ function SecaoSimulados({
         </div>
       )}
 
-      {/* Desempenho por tópico acumulado */}
       {porTopico.length > 0 && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
@@ -283,83 +406,16 @@ function SecaoSimulados({
   );
 }
 
-/* ── Seção por origem ───────────────────────────────────────────────────────── */
-function SecaoOrigem({
-  badge,
-  badgeCls,
-  total,
-  acertos,
-  porTopico,
-}: {
-  badge: string;
-  badgeCls: string;
-  total: number;
-  acertos: number;
-  porTopico: { topico: string; total: number; acertos: number; erros: number }[];
-}) {
-  const pct = total > 0 ? Math.round((acertos / total) * 100) : 0;
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeCls}`}>
-          {badge}
-        </span>
-        <span className="text-sm text-muted-foreground">
-          {total} questões · {acertos} acertos ·{" "}
-          <span style={{ color: pctColor(pct) }}>{pct}%</span>
-        </span>
-      </div>
-      {porTopico.length > 0 && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="divide-y divide-border/40">
-            {porTopico.map((row) => {
-              const p = row.total > 0 ? Math.round((row.acertos / row.total) * 100) : 0;
-              return (
-                <div key={row.topico} className="px-5 py-3 space-y-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                    <span className="text-sm text-foreground">{row.topico}</span>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-muted-foreground">{row.total}q</span>
-                      <span className="font-bold" style={{ color: pctColor(p) }}>
-                        {p}%
-                      </span>
-                    </div>
-                  </div>
-                  <PctBar pct={p} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function TreinoDashboardPage() {
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const dashboard = await getDashboardAluno();
+  const [dashboard, ranking] = await Promise.all([getDashboardAluno(), getQuestoesRanking()]);
+
   const { total_geral, acertos_geral, banco, aulas, simulados } = dashboard as any;
   const pctGeral = total_geral > 0 ? Math.round((acertos_geral / total_geral) * 100) : null;
-
-  // Agrega todos os tópicos (banco + aulas + simulados) para os gráficos
-  const topicoMap: Record<
-    string,
-    { topico: string; total: number; acertos: number; erros: number }
-  > = {};
-  for (const t of banco?.por_topico ?? []) {
-    if (!t.topico) continue;
-    topicoMap[t.topico] = { topico: t.topico, total: t.total, acertos: t.acertos, erros: t.erros };
-  }
-  const todosTopicos = Object.values(topicoMap).filter((t) => t.total > 0);
-  const topicosParaRevisar = [...todosTopicos]
-    .sort((a, b) => a.acertos / a.total - b.acertos / b.total)
-    .slice(0, 6);
-  const topicosFortes = [...todosTopicos]
-    .sort((a, b) => b.acertos / b.total - a.acertos / a.total)
-    .slice(0, 4);
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -413,65 +469,88 @@ export default async function TreinoDashboardPage() {
             <ResumoCards total={total_geral} acertos={acertos_geral} />
           </section>
 
-          {/* Gráficos de tópicos */}
-          {topicosParaRevisar.length > 0 && (
-            <section className="grid gap-4 sm:grid-cols-2">
-              <GraficoTopicos
-                titulo="📚 Pontos a revisar"
-                subtitulo="Tópicos com mais erros — clique para treinar"
-                items={topicosParaRevisar}
-                tipo="revisar"
-              />
-              {topicosFortes.length > 0 && (
-                <GraficoTopicos
-                  titulo="⭐ Pontos fortes"
-                  subtitulo="Tópicos com melhor desempenho"
-                  items={topicosFortes}
-                  tipo="forte"
+          {/* Ranking de questões — dois painéis */}
+          {(ranking.maisErradas.length > 0 || ranking.maisAcertadas.length > 0) && (
+            <section>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Ranking de questões
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <RankingCard
+                  titulo="Pontos a Revisar"
+                  subtitulo="Questões com mais erros acumulados"
+                  icone="🔴"
+                  itens={ranking.maisErradas}
+                  campo="erros"
+                  topicos={ranking.topicosMaisErrados}
+                  tipo="revisar"
+                  vazio="Nenhuma questão errada ainda — bom sinal!"
                 />
-              )}
+                <RankingCard
+                  titulo="Pontos Fortes"
+                  subtitulo="Questões mais acertadas"
+                  icone="⭐"
+                  itens={ranking.maisAcertadas}
+                  campo="acertos"
+                  topicos={ranking.topicosMaisAcertados}
+                  tipo="forte"
+                  vazio="Responda questões para ver seus pontos fortes."
+                />
+              </div>
             </section>
           )}
 
-          {/* Simulados — seção dedicada */}
-          {simulados?.total > 0 && (
+          {/* Simulados */}
+          {(simulados as any)?.total > 0 && (
             <section className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Simulados
               </h2>
               <SecaoSimulados
-                total={simulados.total}
-                acertos={simulados.acertos}
-                porTopico={simulados.por_topico ?? []}
+                total={(simulados as any).total}
+                acertos={(simulados as any).acertos}
+                porTopico={(simulados as any).por_topico ?? []}
                 porSimulado={(simulados as any).por_simulado ?? []}
               />
             </section>
           )}
 
-          {/* Banco e Listas */}
-          {(banco?.total > 0 || aulas?.total > 0) && (
-            <section className="space-y-6">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {/* Banco / Listas — resumo compacto */}
+          {((banco as any)?.total > 0 || (aulas as any)?.total > 0) && (
+            <section>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Questões livres
               </h2>
-              {banco?.total > 0 && (
-                <SecaoOrigem
-                  badge="Banco de Questões"
-                  badgeCls="bg-sky-500/10 text-sky-400"
-                  total={banco.total}
-                  acertos={banco.acertos}
-                  porTopico={banco.por_topico ?? []}
-                />
-              )}
-              {aulas?.total > 0 && (
-                <SecaoOrigem
-                  badge="Listas de Questões"
-                  badgeCls="bg-amber-500/10 text-amber-400"
-                  total={aulas.total}
-                  acertos={aulas.acertos}
-                  porTopico={aulas.por_topico ?? []}
-                />
-              )}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {(banco as any)?.total > 0 && (
+                  <>
+                    <div className="rounded-xl border border-border bg-card p-4 text-center">
+                      <p className="text-2xl font-black text-foreground">{(banco as any).total}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Banco</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-card p-4 text-center">
+                      <p className="text-2xl font-black text-emerald-400">
+                        {Math.round(((banco as any).acertos / (banco as any).total) * 100)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">% Acerto Banco</p>
+                    </div>
+                  </>
+                )}
+                {(aulas as any)?.total > 0 && (
+                  <>
+                    <div className="rounded-xl border border-border bg-card p-4 text-center">
+                      <p className="text-2xl font-black text-foreground">{(aulas as any).total}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Listas</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-card p-4 text-center">
+                      <p className="text-2xl font-black text-emerald-400">
+                        {Math.round(((aulas as any).acertos / (aulas as any).total) * 100)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">% Acerto Listas</p>
+                    </div>
+                  </>
+                )}
+              </div>
             </section>
           )}
         </>
