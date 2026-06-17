@@ -410,7 +410,7 @@ export default async function TreinoDashboardPage() {
 
   const [dashboard, ranking] = await Promise.all([getDashboardAluno(), getQuestoesRanking()]);
 
-  const { total_geral, acertos_geral, banco, aulas, simulados } = dashboard as any;
+  const { total_geral, acertos_geral, simulados } = dashboard as any;
   const pctGeral = total_geral > 0 ? Math.round((acertos_geral / total_geral) * 100) : null;
 
   return (
@@ -510,43 +510,6 @@ export default async function TreinoDashboardPage() {
           )}
 
           {/* Banco / Listas — resumo compacto */}
-          {((banco as any)?.total > 0 || (aulas as any)?.total > 0) && (
-            <section>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Questões livres
-              </h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {(banco as any)?.total > 0 && (
-                  <>
-                    <div className="rounded-xl border border-border bg-card p-4 text-center">
-                      <p className="text-2xl font-black text-foreground">{(banco as any).total}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Banco</p>
-                    </div>
-                    <div className="rounded-xl border border-border bg-card p-4 text-center">
-                      <p className="text-2xl font-black text-emerald-400">
-                        {Math.round(((banco as any).acertos / (banco as any).total) * 100)}%
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">% Acerto Banco</p>
-                    </div>
-                  </>
-                )}
-                {(aulas as any)?.total > 0 && (
-                  <>
-                    <div className="rounded-xl border border-border bg-card p-4 text-center">
-                      <p className="text-2xl font-black text-foreground">{(aulas as any).total}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Listas</p>
-                    </div>
-                    <div className="rounded-xl border border-border bg-card p-4 text-center">
-                      <p className="text-2xl font-black text-emerald-400">
-                        {Math.round(((aulas as any).acertos / (aulas as any).total) * 100)}%
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">% Acerto Listas</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-          )}
         </>
       )}
     </div>
