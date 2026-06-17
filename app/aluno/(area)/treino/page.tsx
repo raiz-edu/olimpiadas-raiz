@@ -53,6 +53,7 @@ export default async function TreinoPage({
   return (
     <div>
       <TreinoFiltros
+        key={`${sp.olimpiada}-${sp.topico}-${sp.subtopico}-${sp.nivel}-${sp.fase}-${sp.ano}-${sp.modo}-${sp.favoritas}`}
         olimpiadas={olimpiadas}
         topicosMap={topicosMap}
         subtopicosMap={subtopicosMap}
