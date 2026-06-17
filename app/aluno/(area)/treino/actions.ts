@@ -87,11 +87,43 @@ export async function getQuestoesTreino(filtros: {
   assunto?: string;
   modo?: "sequencial" | "aleatorio";
   favoritas?: boolean;
+  erradas?: boolean;
 }): Promise<SessaoTreino> {
   const session = await getStudentSession();
   if (!session) return { questoes: [], totalDisponivel: 0 };
 
   const supabase = createAdminClient() as any;
+
+  // Modo "erradas": carrega as top 10 questões com mais erros do aluno
+  if (filtros.erradas) {
+    const { data: raw } = await supabase
+      .from("resposta_aluno")
+      .select("questao_id")
+      .eq("aluno_id", session.aluno.id)
+      .eq("correta", false);
+
+    const contagem: Record<string, number> = {};
+    for (const r of raw ?? []) {
+      contagem[r.questao_id] = (contagem[r.questao_id] ?? 0) + 1;
+    }
+    const top10Ids = Object.entries(contagem)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => id);
+
+    if (top10Ids.length === 0) return { questoes: [], totalDisponivel: 0 };
+
+    const { data } = await supabase
+      .from("questao")
+      .select(
+        "id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, dificuldade",
+      )
+      .eq("ativo", true)
+      .in("id", top10Ids);
+
+    const pool = data ?? [];
+    return { questoes: pool, totalDisponivel: pool.length };
+  }
 
   // Quando "favoritas" está ativo, limita o pool às questões favoritadas pelo aluno
   let favoritoIds: string[] | null = null;
@@ -707,98 +739,4 @@ export async function getQuestoesRanking(): Promise<{
     topicosMaisErrados: derivarTopicos(maisErradas, "erros"),
     topicosMaisAcertados: derivarTopicos(maisAcertadas, "acertos"),
   };
-}
-
-// ─── Plano de revisão por repetição espaçada ──────────────────────────────────
-
-const INTERVALOS_SRS = [2, 3, 5, 7, 15, 30]; // gaps entre revisões (dias)
-
-export type RevisaoItem = {
-  questao_id: string;
-  olimpiada: string;
-  nivel: string | null;
-  fase: number | null;
-  ano: number;
-  numero: number;
-  topico: string | null;
-  assunto: string | null;
-  revisao: number; // 1-6
-  data: string; // "YYYY-MM-DD"
-  diasRestantes: number; // negativo = atrasado
-};
-
-export async function getPlanoRevisao(): Promise<RevisaoItem[]> {
-  const session = await getStudentSession();
-  if (!session) return [];
-
-  const admin = createAdminClient() as any;
-  const { data: raw } = await admin
-    .from("resposta_aluno")
-    .select(
-      "questao_id, correta, respondido_em, questao:questao_id(olimpiada, nivel, fase, ano, numero, topico, assunto)",
-    )
-    .eq("aluno_id", session.aluno.id)
-    .eq("correta", false);
-
-  // Agrupa por questão: conta erros e guarda data do último erro
-  const perQuestao: Record<string, { erros: number; ultimoErro: Date; q: any }> = {};
-  for (const r of raw ?? []) {
-    if (!r.questao) continue;
-    const q = Array.isArray(r.questao) ? r.questao[0] : r.questao;
-    if (!q) continue;
-    const data = new Date(r.respondido_em);
-    if (!perQuestao[r.questao_id]) {
-      perQuestao[r.questao_id] = { erros: 0, ultimoErro: data, q };
-    }
-    const entry = perQuestao[r.questao_id]!;
-    entry.erros++;
-    if (data > entry.ultimoErro) entry.ultimoErro = data;
-  }
-
-  // Top 10 por taxa de erro (consistente com o ranking)
-  const top10 = Object.entries(perQuestao)
-    .sort((a, b) => b[1].erros - a[1].erros)
-    .slice(0, 10);
-
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  const plano: RevisaoItem[] = [];
-
-  for (const [questao_id, { ultimoErro, q }] of top10) {
-    // Cada revisão parte da data da revisão anterior (método gap acumulado)
-    let dataBase = new Date(ultimoErro);
-    dataBase.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < INTERVALOS_SRS.length; i++) {
-      const intervalo = INTERVALOS_SRS[i]!;
-      const dataRevisao = new Date(dataBase);
-      dataRevisao.setDate(dataRevisao.getDate() + intervalo);
-
-      const diasRestantes = Math.round((dataRevisao.getTime() - hoje.getTime()) / 86_400_000);
-
-      // Exibe: atrasadas até 7 dias e futuras até 90 dias
-      if (diasRestantes >= -7 && diasRestantes <= 90) {
-        plano.push({
-          questao_id,
-          olimpiada: q.olimpiada ?? "",
-          nivel: q.nivel ?? null,
-          fase: q.fase ?? null,
-          ano: q.ano ?? 0,
-          numero: q.numero ?? 0,
-          topico: q.topico ?? null,
-          assunto: q.assunto ?? null,
-          revisao: i + 1,
-          data: dataRevisao.toISOString().split("T")[0]!,
-          diasRestantes,
-        });
-      }
-
-      dataBase = dataRevisao;
-    }
-  }
-
-  return plano.sort(
-    (a, b) => a.diasRestantes - b.diasRestantes || a.questao_id.localeCompare(b.questao_id),
-  );
 }

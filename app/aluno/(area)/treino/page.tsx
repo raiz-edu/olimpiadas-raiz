@@ -21,6 +21,7 @@ export default async function TreinoPage({
     subtopico?: string;
     modo?: string;
     favoritas?: string;
+    erradas?: string;
   }>;
 }) {
   const session = await getStudentSession();
@@ -28,6 +29,7 @@ export default async function TreinoPage({
 
   const sp = await searchParams;
   const favoritasAtivo = sp.favoritas === "1";
+  const erradasAtivo = sp.erradas === "1";
 
   const [{ questoes, totalDisponivel }, { olimpiadas, topicosMap, subtopicosMap }, favoritoIds] =
     await Promise.all([
@@ -40,6 +42,7 @@ export default async function TreinoPage({
         subtopico: sp.subtopico,
         modo: (sp.modo ?? "sequencial") as "sequencial" | "aleatorio",
         favoritas: favoritasAtivo,
+        erradas: erradasAtivo,
       }),
       getTopicosDisponiveis(),
       getFavoritos(),
@@ -61,7 +64,9 @@ export default async function TreinoPage({
         <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
           {favoritasAtivo
             ? "Você ainda não favoritou nenhuma questão."
-            : "Nenhuma questão encontrada com esses filtros."}
+            : erradasAtivo
+              ? "Nenhuma questão errada encontrada."
+              : "Nenhuma questão encontrada com esses filtros."}
         </div>
       ) : (
         <TreinoClient

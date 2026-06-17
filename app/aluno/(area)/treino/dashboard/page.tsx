@@ -2,8 +2,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
-import { getDashboardAluno, getQuestoesRanking, getPlanoRevisao } from "../actions";
-import type { QuestaoRankEntry, TopicoRankEntry, RevisaoItem } from "../actions";
+import { getDashboardAluno, getQuestoesRanking } from "../actions";
+import type { QuestaoRankEntry, TopicoRankEntry } from "../actions";
 
 const TEAL = "rgb(91,184,193)";
 
@@ -402,179 +402,13 @@ function SecaoSimulados({
   );
 }
 
-// ── Plano de Revisão ──────────────────────────────────────────────────────────
-
-const REVISAO_LABEL = ["1ª", "2ª", "3ª", "4ª", "5ª", "6ª"];
-
-function labelDia(diasRestantes: number, data: string): string {
-  if (diasRestantes < 0) return `Atrasada · ${fmtDataCurta(data)}`;
-  if (diasRestantes === 0) return "Hoje";
-  if (diasRestantes === 1) return "Amanhã";
-  return `Em ${diasRestantes} dias · ${fmtDataCurta(data)}`;
-}
-
-function fmtDataCurta(iso: string): string {
-  const [, m, d] = iso.split("-");
-  const meses = [
-    "jan",
-    "fev",
-    "mar",
-    "abr",
-    "mai",
-    "jun",
-    "jul",
-    "ago",
-    "set",
-    "out",
-    "nov",
-    "dez",
-  ];
-  return `${Number(d)} ${meses[Number(m) - 1]}`;
-}
-
-function grupoDia(diasRestantes: number): string {
-  if (diasRestantes < 0) return `atrasado`;
-  if (diasRestantes === 0) return "hoje";
-  if (diasRestantes === 1) return "amanha";
-  return `d${diasRestantes}`;
-}
-
-function PlanoRevisao({ itens }: { itens: RevisaoItem[] }) {
-  if (itens.length === 0) return null;
-
-  // Agrupa por data
-  const grupos: Record<string, RevisaoItem[]> = {};
-  for (const item of itens) {
-    const key = grupoDia(item.diasRestantes);
-    (grupos[key] ??= []).push(item);
-  }
-
-  function headerCls(diasRestantes: number) {
-    if (diasRestantes < 0) return "text-red-400";
-    if (diasRestantes === 0) return "text-amber-400";
-    return "text-muted-foreground";
-  }
-
-  function badgeCls(diasRestantes: number) {
-    if (diasRestantes < 0) return "border-red-500/30 bg-red-500/10 text-red-400";
-    if (diasRestantes === 0) return "border-amber-400/30 bg-amber-400/10 text-amber-400";
-    return "border-border bg-muted/30 text-muted-foreground";
-  }
-
-  const primeiroItem = Object.values(grupos)[0]?.[0];
-
-  return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-border">
-        <p className="text-sm font-bold text-foreground">Plano de Revisão</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
-          Repetição espaçada · método 2-3-5-7-15-30 dias · baseado nas questões com mais erros
-        </p>
-      </div>
-
-      <div className="divide-y divide-border/40">
-        {Object.entries(grupos).map(([, grupo]) => {
-          const ref = grupo[0]!;
-          return (
-            <div key={ref.data} className="px-4 py-3 space-y-2">
-              {/* Header do grupo */}
-              <p
-                className={`text-[11px] font-bold uppercase tracking-wider ${headerCls(ref.diasRestantes)}`}
-              >
-                {labelDia(ref.diasRestantes, ref.data)}
-              </p>
-
-              {/* Itens do grupo */}
-              <div className="space-y-1.5">
-                {grupo.map((item) => {
-                  const topico = item.topico ?? item.assunto;
-                  const nivel = item.nivel
-                    ? (
-                        { nivel_1: "N1", nivel_2: "N2", nivel_3: "N3", mirim: "Mirim" } as Record<
-                          string,
-                          string
-                        >
-                      )[item.nivel]
-                    : null;
-                  const olimp =
-                    ({ obmep: "OBMEP", obmep_mirim: "Mirim" } as Record<string, string>)[
-                      item.olimpiada
-                    ] ?? item.olimpiada.toUpperCase();
-                  const label = [
-                    olimp,
-                    nivel,
-                    item.fase ? `${item.fase}ª Fase` : null,
-                    item.ano,
-                    `Q${item.numero}`,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ");
-
-                  return (
-                    <div
-                      key={`${item.questao_id}-${item.revisao}`}
-                      className="flex items-center gap-2.5"
-                    >
-                      <span
-                        className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold ${badgeCls(item.diasRestantes)}`}
-                      >
-                        {REVISAO_LABEL[item.revisao - 1]}
-                      </span>
-                      <span className="flex-1 text-[13px] text-foreground truncate">{label}</span>
-                      {topico && (
-                        <Link
-                          href={`/aluno/treino?topico=${encodeURIComponent(topico)}&modo=aleatorio`}
-                          className="shrink-0 text-[10px] font-semibold transition-colors hover:opacity-80"
-                          style={{ color: TEAL }}
-                        >
-                          Revisar →
-                        </Link>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="px-4 py-3 border-t border-border/50 flex items-center gap-3">
-        {[
-          { cls: "border-red-500/30 bg-red-500/10 text-red-400", label: "Atrasada" },
-          { cls: "border-amber-400/30 bg-amber-400/10 text-amber-400", label: "Hoje" },
-          { cls: "border-border bg-muted/30 text-muted-foreground", label: "Futura" },
-        ].map((b) => (
-          <span
-            key={b.label}
-            className={`rounded border px-1.5 py-0.5 text-[10px] font-bold ${b.cls}`}
-          >
-            {b.label}
-          </span>
-        ))}
-        <span className="text-[10px] text-muted-foreground">= status da revisão</span>
-        {primeiroItem && (
-          <span className="ml-auto text-[10px] text-muted-foreground tabular-nums">
-            {itens.length} sessão{itens.length !== 1 ? "ões" : ""} programada
-            {itens.length !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function TreinoDashboardPage() {
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const [dashboard, ranking, plano] = await Promise.all([
-    getDashboardAluno(),
-    getQuestoesRanking(),
-    getPlanoRevisao(),
-  ]);
+  const [dashboard, ranking] = await Promise.all([getDashboardAluno(), getQuestoesRanking()]);
 
   const { total_geral, acertos_geral, simulados } = dashboard as any;
   const pctGeral = total_geral > 0 ? Math.round((acertos_geral / total_geral) * 100) : null;
@@ -660,10 +494,25 @@ export default async function TreinoDashboardPage() {
             </section>
           )}
 
-          {/* Plano de Revisão */}
-          {plano.length > 0 && (
+          {/* Sessão de Revisão */}
+          {ranking.maisErradas.length > 0 && (
             <section>
-              <PlanoRevisao itens={plano} />
+              <div className="rounded-xl border border-border bg-card px-5 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-foreground">Sessão de Revisão</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {ranking.maisErradas.length} questões com mais erros · repetição espaçada
+                    2-3-5-7-15-30 dias
+                  </p>
+                </div>
+                <Link
+                  href="/aluno/treino?erradas=1"
+                  className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold text-[#0f172a] whitespace-nowrap"
+                  style={{ background: TEAL }}
+                >
+                  Revisar agora →
+                </Link>
+              </div>
             </section>
           )}
 
