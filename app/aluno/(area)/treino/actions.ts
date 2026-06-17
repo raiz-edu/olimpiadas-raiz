@@ -679,13 +679,13 @@ export async function getQuestoesRanking(): Promise<{
 
   const maisErradas = questoes
     .filter((q) => q.erros > 0)
-    .sort((a, b) => b.erros - a.erros || b.total - a.total)
-    .slice(0, 5);
+    .sort((a, b) => b.erros / b.total - a.erros / a.total || b.erros - a.erros)
+    .slice(0, 10);
 
   const maisAcertadas = questoes
     .filter((q) => q.acertos > 0)
-    .sort((a, b) => b.acertos - a.acertos || a.erros - b.erros)
-    .slice(0, 5);
+    .sort((a, b) => b.acertos / b.total - a.acertos / a.total || b.acertos - a.acertos)
+    .slice(0, 10);
 
   function derivarTopicos(
     itens: QuestaoRankEntry[],
