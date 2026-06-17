@@ -94,24 +94,39 @@ export async function getQuestoesTreino(filtros: {
 
   const supabase = createAdminClient() as any;
 
-  // Modo "erradas": carrega as top 10 questões com mais erros do aluno
+  // Modo "erradas": 10 crônicos (mais erros acumulados) + 10 recentes (mais recentes, sem repetir)
   if (filtros.erradas) {
     const { data: raw } = await supabase
       .from("resposta_aluno")
-      .select("questao_id")
+      .select("questao_id, respondido_em")
       .eq("aluno_id", session.aluno.id)
-      .eq("correta", false);
+      .eq("correta", false)
+      .order("respondido_em", { ascending: false });
 
     const contagem: Record<string, number> = {};
+    const ultimoErro: Record<string, string> = {};
     for (const r of raw ?? []) {
       contagem[r.questao_id] = (contagem[r.questao_id] ?? 0) + 1;
+      if (!ultimoErro[r.questao_id]) ultimoErro[r.questao_id] = r.respondido_em;
     }
-    const top10Ids = Object.entries(contagem)
+
+    // Top 10 crônicos por contagem de erros
+    const cronicos = Object.entries(contagem)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([id]) => id);
 
-    if (top10Ids.length === 0) return { questoes: [], totalDisponivel: 0 };
+    const cronicosSet = new Set(cronicos);
+
+    // Top 10 recentes que não estejam já nos crônicos
+    const recentes = Object.entries(ultimoErro)
+      .filter(([id]) => !cronicosSet.has(id))
+      .sort((a, b) => b[1].localeCompare(a[1]))
+      .slice(0, 10)
+      .map(([id]) => id);
+
+    const ids = [...cronicos, ...recentes];
+    if (ids.length === 0) return { questoes: [], totalDisponivel: 0 };
 
     const { data } = await supabase
       .from("questao")
@@ -119,7 +134,7 @@ export async function getQuestoesTreino(filtros: {
         "id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, dificuldade",
       )
       .eq("ativo", true)
-      .in("id", top10Ids);
+      .in("id", ids);
 
     const pool = data ?? [];
     return { questoes: pool, totalDisponivel: pool.length };
