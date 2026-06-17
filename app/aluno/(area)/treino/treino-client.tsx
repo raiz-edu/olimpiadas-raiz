@@ -747,7 +747,7 @@ export function TreinoClient({
           <button
             onClick={() => setIdx((i) => Math.max(0, i - 1))}
             disabled={idx === 0}
-            className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+            className="min-w-[110px] rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
           >
             ← Voltar
           </button>
@@ -757,8 +757,8 @@ export function TreinoClient({
             onClick={() => setIdx((i) => i + 1)}
             className={
               respondidoQuestao
-                ? "rounded-lg px-5 py-2 text-sm font-bold text-[#0f172a]"
-                : "rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+                ? "min-w-[110px] rounded-lg px-5 py-2 text-sm font-bold text-[#0f172a]"
+                : "min-w-[110px] rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
             }
             style={respondidoQuestao ? { background: TEAL } : {}}
           >
@@ -783,7 +783,7 @@ export function TreinoClient({
                   const aid = altPendente[questao.id];
                   if (aid) altSelecionadaRef.current[questao.id] = aid;
                 }}
-                className={`rounded-lg px-5 py-2 text-sm font-bold transition-all disabled:opacity-35 disabled:cursor-not-allowed ${
+                className={`min-w-[110px] rounded-lg px-5 py-2 text-sm font-bold transition-all disabled:opacity-35 disabled:cursor-not-allowed ${
                   altPendente[questao.id]
                     ? "text-[#0f172a]"
                     : "border border-border text-muted-foreground"
@@ -798,7 +798,7 @@ export function TreinoClient({
           <button
             onClick={handleGabarito}
             disabled={!respondidoQuestao}
-            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${mostrarGabarito ? "border-sky-400 text-sky-400 bg-sky-400/8" : "border-border text-muted-foreground hover:border-sky-400 hover:text-sky-400"}`}
+            className={`min-w-[110px] rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${mostrarGabarito ? "border-sky-400 text-sky-400 bg-sky-400/8" : "border-border text-muted-foreground hover:border-sky-400 hover:text-sky-400"}`}
           >
             {mostrarGabarito ? "Fechar resolução" : "Resolução"}
           </button>
