@@ -182,7 +182,6 @@ function TopicosDerived({
 function RankingCard({
   titulo,
   subtitulo,
-  icone,
   itens,
   campo,
   topicos,
@@ -191,7 +190,6 @@ function RankingCard({
 }: {
   titulo: string;
   subtitulo: string;
-  icone: string;
   itens: QuestaoRankEntry[];
   campo: "erros" | "acertos";
   topicos: TopicoRankEntry[];
@@ -203,9 +201,7 @@ function RankingCard({
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border">
-        <p className="text-sm font-bold text-foreground flex items-center gap-2">
-          <span>{icone}</span> {titulo}
-        </p>
+        <p className="text-sm font-bold text-foreground">{titulo}</p>
         <p className="text-[11px] text-muted-foreground mt-0.5">{subtitulo}</p>
       </div>
 
@@ -479,7 +475,6 @@ export default async function TreinoDashboardPage() {
                 <RankingCard
                   titulo="Pontos a Revisar"
                   subtitulo="Questões com mais erros acumulados"
-                  icone="🔴"
                   itens={ranking.maisErradas}
                   campo="erros"
                   topicos={ranking.topicosMaisErrados}
@@ -489,7 +484,6 @@ export default async function TreinoDashboardPage() {
                 <RankingCard
                   titulo="Pontos Fortes"
                   subtitulo="Questões mais acertadas"
-                  icone="⭐"
                   itens={ranking.maisAcertadas}
                   campo="acertos"
                   topicos={ranking.topicosMaisAcertados}
