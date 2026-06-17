@@ -171,13 +171,9 @@ export function TreinoFiltros({
         >
           Limpar
         </Link>
-      </div>
-
-      {/* Toggle Favoritas — fora do fluxo de grid, largura total */}
-      <div className="col-span-2 flex items-center sm:col-span-full">
         <Link
           href={favoritasAtivo ? "/aluno/treino" : "/aluno/treino?favoritas=1"}
-          className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
             favoritasAtivo
               ? "border-amber-400 bg-amber-400/10 text-amber-400"
               : "border-border text-muted-foreground hover:border-amber-400/50 hover:text-amber-400"
@@ -185,8 +181,8 @@ export function TreinoFiltros({
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
+            width="13"
+            height="13"
             viewBox="0 0 24 24"
             fill={favoritasAtivo ? "currentColor" : "none"}
             stroke="currentColor"
@@ -196,7 +192,7 @@ export function TreinoFiltros({
           >
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
-          {favoritasAtivo ? "Mostrando favoritas" : "Ver favoritas"}
+          {favoritasAtivo ? "Favoritas" : "Favoritas"}
         </Link>
       </div>
     </form>
