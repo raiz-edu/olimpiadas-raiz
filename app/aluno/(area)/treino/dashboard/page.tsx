@@ -501,8 +501,7 @@ export default async function TreinoDashboardPage() {
                 <div>
                   <p className="text-sm font-bold text-foreground">Sessão de Revisão</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {ranking.maisErradas.length} questões com mais erros · repetição espaçada
-                    2-3-5-7-15-30 dias
+                    Crônicos + recentes · repetição espaçada 2-3-5-7-15 dias
                   </p>
                 </div>
                 <Link
