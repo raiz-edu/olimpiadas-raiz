@@ -63,36 +63,6 @@ const EXPECTED_PERMISSIONS: PermMatrix = {
   professor: READ_ONLY_ENTITIES,
   coordenador: READ_ONLY_ENTITIES,
   diretor: READ_ONLY_ENTITIES,
-  direcao_marca: {
-    marca: [],
-    unidade: [],
-    turma: [],
-    aluno: [],
-    olimpiada: [],
-    inscricao: [],
-    resultado: [],
-    audit_log: [],
-  },
-  direcao_unidade: {
-    marca: [],
-    unidade: [],
-    turma: [],
-    aluno: [],
-    olimpiada: [],
-    inscricao: [],
-    resultado: [],
-    audit_log: [],
-  },
-  coordenacao_unidade: {
-    marca: [],
-    unidade: [],
-    turma: [],
-    aluno: [],
-    olimpiada: [],
-    inscricao: [],
-    resultado: [],
-    audit_log: [],
-  },
 };
 
 const READ_ONLY_ROLES: RoleUsuario[] = ["professor", "coordenador", "diretor"];

@@ -1,6 +1,7 @@
 "use server";
 
 import { getServerSession } from "@/lib/auth/session";
+import { can } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // ─── Coligadas elegíveis para o portal olímpico ───────────────────────────────
@@ -130,7 +131,7 @@ export async function sincronizarAlunosTOTVS(): Promise<SyncResult> {
   if (!session) return { error: "Não autorizado" };
 
   const { role } = session.user;
-  if (role !== "raiz" && role !== "direcao_marca") {
+  if (!can(role, "aluno:create")) {
     return { error: "Permissão insuficiente para sincronizar alunos." };
   }
 

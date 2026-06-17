@@ -13,10 +13,11 @@ import type { RoleUsuario } from "@/lib/types/database";
 
 const TEAL = "rgb(91,184,193)";
 const NIVEIS_ROLE: RoleUsuario[] = [
-  "raiz",
-  "direcao_marca",
-  "direcao_unidade",
-  "coordenacao_unidade",
+  "diretor_marca",
+  "gestor_conteudo",
+  "professor",
+  "coordenador",
+  "diretor",
 ];
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -61,10 +62,6 @@ function RoleBadge({ role }: { role: RoleUsuario }) {
     professor: "bg-indigo-400/10 text-indigo-400",
     coordenador: "bg-violet-400/10 text-violet-400",
     diretor: "bg-purple-400/10 text-purple-400",
-    // Legado
-    direcao_marca: "bg-zinc-400/10 text-zinc-400",
-    direcao_unidade: "bg-zinc-400/10 text-zinc-400",
-    coordenacao_unidade: "bg-zinc-400/10 text-zinc-400",
   };
   return (
     <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${colors[role]}`}>

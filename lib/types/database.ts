@@ -30,16 +30,12 @@ export type TipoResultado =
   | "bronze"
   | "mencao_honrosa";
 export type RoleUsuario =
-  | "raiz"
+  | "raiz" // flag interno dos admins do sistema — não aparece no seletor de roles
   | "diretor_marca"
   | "gestor_conteudo"
   | "professor"
   | "coordenador"
-  | "diretor"
-  // Legado — permanecem no enum do banco mas sem permissões no código
-  | "direcao_marca"
-  | "direcao_unidade"
-  | "coordenacao_unidade";
+  | "diretor";
 export type TipoFase = "inscricao" | "prova_1" | "prova_2" | "final" | "divulgacao";
 
 // ---------------------------------------------------------------------------

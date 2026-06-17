@@ -1,4 +1,5 @@
 import { getServerSession } from "@/lib/auth/session";
+import { can } from "@/lib/auth/roles";
 import { redirect } from "next/navigation";
 import { SincronizacaoClient } from "./sincronizacao-client";
 
@@ -9,7 +10,7 @@ export default async function SincronizacaoPage() {
   if (!session) redirect("/login");
 
   const { role } = session.user;
-  if (role !== "raiz" && role !== "direcao_marca") redirect("/dashboard");
+  if (!can(role, "aluno:create")) redirect("/dashboard");
 
   return (
     <div className="max-w-2xl space-y-6">

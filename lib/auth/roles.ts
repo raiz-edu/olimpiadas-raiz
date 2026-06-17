@@ -26,7 +26,6 @@ function perms(...list: Permission[]): Set<Permission> {
 }
 
 // ─── Conjunto base de leitura geral ──────────────────────────────────────────
-// Inclui questão, simulado e projeto — mas NÃO audit_log (Gestão) nem escrita em usuários
 
 const LEITURA_GERAL = perms(
   "marca:read",
@@ -49,7 +48,7 @@ const LEITURA_GERAL = perms(
 // ─── Matriz de permissões ─────────────────────────────────────────────────────
 
 export const ROLE_PERMISSIONS: RolePermissions = {
-  // Super admin — acesso total
+  // Flag interno dos 2 admins do sistema (Helio e Hugo) — acesso total
   raiz: perms(
     "questao:create",
     "questao:read",
@@ -104,7 +103,7 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     "usuario:delete",
   ),
 
-  // Diretor de Marca — vê Gestão e Usuários, gerencia usuários da sua marca, leitura geral
+  // Vê Gestão e Usuários, gerencia usuários da sua marca, leitura geral
   diretor_marca: perms(
     ...LEITURA_GERAL,
     "audit_log:read",
@@ -114,8 +113,7 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     "usuario:update",
   ),
 
-  // Gestor de Conteúdo — cria e edita banco de questões, simulados e projetos
-  // Leitura geral, mas NÃO vê Gestão nem Usuários (sem audit_log:read, sem convite:create)
+  // Cria e edita banco de questões, simulados e projetos; leitura geral; sem Gestão/Usuários
   gestor_conteudo: perms(
     ...LEITURA_GERAL,
     "questao:create",
@@ -126,15 +124,10 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     "projeto:update",
   ),
 
-  // Professor, Coordenador, Diretor — leitura geral, sem escrita, sem Gestão/Usuários
+  // Leitura geral — sem escrita, sem Gestão, sem Usuários
   professor: perms(...LEITURA_GERAL),
   coordenador: perms(...LEITURA_GERAL),
   diretor: perms(...LEITURA_GERAL),
-
-  // Legado — sem permissões até reatribuição manual de role
-  direcao_marca: perms(),
-  direcao_unidade: perms(),
-  coordenacao_unidade: perms(),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -160,31 +153,23 @@ export function canAny(role: RoleUsuario, permissions: Permission[]): boolean {
 
 // ─── Labels e descrições ──────────────────────────────────────────────────────
 
-export const ROLE_LABELS: Record<RoleUsuario, string> = {
-  raiz: "Admin",
+export const ROLE_LABELS: Partial<Record<RoleUsuario, string>> = {
   diretor_marca: "Diretor de Marca",
   gestor_conteudo: "Gestor de Conteúdo",
   professor: "Professor",
   coordenador: "Coordenador",
   diretor: "Diretor",
-  direcao_marca: "Direção de Marca (legado)",
-  direcao_unidade: "Direção de Unidade (legado)",
-  coordenacao_unidade: "Coordenação de Unidade (legado)",
 };
 
-export const ROLE_DESCRIPTIONS: Record<RoleUsuario, string> = {
-  raiz: "Acesso total — leitura e escrita em todas as áreas",
+export const ROLE_DESCRIPTIONS: Partial<Record<RoleUsuario, string>> = {
   diretor_marca: "Visão de Gestão e Usuários — gerencia usuários da marca",
   gestor_conteudo: "Cria e edita banco de questões, simulados e projetos",
   professor: "Leitura geral — sem acesso a Gestão ou Usuários",
   coordenador: "Leitura geral — sem acesso a Gestão ou Usuários",
   diretor: "Leitura geral — sem acesso a Gestão ou Usuários",
-  direcao_marca: "Role legado — sem permissões ativas",
-  direcao_unidade: "Role legado — sem permissões ativas",
-  coordenacao_unidade: "Role legado — sem permissões ativas",
 };
 
-// Roles atribuíveis via interface (exclui raiz e legados)
+// Roles atribuíveis via interface
 export const ROLES_ATRIBUIVEIS: RoleUsuario[] = [
   "diretor_marca",
   "gestor_conteudo",
@@ -192,11 +177,3 @@ export const ROLES_ATRIBUIVEIS: RoleUsuario[] = [
   "coordenador",
   "diretor",
 ];
-
-// Mantido para compatibilidade — não é mais usado no novo sistema
-export const ADMIN_MARCA_EXTRA = perms(
-  "convite:create",
-  "convite:delete",
-  "usuario:create",
-  "usuario:update",
-);

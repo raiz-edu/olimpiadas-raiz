@@ -23,9 +23,6 @@ const ALL_ROLES: RoleUsuario[] = [
   "professor",
   "coordenador",
   "diretor",
-  "direcao_marca",
-  "direcao_unidade",
-  "coordenacao_unidade",
 ];
 
 describe("can() — raiz", () => {
@@ -136,18 +133,6 @@ describe("can() — roles de leitura (professor/coordenador/diretor)", () => {
       expect(can(role, "audit_log:read")).toBe(false);
       expect(can(role, "convite:create")).toBe(false);
       expect(can(role, "usuario:create")).toBe(false);
-    }
-  });
-});
-
-describe("can() — roles legados sem permissões", () => {
-  const LEGADOS: RoleUsuario[] = ["direcao_marca", "direcao_unidade", "coordenacao_unidade"];
-
-  it("roles legados não têm nenhuma permissão", () => {
-    for (const role of LEGADOS) {
-      expect(can(role, "olimpiada:read")).toBe(false);
-      expect(can(role, "questao:read")).toBe(false);
-      expect(can(role, "audit_log:read")).toBe(false);
     }
   });
 });
