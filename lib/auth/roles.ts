@@ -38,11 +38,10 @@ const LEITURA_GERAL = perms(
   "inscricao:export",
   "resultado:read",
   "resultado:export",
-  "convite:read",
-  "usuario:read",
   "questao:read",
   "simulado:read",
   "projeto:read",
+  // usuario:read e convite:read NÃO estão aqui — seção Usuários só para raiz e diretor_marca
 );
 
 // ─── Matriz de permissões ─────────────────────────────────────────────────────
