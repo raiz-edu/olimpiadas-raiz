@@ -417,7 +417,7 @@ export default async function TreinoDashboardPage() {
     <div className="max-w-3xl space-y-8">
       {/* Cabeçalho */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-bold text-foreground">Meu Desempenho</h1>
+        <h1 className="text-xl font-bold text-foreground">Desempenho</h1>
         <div className="flex items-center gap-2">
           <Link
             href="/aluno/treino?favoritas=1"
