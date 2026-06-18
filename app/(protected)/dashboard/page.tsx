@@ -70,6 +70,7 @@ type Evento = {
   dataInicio: string;
   dataFim?: string;
   diasInicio: number;
+  fasesPendentes?: boolean;
 };
 
 // ─── Página ───────────────────────────────────────────────────────────────────
@@ -90,7 +91,9 @@ export default async function DashboardPage() {
   const [{ data: fases }, { data: simulados }] = await Promise.all([
     supabase
       .from("olimpiada_fase")
-      .select("id, tipo, nome, data_inicio, data_fim, olimpiada:olimpiada_id(nome)")
+      .select(
+        "id, tipo, nome, data_inicio, data_fim, olimpiada:olimpiada_id(nome, fases_pendentes)",
+      )
       .lte("data_inicio", limiteIso)
       .gte("data_fim", hojeIso)
       .order("data_inicio"),
@@ -114,6 +117,7 @@ export default async function DashboardPage() {
         tipoFase: f.tipo,
         nome: f.nome,
         olimpiada: ol?.nome ?? "",
+        fasesPendentes: ol?.fases_pendentes ?? false,
         dataInicio: f.data_inicio,
         dataFim: f.data_fim,
         diasInicio: diasRestantes(f.data_inicio),
@@ -193,6 +197,23 @@ export default async function DashboardPage() {
                     {ev.dataFim && ev.dataFim !== ev.dataInicio && (
                       <p className="text-[11px] text-muted-foreground mt-0.5">
                         até {fmtData(ev.dataFim, "curta")}
+                      </p>
+                    )}
+                    {ev.fasesPendentes && (
+                      <p className="text-[10px] text-red-400 mt-0.5 flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          className="h-3 w-3 shrink-0"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Data não confirmada — verifique o site oficial
                       </p>
                     )}
                   </div>

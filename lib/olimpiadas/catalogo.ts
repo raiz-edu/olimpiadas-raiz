@@ -47,6 +47,7 @@ export type OlimpiadaCatalogo = {
   fases: Fase[];
   premiacao: string[];
   notas?: string;
+  avisoFases?: string;
 };
 
 export const AREA_CONFIG: Record<
@@ -390,6 +391,8 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "A OBM é a principal seletiva para a IMO. Diferente da OBMEP (escolas públicas, múltipla escolha), a OBM é aberta a todos e usa provas discursivas de maior dificuldade.",
+    avisoFases:
+      "As datas exatas das fases 2026 ainda não foram divulgadas oficialmente pela OBM. Verifique em obm.org.br antes de comunicar aos alunos.",
   },
   {
     sigla: "Canguru",
@@ -1118,6 +1121,8 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "Olimpíada única: não exige conhecimento específico de Português ou outras línguas — avalia raciocínio sobre estruturas linguísticas. Qualquer aluno, de qualquer área, pode participar. A 15ª edição será anunciada no site oficial.",
+    avisoFases:
+      "O calendário da edição 2025-2026 está em atualização. As datas das fases podem estar incompletas — consulte obling.org para informações oficiais antes de comunicar aos alunos.",
   },
   {
     sigla: "ONFIL",
@@ -1402,6 +1407,8 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     ],
     notas:
       "Formato único: baseada em projeto (não em prova). Inscrições ainda abertas até 30/06/2026. O Programa Mentoria nas Escolas é uma novidade de 2026 — ex-vencedores de escolas públicas recebem bolsas para iniciação científica na Fiocruz.",
+    avisoFases:
+      "As datas das fases Regional e Nacional 2026 ainda não foram publicadas pela Fiocruz. Acompanhe o site oficial olimpiada.fiocruz.br antes de comunicar aos alunos.",
   },
   {
     sigla: "OBECON",
