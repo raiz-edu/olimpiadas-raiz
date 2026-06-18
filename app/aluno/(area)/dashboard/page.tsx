@@ -45,7 +45,11 @@ export default async function AlunoDashboard() {
   const seteDias = new Date(agora.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const [respostasResult, proximasAulasResult, proximoSimuladoResult] = await Promise.all([
-    admin.from("resposta_aluno").select("correta").eq("aluno_id", session.aluno.id),
+    admin
+      .from("resposta_aluno")
+      .select("questao_id, correta, contexto, aula_id")
+      .eq("aluno_id", session.aluno.id)
+      .order("respondido_em", { ascending: false }),
     // Aulas online das próximas 7 dias
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any)
@@ -67,7 +71,14 @@ export default async function AlunoDashboard() {
       .limit(1),
   ]);
 
-  const respostas = respostasResult.data ?? [];
+  const raw = respostasResult.data ?? [];
+  const visto = new Set<string>();
+  const respostas = raw.filter((r) => {
+    const key = `${r.questao_id}-${r.contexto ?? "banco"}-${r.aula_id ?? ""}`;
+    if (visto.has(key)) return false;
+    visto.add(key);
+    return true;
+  });
   const total = respostas.length;
   const acertos = respostas.filter((r) => r.correta).length;
   const erros = total - acertos;
