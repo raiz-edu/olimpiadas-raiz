@@ -115,7 +115,7 @@ export default async function AlunoDashboard() {
       {total > 0 && (
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Seu desempenho
+            Desempenho
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {kpis.map((k) => (
