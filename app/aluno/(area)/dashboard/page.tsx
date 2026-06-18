@@ -2,9 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database, PreparacaoProjeto, PreparacaoAula } from "@/lib/types/database";
 
 export const metadata = { title: "Início — Plataforma Olímpica" };
 
@@ -36,44 +33,36 @@ function fmtDateTime(iso: string) {
   });
 }
 
-type ProjetoComAulas = PreparacaoProjeto & { aulas: PreparacaoAula[] };
-
 export default async function AlunoDashboard() {
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
   const admin = createAdminClient();
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cs) {
-          cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
-
   const firstName = session.aluno.nome.split(" ")[0]!;
 
-  const [respostasResult, inscricoesResult, proximoSimuladoResult] = await Promise.all([
+  const agora = new Date();
+  const tresHAtras = new Date(agora.getTime() - 3 * 60 * 60 * 1000);
+  const seteDias = new Date(agora.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const [respostasResult, proximasAulasResult, proximoSimuladoResult] = await Promise.all([
     admin.from("resposta_aluno").select("correta").eq("aluno_id", session.aluno.id),
-    supabase
-      .from("inscricao")
-      .select("olimpiada_id")
-      .eq("aluno_id", session.aluno.id)
-      .eq("status", "confirmada"),
+    // Aulas online das próximas 7 dias
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
+      .from("preparacao_aula")
+      .select("id, titulo, data_hora")
+      .eq("tipo", "online")
+      .eq("publicada", true)
+      .gte("data_hora", tresHAtras.toISOString())
+      .lte("data_hora", seteDias.toISOString())
+      .order("data_hora")
+      .limit(2),
     admin
       .from("preparacao_aula")
       .select("id, titulo, data_hora")
       .eq("tipo", "simulado")
       .eq("publicada", true)
-      .gte("data_hora", new Date().toISOString())
+      .gte("data_hora", agora.toISOString())
       .order("data_hora")
       .limit(1),
   ]);
@@ -84,29 +73,11 @@ export default async function AlunoDashboard() {
   const erros = total - acertos;
   const pct = total > 0 ? Math.round((acertos / total) * 100) : null;
 
-  const olimpiadaIds = (inscricoesResult.data ?? []).map((i) => i.olimpiada_id);
-  let query = supabase
-    .from("preparacao_projeto")
-    .select("*, aulas:preparacao_aula(*)")
-    .eq("publicado", true)
-    .eq("ativo", true);
-
-  if (olimpiadaIds.length > 0) {
-    query = query.or(`olimpiada_id.is.null,olimpiada_id.in.(${olimpiadaIds.join(",")})`);
-  } else {
-    query = query.is("olimpiada_id", null);
-  }
-
-  const { data: projetos } = await query.order("criado_em", { ascending: false });
-  const lista = (projetos ?? []) as unknown as ProjetoComAulas[];
-
-  const aulasOnline = lista.flatMap((p) =>
-    p.aulas.filter((a) => a.tipo === "online" && a.publicada && a.data_hora),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proximasAoVivo = ((proximasAulasResult as any).data ?? []).filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a: any) => isLiveNow(a.data_hora) || isUpcoming(a.data_hora),
   );
-  const proximasAoVivo = aulasOnline
-    .filter((a) => isLiveNow(a.data_hora) || isUpcoming(a.data_hora))
-    .sort((a, b) => new Date(a.data_hora!).getTime() - new Date(b.data_hora!).getTime())
-    .slice(0, 2);
 
   const proximoSimulado = proximoSimuladoResult.data?.[0] ?? null;
 
@@ -176,14 +147,15 @@ export default async function AlunoDashboard() {
         </section>
       )}
 
-      {/* Aulas ao vivo / próximas na semana */}
+      {/* Aulas ao vivo / próximas */}
       {proximasAoVivo.length > 0 && (
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Aulas ao vivo
           </h2>
           <div className="space-y-2">
-            {proximasAoVivo.map((aula) => (
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {proximasAoVivo.map((aula: any) => (
               <Link
                 key={aula.id}
                 href={`/aluno/aula/${aula.id}`}
@@ -206,7 +178,7 @@ export default async function AlunoDashboard() {
                     {isLiveNow(aula.data_hora) ? (
                       <span className="font-semibold text-red-500">AO VIVO AGORA</span>
                     ) : (
-                      <>{fmtDateTime(aula.data_hora!)}</>
+                      <>{fmtDateTime(aula.data_hora)}</>
                     )}
                   </p>
                 </div>
@@ -270,75 +242,14 @@ export default async function AlunoDashboard() {
         </section>
       )}
 
-      {/* Projetos de preparação */}
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Projetos de preparação
-          </h2>
-          {lista.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {lista.length} disponível{lista.length !== 1 ? "is" : ""}
-            </span>
-          )}
-        </div>
-
-        {lista.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              Nenhum projeto publicado ainda. Volte em breve!
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {lista.map((projeto) => {
-              const totalAulas = projeto.aulas.filter(
-                (a) => a.tipo !== "simulado" && a.publicada,
-              ).length;
-              const aulaViva = projeto.aulas.find(
-                (a) => a.tipo === "online" && isLiveNow(a.data_hora),
-              );
-              return (
-                <Link
-                  key={projeto.id}
-                  href={`/aluno/projeto/${projeto.id}`}
-                  className="group rounded-lg border border-border bg-card p-3 hover:border-ring transition-colors"
-                >
-                  <div className="mb-1.5 flex items-start justify-between gap-2">
-                    <div
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
-                      style={{ background: TEAL }}
-                    >
-                      {projeto.olimpiada_sigla}
-                    </div>
-                    {aulaViva && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-500">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                        AO VIVO
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mb-0.5 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {projeto.nome}
-                  </h3>
-                  {projeto.descricao && (
-                    <p className="mb-2 line-clamp-1 text-xs text-muted-foreground">
-                      {projeto.descricao}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{projeto.ano_letivo}</span>
-                    <span>·</span>
-                    <span>
-                      {totalAulas} {totalAulas === 1 ? "aula" : "aulas"}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      {/* Atalhos rápidos */}
+      {total === 0 && !proximoSimulado && proximasAoVivo.length === 0 && (
+        <section>
+          <p className="text-sm text-muted-foreground text-center py-6">
+            Comece respondendo questões no treino para ver seu desempenho aqui.
+          </p>
+        </section>
+      )}
     </div>
   );
 }
