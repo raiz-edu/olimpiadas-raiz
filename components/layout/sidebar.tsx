@@ -117,6 +117,7 @@ const PERSIST_BASES = [
   "/academico/olimpiadas",
   "/academico/preparacao",
   "/academico/banco-questoes",
+  "/academico/banco-questoes/raio-x",
 ] as const;
 
 function SidebarContent() {
@@ -217,10 +218,19 @@ function SidebarContent() {
             Calendário
           </SubItem>
           <SubItem
-            active={pathname.startsWith("/academico/banco-questoes")}
+            active={
+              pathname.startsWith("/academico/banco-questoes") &&
+              !pathname.startsWith("/academico/banco-questoes/raio-x")
+            }
             onClick={() => go("/academico/banco-questoes")}
           >
             Banco de Questões
+          </SubItem>
+          <SubItem
+            active={pathname.startsWith("/academico/banco-questoes/raio-x")}
+            onClick={() => go("/academico/banco-questoes/raio-x")}
+          >
+            Raio-x do banco
           </SubItem>
         </>
       )}
