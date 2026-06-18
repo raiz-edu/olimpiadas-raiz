@@ -235,42 +235,27 @@ export default async function AlunoDashboard() {
       <section>
         {erros > 0 ? (
           /* Aluno tem erros: destaque para sessão de revisão */
-          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-5">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-500/10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  className="h-5 w-5 text-red-400"
-                  aria-hidden="true"
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">Sessão de Revisão</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Você errou {erros.toLocaleString("pt-BR")} {erros !== 1 ? "questões" : "questão"} —
+                pratique as mais difíceis para melhorar seu desempenho.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href="/aluno/treino?erradas=1"
+                  className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-bold text-[#0f172a]"
+                  style={{ background: TEAL }}
                 >
-                  <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">Sessão de Revisão</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Você errou {erros.toLocaleString("pt-BR")} questão{erros !== 1 ? "ões" : ""} —
-                  pratique as mais difíceis para melhorar seu desempenho.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href="/aluno/treino?erradas=1"
-                    className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-bold text-[#0f172a]"
-                    style={{ background: TEAL }}
-                  >
-                    Revisar agora
-                  </Link>
-                  <Link
-                    href="/aluno/treino"
-                    className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Treinar livremente →
-                  </Link>
-                </div>
+                  Revisar agora
+                </Link>
+                <Link
+                  href="/aluno/treino"
+                  className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Treinar livremente →
+                </Link>
               </div>
             </div>
           </div>
