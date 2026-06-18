@@ -90,7 +90,7 @@ export default async function DashboardPage() {
   const [{ data: fases }, { data: simulados }] = await Promise.all([
     supabase
       .from("olimpiada_fase")
-      .select("id, tipo, nome, data_inicio, data_fim, olimpiada:olimpiada_id(nome, sigla)")
+      .select("id, tipo, nome, data_inicio, data_fim, olimpiada:olimpiada_id(nome)")
       .lte("data_inicio", limiteIso)
       .gte("data_fim", hojeIso)
       .order("data_inicio"),
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
         tipo: "fase" as const,
         tipoFase: f.tipo,
         nome: f.nome,
-        olimpiada: ol?.sigla ?? ol?.nome ?? "",
+        olimpiada: ol?.nome ?? "",
         dataInicio: f.data_inicio,
         dataFim: f.data_fim,
         diasInicio: diasRestantes(f.data_inicio),
