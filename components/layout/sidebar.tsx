@@ -230,7 +230,7 @@ function SidebarContent() {
             active={pathname.startsWith("/academico/banco-questoes/raio-x")}
             onClick={() => go("/academico/banco-questoes/raio-x")}
           >
-            Raio-x do banco
+            Raio-X do Banco de Questões
           </SubItem>
         </>
       )}

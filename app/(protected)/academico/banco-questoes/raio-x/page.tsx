@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Raio-x do Banco de Questões" };
+export const metadata = { title: "Raio-X do Banco de Questões" };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -285,15 +285,7 @@ export default async function RaioXBancoQuestoesPage({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="mb-1 flex items-center gap-2">
-          <Link
-            href="/academico/banco-questoes"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Banco de Questões
-          </Link>
-        </div>
-        <h1 className="text-2xl font-bold text-foreground">Raio-x do Banco de Questões</h1>
+        <h1 className="text-2xl font-bold text-foreground">Raio-X do Banco de Questões</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Análise do acervo por olimpíada, nível e fase — cobertura, dificuldade e pipeline de
           conteúdo.
