@@ -1265,16 +1265,15 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
     site: "https://olimpiadadeportugues.org",
     portalInscricao: "https://olimpiadadeportugues.org/area-da-escola/op",
     usaPlanilha: false,
-    segmentos: ["EFAI", "EFAF", "EM"],
-    series:
-      "OP bê-á-bá: 1º–5º EF · Categoria C: 6º–7º EF · Categoria B: 8º–9º EF · Categoria A: Ensino Médio",
+    segmentos: ["EFAF", "EM"],
+    series: "Categoria C: 6º–7º EF · Categoria B: 8º–9º EF · Categoria A: Ensino Médio",
     custo:
       "Escolas públicas: R$ 135 (1–40 alunos) a R$ 475 (161–200 alunos) · Escolas privadas: R$ 220 (1–40 alunos) a R$ 700 (161–200 alunos)",
     gratuita: false,
     inscricoes: {
       periodo: "19/01 a 08/05/2026 (encerradas)",
       descricao:
-        "4ª edição. A 3ª edição teve mais de 750.000 participantes na 1ª Fase. Inclui a OP bê-á-bá (EFAI, 1º ao 5º ano), lançada como nova modalidade em 2026. Taxa cobrada por escola, por faixa de número de alunos.",
+        "4ª edição. A 3ª edição teve mais de 750.000 participantes na 1ª Fase. Taxa cobrada por escola, por faixa de número de alunos.",
       como: "Escola acessa o site e inscreve os alunos por categoria. Há dois períodos de inscrição: período 1 (19/01–13/03) com valor reduzido e período 2 (14/03–08/05) com valor padrão.",
     },
     fases: [
@@ -1296,7 +1295,42 @@ export const CATALOGO: OlimpiadaCatalogo[] = [
       "~15% dos participantes de cada tipo de escola recebem medalha",
     ],
     notas:
-      "Há duas olimpíadas distintas no mesmo site: OP bê-á-bá (EFAI, 1º ao 5º ano) e OP (EFAF e EM). Inscrições e taxas são separadas por categoria. A taxa é por escola (não por aluno individual).",
+      "A taxa é por escola (não por aluno individual). A OP Bê-á-bá (EFAI, 1º ao 5º ano) é uma modalidade separada — cadastrada à parte neste sistema.",
+  },
+  {
+    sigla: "OP BÊ-Á-BÁ",
+    nome: "Olimpíada de Português — OP Bê-á-bá",
+    edicao: "1ª edição (2026)",
+    area: "Português",
+    areaSlug: "portugues",
+    organizador: "Olimpíada de Português — entidade própria",
+    site: "https://olimpiadadeportugues.org",
+    portalInscricao: "https://olimpiadadeportugues.org/area-da-escola/op",
+    usaPlanilha: false,
+    segmentos: ["EFAI"],
+    series: "1º ao 5º ano do Ensino Fundamental",
+    custo:
+      "Escolas públicas: R$ 135 (1–40 alunos) a R$ 475 (161–200 alunos) · Escolas privadas: R$ 220 (1–40 alunos) a R$ 700 (161–200 alunos)",
+    gratuita: false,
+    inscricoes: {
+      periodo: "19/01 a 08/05/2026 (encerradas)",
+      descricao:
+        "Nova modalidade lançada em 2026, voltada ao EFAI (1º ao 5º ano). Mesma plataforma e período de inscrições da OP principal. Taxa cobrada por escola, por faixa de número de alunos.",
+      como: "Escola acessa o site e inscreve os alunos na modalidade bê-á-bá. Há dois períodos de inscrição: período 1 (19/01–13/03) com valor reduzido e período 2 (14/03–08/05) com valor padrão.",
+    },
+    fases: [
+      {
+        nome: "1ª Fase",
+        formato: "25 questões objetivas",
+        data: "21–23/05/2026",
+        local: "Na escola",
+      },
+    ],
+    premiacao: ["Medalhas ouro, prata, bronze", "~15% dos participantes recebem medalha"],
+    notas:
+      "Modalidade inaugural em 2026. A estrutura completa de fases (incluindo eventual 2ª Fase) pode ser confirmada no site oficial.",
+    avisoFases:
+      "Nova modalidade criada em 2026. Confirme a estrutura completa de fases em olimpiadadeportugues.org antes de comunicar aos alunos.",
   },
   {
     sigla: "OBICT",
