@@ -74,7 +74,8 @@ export default async function AlunoDashboard() {
 
   const raw = respostasResult.data ?? [];
   const visto = new Set<string>();
-  const respostas = raw.filter((r) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const respostas = raw.filter((r: any) => {
     const key = `${r.questao_id}-${r.contexto ?? "banco"}-${r.aula_id ?? ""}`;
     if (visto.has(key)) return false;
     visto.add(key);
