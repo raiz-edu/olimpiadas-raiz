@@ -45,7 +45,8 @@ export default async function AlunoDashboard() {
   const seteDias = new Date(agora.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const [respostasResult, proximasAulasResult, proximoSimuladoResult] = await Promise.all([
-    admin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
       .from("resposta_aluno")
       .select("questao_id, correta, contexto, aula_id")
       .eq("aluno_id", session.aluno.id)
