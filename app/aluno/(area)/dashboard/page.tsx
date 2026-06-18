@@ -245,7 +245,7 @@ export default async function AlunoDashboard() {
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-xs text-muted-foreground">
               Você errou {erros.toLocaleString("pt-BR")} {erros !== 1 ? "questões" : "questão"} —
-              pratique as mais difíceis para melhorar seu desempenho.
+              faça revisões em 2, 3, 5, 7 e 15 dias para fixar o conteúdo.
             </p>
             <div className="mt-3">
               <Link
