@@ -293,7 +293,11 @@ export default async function RaioXBancoQuestoesPage({
       </div>
 
       {/* Filtros */}
-      <form method="GET" className="rounded-xl border border-border bg-card p-4">
+      <form
+        method="GET"
+        key={`${sp.olimpiada}-${sp.nivel}-${sp.fase}-${sp.ano}-${sp.status_cadastro}`}
+        className="rounded-xl border border-border bg-card p-4"
+      >
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">Origem</label>
@@ -351,7 +355,10 @@ export default async function RaioXBancoQuestoesPage({
           <div className="flex items-center gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium hover:bg-secondary/80"
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                recorteParts.length > 0 ? "text-[#0f172a]" : "bg-secondary hover:bg-secondary/80"
+              }`}
+              style={recorteParts.length > 0 ? { background: "rgb(91,184,193)" } : {}}
             >
               Filtrar
             </button>
