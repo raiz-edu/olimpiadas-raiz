@@ -104,7 +104,11 @@ export default async function AlunoDashboard() {
       {/* Saudação + ação rápida */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Olá, {firstName}!</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Sua plataforma de preparação olímpica.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Esta é a sua plataforma de preparação para as olimpíadas de conhecimento. Aproveite os
+          projetos, simulados e questões. Não esqueça de acompanhar o seu desempenho e realizar as
+          revisões. Boa preparação!
+        </p>
       </div>
 
       {/* Snapshot de desempenho */}
