@@ -355,10 +355,7 @@ export default async function RaioXBancoQuestoesPage({
           <div className="flex items-center gap-2">
             <button
               type="submit"
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                recorteParts.length > 0 ? "text-[#0f172a]" : "bg-secondary hover:bg-secondary/80"
-              }`}
-              style={recorteParts.length > 0 ? { background: "rgb(91,184,193)" } : {}}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               Filtrar
             </button>
