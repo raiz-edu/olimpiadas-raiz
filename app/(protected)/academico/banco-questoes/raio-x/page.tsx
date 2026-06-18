@@ -287,8 +287,8 @@ export default async function RaioXBancoQuestoesPage({
       <div>
         <h1 className="text-2xl font-bold text-foreground">Raio-X do Banco de Questões</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Análise do acervo por olimpíada, nível e fase — cobertura, dificuldade e pipeline de
-          conteúdo.
+          Análise do acervo por origem, nível/categoria e fase — cobertura, dificuldade e pipeline
+          de conteúdo.
         </p>
       </div>
 
@@ -296,7 +296,7 @@ export default async function RaioXBancoQuestoesPage({
       <form method="GET" className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Olimpíada</label>
+            <label className="text-xs font-medium text-muted-foreground">Origem</label>
             <select name="olimpiada" defaultValue={sp.olimpiada ?? ""} className={selectClass}>
               <option value="">Todas</option>
               {olimpiadasDisp.map((o) => (
@@ -307,7 +307,7 @@ export default async function RaioXBancoQuestoesPage({
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Nível</label>
+            <label className="text-xs font-medium text-muted-foreground">Nível/Categoria</label>
             <select name="nivel" defaultValue={sp.nivel ?? ""} className={selectClass}>
               <option value="">Todos</option>
               {niveisDisp.map((n) => (
