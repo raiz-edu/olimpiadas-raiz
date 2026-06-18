@@ -385,6 +385,37 @@ export default async function RaioXBancoQuestoesPage({
 
       {/* 1 — Cobertura por tópico */}
       <Divider label="Cobertura por tópico" />
+
+      {/* Gráfico resumo — todos os tópicos */}
+      {total > 0 && topicoList.length > 0 && (
+        <SectionCard title="Visão geral por tópico">
+          <div className="space-y-2">
+            {topicoList.map((t, i) => {
+              const p = pct(t.total, total);
+              const hue = Math.round((i / topicoList.length) * 220 + 170); // gradiente azul→verde
+              const barColor = `hsl(${hue}, 60%, 55%)`;
+              return (
+                <div key={t.nome}>
+                  <div className="mb-1 flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium text-foreground truncate">{t.nome}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      <span className="font-semibold text-foreground">{fmt(t.total)}</span>
+                      <span className="ml-1.5 text-[11px]">({p}%)</span>
+                    </span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded bg-background">
+                    <div
+                      className="h-full rounded transition-all"
+                      style={{ width: `${p}%`, backgroundColor: barColor }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+      )}
+
       <SectionCard title="Questões por tópico e subtópico">
         {total === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma questão para este recorte.</p>
