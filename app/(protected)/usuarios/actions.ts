@@ -68,7 +68,7 @@ export async function convidarUsuario(
 
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
   if (!(ALLOWED_DOMAINS as readonly string[]).includes(getEmailDomain(email)))
-    return { error: "Apenas e-mails institucionais das marcas Raiz são permitidos" };
+    return { error: "Utilize um e-mail institucional." };
   if (!Object.keys(ROLE_LABELS).includes(role)) return { error: "Role inválida" };
 
   if (role === "raiz") return { error: "Sem permissão para convidar administrador" };
@@ -153,7 +153,7 @@ export async function criarUsuarioDireto(
   if (!nome) return { error: "Nome é obrigatório" };
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
   if (!(ALLOWED_DOMAINS as readonly string[]).includes(getEmailDomain(email)))
-    return { error: "Apenas e-mails institucionais das marcas Raiz são permitidos" };
+    return { error: "Utilize um e-mail institucional." };
   if (!Object.keys(ROLE_LABELS).includes(role)) return { error: "Nível de acesso inválido" };
   if (session.user.role !== "raiz" && role === "raiz")
     return { error: "Sem permissão para criar usuário Raiz" };
