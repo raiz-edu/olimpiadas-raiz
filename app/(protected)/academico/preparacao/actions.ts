@@ -359,7 +359,7 @@ export async function getProjetos(): Promise<Projeto[]> {
 
 export async function publicarProjeto(id: string): Promise<void> {
   const session = await getServerSession();
-  if (!session || !["raiz", "diretor_marca"].includes(session.user.role)) return;
+  if (!session || !can(session.user.role, "projeto:update")) return;
   const supabase = createAdminClient();
   await supabase.from("preparacao_projeto").update({ publicado: true }).eq("id", id);
   revalidatePath(PATH);
@@ -367,7 +367,7 @@ export async function publicarProjeto(id: string): Promise<void> {
 
 export async function despublicarProjeto(id: string): Promise<void> {
   const session = await getServerSession();
-  if (!session || !["raiz", "diretor_marca"].includes(session.user.role)) return;
+  if (!session || !can(session.user.role, "projeto:update")) return;
   const supabase = createAdminClient();
   await supabase.from("preparacao_projeto").update({ publicado: false }).eq("id", id);
   revalidatePath(PATH);
@@ -375,7 +375,7 @@ export async function despublicarProjeto(id: string): Promise<void> {
 
 export async function publicarAula(id: string): Promise<void> {
   const session = await getServerSession();
-  if (!session || !["raiz", "diretor_marca"].includes(session.user.role)) return;
+  if (!session || !can(session.user.role, "projeto:update")) return;
   const supabase = createAdminClient();
   await supabase.from("preparacao_aula").update({ publicada: true }).eq("id", id);
   revalidatePath(PATH);
@@ -383,7 +383,7 @@ export async function publicarAula(id: string): Promise<void> {
 
 export async function despublicarAula(id: string): Promise<void> {
   const session = await getServerSession();
-  if (!session || !["raiz", "diretor_marca"].includes(session.user.role)) return;
+  if (!session || !can(session.user.role, "projeto:update")) return;
   const supabase = createAdminClient();
   await supabase.from("preparacao_aula").update({ publicada: false }).eq("id", id);
   revalidatePath(PATH);

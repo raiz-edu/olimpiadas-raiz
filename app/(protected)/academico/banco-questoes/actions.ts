@@ -163,8 +163,7 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
         .join("\n\n") || null
     : null;
 
-  // Questões criadas por não-raiz entram como aguardando revisão
-  const status_cadastro = session.user.role === "raiz" ? "publicado" : "aguardando_revisao";
+  const status_cadastro = "publicado";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
@@ -230,17 +229,6 @@ export async function atualizarQuestao(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
-
-  // gestor_conteudo não pode editar questões já publicadas
-  if (session.user.role !== "raiz") {
-    const { data: q } = await supabase
-      .from("questao")
-      .select("status_cadastro")
-      .eq("id", id)
-      .maybeSingle();
-    if (q?.status_cadastro === "publicado")
-      return { error: "Questões publicadas só podem ser editadas pelo administrador" };
-  }
 
   const enunciado_blocos = parseBlocos((formData.get("enunciado_blocos") as string) ?? "");
 
