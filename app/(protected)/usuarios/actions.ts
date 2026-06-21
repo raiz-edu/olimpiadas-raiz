@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
 import { canUser, ROLE_LABELS } from "@/lib/auth/roles";
+import { ALLOWED_DOMAINS, getEmailDomain } from "@/lib/auth/domains";
 import type { RoleUsuario } from "@/lib/types/database";
 import { getResend, FROM_EMAIL, APP_URL } from "@/lib/email/resend";
 import { conviteEmailHtml, conviteEmailText } from "@/lib/email/templates/convite";
@@ -66,6 +67,8 @@ export async function convidarUsuario(
   const marcaId = (formData.get("marca_id") as string) || null;
 
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
+  if (!(ALLOWED_DOMAINS as readonly string[]).includes(getEmailDomain(email)))
+    return { error: "Utilize um e-mail institucional." };
   if (!Object.keys(ROLE_LABELS).includes(role)) return { error: "Role inválida" };
 
   if (role === "raiz") return { error: "Sem permissão para convidar administrador" };
@@ -149,6 +152,8 @@ export async function criarUsuarioDireto(
 
   if (!nome) return { error: "Nome é obrigatório" };
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
+  if (!(ALLOWED_DOMAINS as readonly string[]).includes(getEmailDomain(email)))
+    return { error: "Utilize um e-mail institucional." };
   if (!Object.keys(ROLE_LABELS).includes(role)) return { error: "Nível de acesso inválido" };
   if (session.user.role !== "raiz" && role === "raiz")
     return { error: "Sem permissão para criar usuário Raiz" };
