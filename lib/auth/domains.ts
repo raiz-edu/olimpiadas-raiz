@@ -10,7 +10,7 @@ export const ALLOWED_DOMAINS = [
 
 export type AllowedDomain = (typeof ALLOWED_DOMAINS)[number];
 
-// Únicos emails com papel admin_rede — todos os demais recebem professor por padrão
+// Únicos emails com role raiz (admin total) — todos os demais recebem professor por padrão
 export const ADMIN_EMAILS = new Set([
   "helio.barbosa@matrizeducacao.com.br",
   "hugo.carvalho@raizeducacao.com.br",
@@ -42,6 +42,6 @@ export function isAllowedDomain(email: string): boolean {
   return true;
 }
 
-export function getRoleForEmail(email: string): "admin_rede" | "professor" {
-  return ADMIN_EMAILS.has(email.toLowerCase()) ? "admin_rede" : "professor";
+export function getRoleForEmail(email: string): "raiz" | "professor" {
+  return ADMIN_EMAILS.has(email.toLowerCase()) ? "raiz" : "professor";
 }

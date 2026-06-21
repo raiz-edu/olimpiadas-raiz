@@ -22,7 +22,7 @@ export default async function CalendarioAcademicoServerPage({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = session.user as any;
-  const isAdmin = user.role === "admin_rede";
+  const isAdmin = user.role === "raiz";
 
   const [{ data: fasesData }, { data: aulasData }, marcaResult, todasMarcasResult] =
     await Promise.all([

@@ -26,7 +26,7 @@ Next.js App Router + Supabase + Tailwind CSS.
 - Verificar permissão server-side: `can(session.user.role, "recurso:acao")` de `@/lib/auth/roles`
 - Verificar permissão no JSX: `<Can role={user.role} perform="recurso:acao">` de `@/components/auth/can`
 - Verificar permissão em client component: `useCan("recurso:acao")` de `@/lib/auth/context`
-- Roles disponíveis: `admin_rede`, `coord_marca`, `coord_unidade`, `professor`
+- Roles disponíveis: `raiz` (admins Helio/Hugo), `diretor_marca`, `gestor_conteudo`, `professor`, `coordenador`, `diretor`
 
 ### Formulários com Server Actions
 

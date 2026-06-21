@@ -228,7 +228,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ sigl
   // ── Determina marca do usuário ─────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = session.user as any;
-  const isAdmin = user.role === "admin_rede";
+  const isAdmin = user.role === "raiz";
   const marcaParam = req.nextUrl.searchParams.get("marca");
 
   let marcaSlug: string | null = null;

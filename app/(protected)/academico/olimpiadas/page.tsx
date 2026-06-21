@@ -12,7 +12,7 @@ export default async function AcademicoOlimpiadasPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = session.user as any;
-  const isAdmin = user.role === "admin_rede";
+  const isAdmin = user.role === "raiz";
 
   const planilhasMap: Record<
     string,
