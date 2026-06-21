@@ -27,7 +27,6 @@ type UsuarioRow = {
   nome: string;
   email: string;
   role: RoleUsuario;
-  admin_marca: boolean;
   marca_ativa_id: string | null;
   ativo: boolean;
   marca?: { id: string; nome: string } | null;
@@ -49,6 +48,7 @@ type Props = {
   convites: ConviteRow[];
   marcas: MarcaRow[];
   isRaiz: boolean;
+  isDiretor: boolean;
   currentUserId: string;
 };
 
@@ -70,14 +70,6 @@ function RoleBadge({ role }: { role: RoleUsuario }) {
   );
 }
 
-function AdminBadge() {
-  return (
-    <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-      Admin Marca
-    </span>
-  );
-}
-
 // ─── Formulário de edição de usuário ─────────────────────────────────────────
 
 function EditarUsuarioForm({
@@ -95,7 +87,6 @@ function EditarUsuarioForm({
     atualizarUsuario,
     null,
   );
-  const [adminMarca, setAdminMarca] = useState(usuario.admin_marca);
   const [ativo, setAtivo] = useState(usuario.ativo);
 
   if (state && "ok" in state) onClose();
@@ -106,7 +97,6 @@ function EditarUsuarioForm({
       className="mt-2 rounded-xl border border-border bg-background p-4 space-y-4"
     >
       <input type="hidden" name="id" value={usuario.id} />
-      <input type="hidden" name="admin_marca" value={String(adminMarca)} />
       <input type="hidden" name="ativo" value={String(ativo)} />
 
       <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: TEAL }}>
@@ -132,22 +122,6 @@ function EditarUsuarioForm({
             <p className="mt-0.5 text-[10px] text-muted-foreground">
               {ROLE_DESCRIPTIONS[usuario.role as RoleUsuario]}
             </p>
-          </div>
-        )}
-
-        {/* Admin Marca — somente Raiz pode alterar */}
-        {isRaiz && (
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-muted-foreground">Admin Marca</label>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={adminMarca}
-                onChange={(e) => setAdminMarca(e.target.checked)}
-                className="accent-[rgb(91,184,193)]"
-              />
-              <span className="text-sm text-foreground">Pode convidar usuários da sua marca</span>
-            </label>
           </div>
         )}
 
@@ -191,15 +165,16 @@ function EditarUsuarioForm({
 
 // ─── Formulário de convite ────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ConvidarForm({
   marcas,
   isRaiz,
+  isDiretor,
   marcaAtualId,
   onClose,
 }: {
   marcas: MarcaRow[];
   isRaiz: boolean;
+  isDiretor: boolean;
   marcaAtualId: string | null;
   onClose: () => void;
 }) {
@@ -278,7 +253,12 @@ function ConvidarForm({
             className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
           >
             <option value="">Selecione…</option>
-            {(isRaiz ? NIVEIS_ROLE : NIVEIS_ROLE.filter((r) => r !== "raiz")).map((r) => (
+            {(isRaiz
+              ? NIVEIS_ROLE
+              : isDiretor
+                ? NIVEIS_ROLE.filter((r) => ["professor", "coordenador", "diretor"].includes(r))
+                : NIVEIS_ROLE
+            ).map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}
               </option>
@@ -481,9 +461,16 @@ function CriarUsuarioForm({
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function UsuariosPage({ usuarios, convites, marcas, isRaiz, currentUserId }: Props) {
+export function UsuariosPage({
+  usuarios,
+  convites,
+  marcas,
+  isRaiz,
+  isDiretor,
+  currentUserId,
+}: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const showConvite = false;
+  const [showConvite, setShowConvite] = useState(false);
   const [showCriar, setShowCriar] = useState(false);
   const [cancelando, startCancelar] = useTransition();
 
@@ -501,27 +488,57 @@ export function UsuariosPage({ usuarios, convites, marcas, isRaiz, currentUserId
         </div>
         {!showCriar && !showConvite && (
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCriar(true)}
-              className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: TEAL }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-4 w-4"
+            {isDiretor ? (
+              <button
+                type="button"
+                onClick={() => setShowConvite(true)}
+                className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: TEAL }}
               >
-                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-              </svg>
-              Adicionar usuário
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                >
+                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+                Convidar usuário
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowCriar(true)}
+                className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: TEAL }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                >
+                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+                Adicionar usuário
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Formulário de criação direta */}
+      {/* Formulário de convite (diretor) */}
+      {showConvite && (
+        <ConvidarForm
+          marcas={marcas}
+          isRaiz={isRaiz}
+          isDiretor={isDiretor}
+          marcaAtualId={usuarios.find((u) => u.id === currentUserId)?.marca_ativa_id ?? null}
+          onClose={() => setShowConvite(false)}
+        />
+      )}
+
+      {/* Formulário de criação direta (raiz / diretor_marca) */}
       {showCriar && (
         <CriarUsuarioForm
           marcas={marcas}
@@ -557,7 +574,6 @@ export function UsuariosPage({ usuarios, convites, marcas, isRaiz, currentUserId
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         <RoleBadge role={u.role} />
-                        {u.admin_marca && <AdminBadge />}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -575,7 +591,7 @@ export function UsuariosPage({ usuarios, convites, marcas, isRaiz, currentUserId
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {u.id !== currentUserId && (
+                      {u.id !== currentUserId && u.role !== "raiz" && (
                         <button
                           type="button"
                           onClick={() => setEditingId(editingId === u.id ? null : u.id)}

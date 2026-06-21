@@ -16,7 +16,7 @@ export type UsuarioState =
   | { ok: true; link?: string; warning?: string; tempPassword?: string; email?: string }
   | null;
 
-// ─── Atualizar usuário (role, admin_marca, ativo) ─────────────────────────────
+// ─── Atualizar usuário (role, ativo) ─────────────────────────────────────────
 
 export async function atualizarUsuario(
   _prev: UsuarioState,
@@ -28,20 +28,22 @@ export async function atualizarUsuario(
 
   const id = formData.get("id") as string;
   const role = formData.get("role") as RoleUsuario | null;
-  const adminMarca = formData.get("admin_marca") === "true";
   const ativo = formData.get("ativo") === "true";
 
   if (!id) return { error: "ID obrigatório" };
 
-  // admin_marca só pode ser editado por raiz
-  type UsuarioUpdate = { ativo: boolean; role?: RoleUsuario; admin_marca?: boolean };
+  // Não permitir editar usuários raiz
+  const supabase = createAdminClient();
+  const { data: alvo } = await supabase.from("usuario").select("role").eq("id", id).maybeSingle();
+  if (alvo?.role === "raiz")
+    return { error: "Usuários administradores não podem ser editados pela interface" };
+
+  type UsuarioUpdate = { ativo: boolean; role?: RoleUsuario };
   const update: UsuarioUpdate = { ativo };
   if (session.user.role === "raiz") {
     if (role && Object.keys(ROLE_LABELS).includes(role)) update.role = role;
-    update.admin_marca = adminMarca;
   }
 
-  const supabase = createAdminClient();
   const { error } = await supabase.from("usuario").update(update).eq("id", id);
   if (error) return { error: error.message };
 
@@ -66,9 +68,12 @@ export async function convidarUsuario(
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
   if (!Object.keys(ROLE_LABELS).includes(role)) return { error: "Role inválida" };
 
-  // admin_marca só pode convidar para roles de leitura
-  if (session.user.role !== "raiz" && role === "raiz")
-    return { error: "Sem permissão para convidar Raiz" };
+  if (role === "raiz") return { error: "Sem permissão para convidar administrador" };
+
+  // diretor só pode convidar roles de leitura (sem gestor_conteudo ou diretor_marca)
+  const ROLES_LEITURA: RoleUsuario[] = ["professor", "coordenador", "diretor"];
+  if (session.user.role === "diretor" && !ROLES_LEITURA.includes(role))
+    return { error: "Diretores só podem convidar Professor, Coordenador ou Diretor" };
 
   const token = crypto.randomUUID();
   const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -178,7 +183,6 @@ export async function criarUsuarioDireto(
     nome,
     email,
     role,
-    admin_marca: false,
     marca_ativa_id: marcaId,
     ativo: true,
   });

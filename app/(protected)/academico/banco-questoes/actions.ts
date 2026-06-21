@@ -228,10 +228,22 @@ export async function atualizarQuestao(
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
 
-  const enunciado_blocos = parseBlocos((formData.get("enunciado_blocos") as string) ?? "");
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
+
+  // gestor_conteudo não pode editar questões já publicadas
+  if (session.user.role !== "raiz") {
+    const { data: q } = await supabase
+      .from("questao")
+      .select("status_cadastro")
+      .eq("id", id)
+      .maybeSingle();
+    if (q?.status_cadastro === "publicado")
+      return { error: "Questões publicadas só podem ser editadas pelo administrador" };
+  }
+
+  const enunciado_blocos = parseBlocos((formData.get("enunciado_blocos") as string) ?? "");
+
   const { error } = await supabase
     .from("questao")
     .update({

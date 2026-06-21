@@ -12,14 +12,13 @@ export default async function UsuariosServerPage() {
   if (!canUser(session.user, "usuario:read")) redirect("/dashboard");
 
   const isRaiz = session.user.role === "raiz";
+  const isDiretor = session.user.role === "diretor";
   const supabase = createAdminClient();
 
-  // Busca usuários — Raiz vê todos; admin_marca vê apenas da sua marca
+  // Raiz vê todos; demais veem apenas usuários da sua marca
   let usuariosQuery = supabase
     .from("usuario")
-    .select(
-      "id, nome, email, role, admin_marca, marca_ativa_id, ativo, marca:marca_ativa_id(id, nome)",
-    )
+    .select("id, nome, email, role, marca_ativa_id, ativo, marca:marca_ativa_id(id, nome)")
     .order("nome");
 
   if (!isRaiz && session.user.marca_ativa_id) {
@@ -43,6 +42,7 @@ export default async function UsuariosServerPage() {
       convites={(convites ?? []) as any}
       marcas={marcas ?? []}
       isRaiz={isRaiz}
+      isDiretor={isDiretor}
       currentUserId={session.user.id}
     />
   );

@@ -126,7 +126,8 @@ export const ROLE_PERMISSIONS: RolePermissions = {
   // Leitura geral — sem escrita, sem Gestão, sem Usuários
   professor: perms(...LEITURA_GERAL),
   coordenador: perms(...LEITURA_GERAL),
-  diretor: perms(...LEITURA_GERAL),
+  // Pode convidar roles de leitura (professor, coordenador, diretor) da sua marca
+  diretor: perms(...LEITURA_GERAL, "usuario:read", "convite:read", "convite:create"),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
