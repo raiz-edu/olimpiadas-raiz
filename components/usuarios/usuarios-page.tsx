@@ -8,7 +8,7 @@ import {
   criarUsuarioDireto,
   type UsuarioState,
 } from "@/app/(protected)/usuarios/actions";
-import { ROLE_LABELS, ROLE_DESCRIPTIONS } from "@/lib/auth/roles";
+import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLES_ATRIBUIVEIS_NAO_RAIZ } from "@/lib/auth/roles";
 import type { RoleUsuario } from "@/lib/types/database";
 
 const TEAL = "rgb(91,184,193)";
@@ -410,7 +410,7 @@ function CriarUsuarioForm({
             className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
           >
             <option value="">Selecione…</option>
-            {(isRaiz ? NIVEIS_ROLE : NIVEIS_ROLE.filter((r) => r !== "raiz")).map((r) => (
+            {(isRaiz ? NIVEIS_ROLE : ROLES_ATRIBUIVEIS_NAO_RAIZ).map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}
               </option>

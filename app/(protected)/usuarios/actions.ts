@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
-import { canUser, ROLE_LABELS } from "@/lib/auth/roles";
+import { canUser, ROLE_LABELS, ROLES_ATRIBUIVEIS_NAO_RAIZ } from "@/lib/auth/roles";
 import { ALLOWED_DOMAINS, getEmailDomain } from "@/lib/auth/domains";
 import type { RoleUsuario } from "@/lib/types/database";
 import { getResend, FROM_EMAIL, APP_URL } from "@/lib/email/resend";
@@ -35,9 +35,17 @@ export async function atualizarUsuario(
 
   // Não permitir editar usuários raiz
   const supabase = createAdminClient();
-  const { data: alvo } = await supabase.from("usuario").select("role").eq("id", id).maybeSingle();
+  const { data: alvo } = await supabase
+    .from("usuario")
+    .select("role, marca_ativa_id")
+    .eq("id", id)
+    .maybeSingle();
   if (alvo?.role === "raiz")
     return { error: "Usuários administradores não podem ser editados pela interface" };
+
+  // Não-raiz só edita usuários da própria marca
+  if (session.user.role !== "raiz" && alvo?.marca_ativa_id !== session.user.marca_ativa_id)
+    return { error: "Você só pode editar usuários da sua marca" };
 
   type UsuarioUpdate = { ativo: boolean; role?: RoleUsuario };
   const update: UsuarioUpdate = { ativo };
@@ -64,7 +72,11 @@ export async function convidarUsuario(
 
   const email = (formData.get("email") as string)?.trim().toLowerCase();
   const role = formData.get("role") as RoleUsuario;
-  const marcaId = (formData.get("marca_id") as string) || null;
+  const isRaiz = session.user.role === "raiz";
+  // Não-raiz só convida dentro da própria marca — marca do formulário é ignorada
+  const marcaId = isRaiz
+    ? (formData.get("marca_id") as string) || null
+    : session.user.marca_ativa_id || null;
 
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
   if (!(ALLOWED_DOMAINS as readonly string[]).includes(getEmailDomain(email)))
@@ -73,10 +85,11 @@ export async function convidarUsuario(
 
   if (role === "raiz") return { error: "Sem permissão para convidar administrador" };
 
-  // diretor só pode convidar roles de leitura (sem gestor_conteudo ou diretor_marca)
-  const ROLES_LEITURA: RoleUsuario[] = ["professor", "coordenador", "diretor"];
-  if (session.user.role === "diretor" && !ROLES_LEITURA.includes(role))
-    return { error: "Diretores só podem convidar Professor, Coordenador ou Diretor" };
+  // Não-raiz só pode atribuir papéis de leitura (anti-escalonamento de privilégio)
+  if (!isRaiz && !ROLES_ATRIBUIVEIS_NAO_RAIZ.includes(role))
+    return { error: "Você só pode convidar Professor, Coordenador ou Diretor" };
+  if (!isRaiz && !marcaId)
+    return { error: "Seu usuário não tem uma marca definida para vincular o convite" };
 
   const token = crypto.randomUUID();
   const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -148,15 +161,22 @@ export async function criarUsuarioDireto(
   const nome = (formData.get("nome") as string)?.trim();
   const email = (formData.get("email") as string)?.trim().toLowerCase();
   const role = formData.get("role") as RoleUsuario;
-  const marcaId = (formData.get("marca_id") as string) || session.user.marca_ativa_id || null;
+  const isRaiz = session.user.role === "raiz";
+  // Não-raiz só cria dentro da própria marca — marca do formulário é ignorada
+  const marcaId = isRaiz
+    ? (formData.get("marca_id") as string) || null
+    : session.user.marca_ativa_id || null;
 
   if (!nome) return { error: "Nome é obrigatório" };
   if (!email || !email.includes("@")) return { error: "E-mail inválido" };
   if (!(ALLOWED_DOMAINS as readonly string[]).includes(getEmailDomain(email)))
     return { error: "Utilize um e-mail institucional." };
   if (!Object.keys(ROLE_LABELS).includes(role)) return { error: "Nível de acesso inválido" };
-  if (session.user.role !== "raiz" && role === "raiz")
-    return { error: "Sem permissão para criar usuário Raiz" };
+  // Não-raiz só pode atribuir papéis de leitura (anti-escalonamento de privilégio)
+  if (!isRaiz && !ROLES_ATRIBUIVEIS_NAO_RAIZ.includes(role))
+    return { error: "Você só pode criar usuários Professor, Coordenador ou Diretor" };
+  if (!isRaiz && !marcaId)
+    return { error: "Seu usuário não tem uma marca definida para vincular o novo usuário" };
 
   // Senha temporária — formato fácil de compartilhar
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -207,6 +227,17 @@ export async function cancelarConvite(id: string): Promise<void> {
   const session = await getServerSession();
   if (!session || !canUser(session.user, "convite:delete")) return;
   const supabase = createAdminClient();
+
+  // Não-raiz só cancela convites da própria marca
+  if (session.user.role !== "raiz") {
+    const { data: convite } = await supabase
+      .from("convite")
+      .select("marca_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (!convite || convite.marca_id !== session.user.marca_ativa_id) return;
+  }
+
   await supabase.from("convite").delete().eq("id", id);
   revalidatePath(PATH);
 }

@@ -107,8 +107,10 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     ...LEITURA_GERAL,
     "audit_log:read",
     "convite:create",
+    "convite:read",
     "convite:delete",
     "usuario:create",
+    "usuario:read",
     "usuario:update",
   ),
 
@@ -177,3 +179,8 @@ export const ROLES_ATRIBUIVEIS: RoleUsuario[] = [
   "coordenador",
   "diretor",
 ];
+
+// Roles que um usuário NÃO-raiz (ex.: diretor_marca, diretor) pode atribuir ao criar
+// ou convidar — apenas papéis de leitura. Impede escalonamento de privilégio
+// (criar outro admin de marca ou um gestor de conteúdo) fora do controle do raiz.
+export const ROLES_ATRIBUIVEIS_NAO_RAIZ: RoleUsuario[] = ["professor", "coordenador", "diretor"];
