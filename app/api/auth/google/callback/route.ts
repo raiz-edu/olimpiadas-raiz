@@ -8,8 +8,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   isAllowedDomain,
   getRoleForEmail,
-  getEmailDomain,
-  DOMAIN_TO_MARCA_SLUG,
+  getMarcaSlugForEmail,
   ADMIN_EMAILS,
 } from "@/lib/auth/domains";
 import {
@@ -141,7 +140,7 @@ export async function GET(request: NextRequest) {
         ativo: true,
       });
 
-      const marcaSlug = DOMAIN_TO_MARCA_SLUG[getEmailDomain(email)];
+      const marcaSlug = getMarcaSlugForEmail(email);
       if (marcaSlug) {
         const { data: marca } = await admin
           .from("marca")
@@ -169,8 +168,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!aluno) {
-    const domain = getEmailDomain(email);
-    const marcaSlug = DOMAIN_TO_MARCA_SLUG[domain];
+    const marcaSlug = getMarcaSlugForEmail(email);
     let marcaId: string | null = null;
     if (marcaSlug) {
       const { data: marca } = await admin
@@ -195,7 +193,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
   }
 
-  const marcaSlugHint = DOMAIN_TO_MARCA_SLUG[getEmailDomain(email)] ?? null;
+  const marcaSlugHint = getMarcaSlugForEmail(email);
   const marcaHintOpts = {
     maxAge: 365 * 24 * 60 * 60,
     path: "/",

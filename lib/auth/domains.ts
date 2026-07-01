@@ -31,16 +31,38 @@ export function getEmailDomain(email: string): string {
   return email.split("@")[1]?.toLowerCase() ?? "";
 }
 
-export function isAllowedDomain(email: string): boolean {
-  const domain = getEmailDomain(email);
-  if (!(ALLOWED_DOMAINS as readonly string[]).includes(domain)) return false;
+/**
+ * Retorna o domínio institucional base ao qual `domain` pertence — ele mesmo
+ * ou um subdomínio dele (ex.: "alunos.colegioapogeu.com.br" → "colegioapogeu.com.br").
+ * Alunos usam subdomínios (`alunos.<marca>`) separados do staff no Google Workspace.
+ * O ponto antes do base evita falso positivo (ex.: "xcolegioapogeu.com.br" não casa).
+ */
+export function matchAllowedBaseDomain(domain: string): AllowedDomain | null {
+  for (const base of ALLOWED_DOMAINS) {
+    if (domain === base || domain.endsWith(`.${base}`)) return base;
+  }
+  return null;
+}
 
-  // raizeducacao.com.br (domínio da rede) é restrito aos admins designados, por enquanto.
-  if (domain === "raizeducacao.com.br") {
+export function isAllowedDomain(email: string): boolean {
+  const base = matchAllowedBaseDomain(getEmailDomain(email));
+  if (!base) return false;
+
+  // raizeducacao.com.br (domínio da rede) e subdomínios são restritos aos admins designados.
+  if (base === "raizeducacao.com.br") {
     return ADMIN_EMAILS.has(email.toLowerCase());
   }
 
   return true;
+}
+
+/**
+ * Slug da marca para um e-mail, resolvendo subdomínios ao domínio base
+ * (ex.: aluno em "alunos.colegioapogeu.com.br" → marca "apogeu").
+ */
+export function getMarcaSlugForEmail(email: string): string | null {
+  const base = matchAllowedBaseDomain(getEmailDomain(email));
+  return base ? (DOMAIN_TO_MARCA_SLUG[base] ?? null) : null;
 }
 
 export function getRoleForEmail(email: string): "raiz" | "professor" {

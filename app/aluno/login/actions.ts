@@ -12,7 +12,7 @@ import {
   cookieSessionOpts,
   cookiePendingOpts,
 } from "@/lib/auth/student-cookie";
-import { getEmailDomain, DOMAIN_TO_MARCA_SLUG } from "@/lib/auth/domains";
+import { getMarcaSlugForEmail } from "@/lib/auth/domains";
 
 const MARCA_HINT_COOKIE = "marca_hint";
 const MARCA_HINT_OPTS = {
@@ -126,7 +126,7 @@ export async function loginAluno(
   }
 
   // Hint de marca para personalizar logo na próxima visita ao login
-  const marcaSlug = DOMAIN_TO_MARCA_SLUG[getEmailDomain(email)] ?? null;
+  const marcaSlug = getMarcaSlugForEmail(email);
   if (marcaSlug) cookieStore.set(MARCA_HINT_COOKIE, marcaSlug, MARCA_HINT_OPTS);
 
   // Define o cookie de sessão próprio do aluno (7 dias, independente do admin)

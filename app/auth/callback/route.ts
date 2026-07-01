@@ -7,8 +7,7 @@ import type { RoleUsuario } from "@/lib/types/database";
 import {
   isAllowedDomain,
   getRoleForEmail,
-  getEmailDomain,
-  DOMAIN_TO_MARCA_SLUG,
+  getMarcaSlugForEmail,
   ADMIN_EMAILS,
 } from "@/lib/auth/domains";
 
@@ -81,9 +80,8 @@ export async function GET(request: NextRequest) {
       .from("usuario")
       .insert({ id: user.id, email: user.email as string, nome, role, ativo: true });
 
-    // Vincula a marca automaticamente pelo domínio do email
-    const domain = getEmailDomain(user.email);
-    const marcaSlug = DOMAIN_TO_MARCA_SLUG[domain];
+    // Vincula a marca automaticamente pelo domínio do email (resolve subdomínios)
+    const marcaSlug = getMarcaSlugForEmail(user.email);
     if (marcaSlug) {
       const { data: marca } = await admin
         .from("marca")
