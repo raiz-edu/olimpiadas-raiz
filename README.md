@@ -18,14 +18,19 @@
 
 ## Stack
 
-| Camada         | Tecnologia                          |
-| -------------- | ----------------------------------- |
-| Framework      | Next.js (App Router) + TypeScript   |
-| UI             | Tailwind CSS + componentes próprios |
-| Banco de dados | Supabase PostgreSQL + RLS           |
-| Auth           | Supabase Auth + RBAC customizado    |
-| Email          | Resend                              |
-| Deploy         | Vercel                              |
+| Camada         | Tecnologia                                        |
+| -------------- | ------------------------------------------------- |
+| Framework      | Next.js 16.2 (App Router) + React 19 + TypeScript |
+| UI             | Tailwind CSS 4 + shadcn + Base UI + lucide-react  |
+| Gráficos       | Recharts                                          |
+| Banco de dados | Supabase PostgreSQL + RLS                         |
+| Auth           | Google OAuth (staff + alunos) + RBAC customizado  |
+| Email          | Resend                                            |
+| IA             | Groq (avaliação de questões abertas + OCR Vision) |
+| Monitoramento  | Sentry                                            |
+| Deploy         | Vercel (auto-deploy no merge para `master`)       |
+
+> Nova pessoa no time? Comece pelo [ONBOARDING.md](./ONBOARDING.md).
 
 ## Pré-requisitos
 
@@ -100,14 +105,17 @@ Registro inline de resultados por aluno e fase. Tipos: aprovado, nao_aprovado, o
 
 ## Perfis e permissões
 
-| Perfil          | Escopo      | Permissões-chave                       |
-| --------------- | ----------- | -------------------------------------- |
-| `admin_rede`    | Toda a rede | Tudo, incluindo Analytics              |
-| `coord_marca`   | 1+ marcas   | CRUD completo exceto audit_log         |
-| `coord_unidade` | 1 unidade   | Turmas, alunos, inscrições, resultados |
-| `professor`     | 1+ turmas   | Leitura + inscrever alunos             |
+| Perfil            | Escopo        | Permissões-chave                                                    |
+| ----------------- | ------------- | ------------------------------------------------------------------- |
+| `raiz`            | Rede inteira  | Admin total; **único que publica conteúdo** (fila de aprovação)     |
+| `diretor_marca`   | 1 marca       | Vê e cria usuários **apenas da sua marca**                          |
+| `gestor_conteudo` | Conteúdo      | Cria questões/simulados/projetos → entram como _aguardando revisão_ |
+| `professor`       | Turmas        | Preparação, questões, inscrever alunos                              |
+| `coordenador`     | Unidade       | Gestão acadêmica da unidade                                         |
+| `diretor`         | Unidade/marca | Leitura ampla                                                       |
 
-A matriz completa está em `lib/auth/roles.ts`.
+Conteúdo criado por não-`raiz` entra como `aguardando_revisao` e só o `raiz` publica;
+o aluno nunca vê conteúdo não publicado. A matriz completa está em `lib/auth/roles.ts`.
 
 ## Estrutura de arquivos relevante
 
