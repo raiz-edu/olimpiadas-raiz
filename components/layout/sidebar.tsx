@@ -218,6 +218,12 @@ function SidebarContent() {
             Calendário
           </SubItem>
           <SubItem
+            active={pathname.startsWith("/academico/desempenho")}
+            onClick={() => go("/academico/desempenho")}
+          >
+            Engajamento e Desempenho
+          </SubItem>
+          <SubItem
             active={
               pathname.startsWith("/academico/banco-questoes") &&
               !pathname.startsWith("/academico/banco-questoes/raio-x")
