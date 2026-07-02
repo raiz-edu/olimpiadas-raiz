@@ -6,12 +6,34 @@ import { can } from "@/lib/auth/roles";
 export const metadata = { title: "Engajamento e Desempenho — Olimpíadas" };
 
 const TOP_POR_MARCA = 20;
+const JANELA_DIAS = 30; // janela da métrica de frequência (dias ativos / última atividade)
+const TZ = "America/Sao_Paulo";
 const MEDALHAS = new Set(["ouro", "prata", "bronze", "mencao_honrosa"]);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
   return n.toLocaleString("pt-BR");
+}
+
+// Início da janela de frequência (ISO). Isolado em helper para manter o corpo do
+// Server Component livre de chamadas impuras (regra react-hooks/purity).
+function inicioJanelaISO(dias: number) {
+  return new Date(Date.now() - dias * 86_400_000).toISOString();
+}
+
+// Dia-calendário no fuso de Brasília (evita contar atividade das 23h como dois dias).
+function diaSP(ts: string) {
+  return new Date(ts).toLocaleDateString("en-CA", { timeZone: TZ });
+}
+
+function dataCurta(ts: string) {
+  return new Date(ts).toLocaleDateString("pt-BR", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
 }
 
 function acertoCls(p: number | null) {
@@ -31,8 +53,9 @@ function AcertoBadge({ p }: { p: number | null }) {
 type Linha = {
   id: string;
   nome: string;
-  acessos: number;
-  ultimoAcesso: string | null;
+  diasAtivos: number;
+  ultimaAtividade: string | null;
+  logins: number;
   respondidas: number;
   acertoPct: number | null;
   aulas: number;
@@ -42,7 +65,8 @@ type Linha = {
 type MarcaBloco = {
   marca: string;
   linhas: Linha[];
-  totAcessos: number;
+  totDiasAtivos: number;
+  totLogins: number;
   totRespondidas: number;
   totAcertos: number;
   totAulas: number;
@@ -56,18 +80,45 @@ export default async function EngajamentoDesempenhoPage() {
 
   const supabase = createAdminClient();
 
-  const [{ data: alunos }, { data: marcas }] = await Promise.all([
-    supabase
-      .from("aluno")
-      .select("id, nome, marca_id, last_login_at, login_count")
-      .eq("ativo", true)
-      .not("last_login_at", "is", null),
-    supabase.from("marca").select("id, nome").order("nome"),
-  ]);
+  const cutoff = inicioJanelaISO(JANELA_DIAS);
+
+  const [{ data: alunos }, { data: marcas }, { data: ativRespostas }, { data: ativAulas }] =
+    await Promise.all([
+      supabase
+        .from("aluno")
+        .select("id, nome, marca_id, login_count")
+        .eq("ativo", true)
+        .not("last_login_at", "is", null),
+      supabase.from("marca").select("id, nome").order("nome"),
+      // Atividade recente (todos os alunos) para a métrica de frequência.
+      supabase
+        .from("resposta_aluno")
+        .select("aluno_id, respondido_em")
+        .gte("respondido_em", cutoff),
+      supabase.from("aluno_progresso").select("aluno_id, updated_at").gte("updated_at", cutoff),
+    ]);
 
   const marcaNomeMap = new Map((marcas ?? []).map((m) => [m.id, m.nome]));
 
-  // Agrupa por marca e seleciona os TOP_POR_MARCA mais frequentes de cada uma
+  // Frequência baseada em atividade real: dias-calendário distintos com atividade
+  // (respostas de treino ou progresso em aula) na janela, e a última atividade.
+  const diasPorAluno = new Map<string, Set<string>>();
+  const ultimaAtivPorAluno = new Map<string, string>();
+
+  function registrarAtividade(alunoId: string, ts: string | null) {
+    if (!ts) return;
+    if (!diasPorAluno.has(alunoId)) diasPorAluno.set(alunoId, new Set());
+    diasPorAluno.get(alunoId)!.add(diaSP(ts));
+    const atual = ultimaAtivPorAluno.get(alunoId);
+    if (!atual || ts > atual) ultimaAtivPorAluno.set(alunoId, ts);
+  }
+
+  for (const r of ativRespostas ?? []) registrarAtividade(r.aluno_id, r.respondido_em);
+  for (const p of ativAulas ?? []) registrarAtividade(p.aluno_id, p.updated_at);
+
+  const diasAtivos = (id: string) => diasPorAluno.get(id)?.size ?? 0;
+
+  // Agrupa por marca e ordena por frequência real (dias ativos → última atividade → logins).
   type AlunoRow = NonNullable<typeof alunos>[number];
   const porMarca = new Map<string, AlunoRow[]>();
   for (const a of alunos ?? []) {
@@ -76,20 +127,28 @@ export default async function EngajamentoDesempenhoPage() {
     porMarca.get(key)!.push(a);
   }
 
+  function ordenar(a: AlunoRow, b: AlunoRow) {
+    const da = diasAtivos(a.id);
+    const db = diasAtivos(b.id);
+    if (db !== da) return db - da;
+    const ua = ultimaAtivPorAluno.get(a.id) ?? "";
+    const ub = ultimaAtivPorAluno.get(b.id) ?? "";
+    if (ua !== ub) return ub < ua ? -1 : 1;
+    if (b.login_count !== a.login_count) return b.login_count - a.login_count;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  }
+
   const topPorMarca = new Map<string, AlunoRow[]>();
   const topIds: string[] = [];
   for (const [marcaId, lista] of porMarca) {
-    const top = lista
-      .slice()
-      .sort((a, b) => b.login_count - a.login_count)
-      .slice(0, TOP_POR_MARCA);
+    const top = lista.slice().sort(ordenar).slice(0, TOP_POR_MARCA);
     topPorMarca.set(marcaId, top);
     for (const a of top) topIds.push(a.id);
   }
 
-  // Métricas de desempenho apenas para os alunos do top-N (volume pequeno)
+  // Métricas de desempenho (acumuladas, all-time) apenas para os alunos do top-N.
   let respostas: { aluno_id: string; correta: boolean }[] = [];
-  let progresso: { aluno_id: string }[] = [];
+  let aulasAssistidas: { aluno_id: string }[] = [];
   let inscricoes: { id: string; aluno_id: string }[] = [];
 
   if (topIds.length > 0) {
@@ -103,7 +162,7 @@ export default async function EngajamentoDesempenhoPage() {
       supabase.from("inscricao").select("id, aluno_id").in("aluno_id", topIds),
     ]);
     respostas = r ?? [];
-    progresso = p ?? [];
+    aulasAssistidas = p ?? [];
     inscricoes = i ?? [];
   }
 
@@ -137,7 +196,7 @@ export default async function EngajamentoDesempenhoPage() {
 
   // Aulas assistidas por aluno
   const aulasPorAluno = new Map<string, number>();
-  for (const p of progresso) {
+  for (const p of aulasAssistidas) {
     aulasPorAluno.set(p.aluno_id, (aulasPorAluno.get(p.aluno_id) ?? 0) + 1);
   }
 
@@ -151,8 +210,9 @@ export default async function EngajamentoDesempenhoPage() {
       return {
         id: a.id,
         nome: a.nome,
-        acessos: a.login_count,
-        ultimoAcesso: a.last_login_at,
+        diasAtivos: diasAtivos(a.id),
+        ultimaAtividade: ultimaAtivPorAluno.get(a.id) ?? null,
+        logins: a.login_count,
         respondidas: resp.respondidas,
         acertoPct,
         aulas: aulasPorAluno.get(a.id) ?? 0,
@@ -166,7 +226,8 @@ export default async function EngajamentoDesempenhoPage() {
     blocos.push({
       marca: marcaNomeMap.get(marcaId) ?? "—",
       linhas,
-      totAcessos: linhas.reduce((s, l) => s + l.acessos, 0),
+      totDiasAtivos: linhas.reduce((s, l) => s + l.diasAtivos, 0),
+      totLogins: linhas.reduce((s, l) => s + l.logins, 0),
       totRespondidas,
       totAcertos,
       totAulas: linhas.reduce((s, l) => s + l.aulas, 0),
@@ -174,8 +235,8 @@ export default async function EngajamentoDesempenhoPage() {
     });
   }
 
-  // Marcas com mais acessos primeiro
-  blocos.sort((a, b) => b.totAcessos - a.totAcessos);
+  // Marcas com mais engajamento (dias ativos somados) primeiro
+  blocos.sort((a, b) => b.totDiasAtivos - a.totDiasAtivos);
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -184,7 +245,7 @@ export default async function EngajamentoDesempenhoPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Engajamento e Desempenho</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Os {TOP_POR_MARCA} alunos mais frequentes de cada marca na Plataforma Olímpica, com
+          Os {TOP_POR_MARCA} alunos mais ativos de cada marca nos últimos {JANELA_DIAS} dias, com
           desempenho no treino, aulas assistidas e premiações.
         </p>
       </div>
@@ -198,6 +259,8 @@ export default async function EngajamentoDesempenhoPage() {
           {blocos.map((b) => {
             const acertoMarca =
               b.totRespondidas > 0 ? Math.round((b.totAcertos / b.totRespondidas) * 100) : null;
+            const mediaDias =
+              b.linhas.length > 0 ? Math.round((b.totDiasAtivos / b.linhas.length) * 10) / 10 : 0;
             return (
               <div key={b.marca} className="rounded-xl border border-border bg-card p-6">
                 <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -210,19 +273,22 @@ export default async function EngajamentoDesempenhoPage() {
                 </div>
 
                 <div className="overflow-x-auto rounded-lg border border-border">
-                  <table className="w-full min-w-[720px] text-sm">
+                  <table className="w-full min-w-[820px] text-sm">
                     <thead>
                       <tr className="border-b border-border bg-background">
                         <th className="px-3 py-2 text-left text-[11px] font-medium text-muted-foreground">
                           Aluno
                         </th>
                         <th className="px-3 py-2 text-center text-[11px] font-medium text-foreground">
-                          Acessos
+                          Dias ativos
                         </th>
                         <th className="hidden px-3 py-2 text-right text-[11px] font-medium text-muted-foreground sm:table-cell">
-                          Último acesso
+                          Última atividade
                         </th>
-                        <th className="px-3 py-2 text-center text-[11px] font-medium text-muted-foreground">
+                        <th className="hidden px-3 py-2 text-center text-[11px] font-medium text-muted-foreground lg:table-cell">
+                          Logins
+                        </th>
+                        <th className="hidden px-3 py-2 text-center text-[11px] font-medium text-muted-foreground md:table-cell">
                           Questões
                         </th>
                         <th className="px-3 py-2 text-center text-[11px] font-medium text-muted-foreground">
@@ -246,17 +312,15 @@ export default async function EngajamentoDesempenhoPage() {
                             {l.nome}
                           </td>
                           <td className="px-3 py-2 text-center font-bold text-foreground">
-                            {fmt(l.acessos)}
+                            {l.diasAtivos > 0 ? fmt(l.diasAtivos) : "—"}
                           </td>
                           <td className="hidden px-3 py-2 text-right text-[11px] text-muted-foreground sm:table-cell">
-                            {l.ultimoAcesso
-                              ? new Date(l.ultimoAcesso).toLocaleString("pt-BR", {
-                                  dateStyle: "short",
-                                  timeStyle: "short",
-                                })
-                              : "—"}
+                            {l.ultimaAtividade ? dataCurta(l.ultimaAtividade) : "—"}
                           </td>
-                          <td className="px-3 py-2 text-center text-foreground">
+                          <td className="hidden px-3 py-2 text-center text-[11px] text-muted-foreground/70 lg:table-cell">
+                            {fmt(l.logins)}
+                          </td>
+                          <td className="hidden px-3 py-2 text-center text-foreground md:table-cell">
                             {l.respondidas > 0 ? fmt(l.respondidas) : "—"}
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -277,10 +341,14 @@ export default async function EngajamentoDesempenhoPage() {
                           Média / total da marca
                         </td>
                         <td className="px-3 py-2 text-center font-bold text-foreground">
-                          {fmt(b.totAcessos)}
+                          {mediaDias.toLocaleString("pt-BR")}
+                          <span className="ml-1 font-normal text-muted-foreground/60">méd.</span>
                         </td>
                         <td className="hidden px-3 py-2 sm:table-cell" />
-                        <td className="px-3 py-2 text-center text-foreground">
+                        <td className="hidden px-3 py-2 text-center text-muted-foreground/70 lg:table-cell">
+                          {fmt(b.totLogins)}
+                        </td>
+                        <td className="hidden px-3 py-2 text-center text-foreground md:table-cell">
                           {b.totRespondidas > 0 ? fmt(b.totRespondidas) : "—"}
                         </td>
                         <td className="px-3 py-2 text-center">
@@ -300,9 +368,13 @@ export default async function EngajamentoDesempenhoPage() {
             );
           })}
           <p className="text-[11px] text-muted-foreground">
-            Frequência por acessos à Plataforma Olímpica. % de acerto = respostas corretas ÷
-            questões de treino respondidas (verde ≥ 70% · âmbar ≥ 50% · vermelho &lt; 50%). Medalhas
-            = ouro, prata, bronze e menção honrosa em olimpíadas.
+            <strong className="font-medium text-muted-foreground">Dias ativos</strong> = dias
+            distintos (fuso de Brasília) com atividade real — respostas de treino ou progresso em
+            aula — nos últimos {JANELA_DIAS} dias; mede frequência independentemente de o aluno
+            permanecer logado. <strong className="font-medium text-muted-foreground">Logins</strong>{" "}
+            conta eventos de autenticação (referência). % de acerto e demais métricas são
+            acumuladas. Semáforo do acerto: verde ≥ 70% · âmbar ≥ 50% · vermelho &lt; 50%. Medalhas
+            = ouro, prata, bronze e menção honrosa.
           </p>
         </div>
       )}
