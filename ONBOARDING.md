@@ -64,7 +64,7 @@ cp .env.example .env.local
 ## 5. Setup local
 
 ```bash
-git clone https://github.com/bomhelio/olimpiadas-raiz.git
+git clone https://github.com/raiz-edu/olimpiadas-raiz.git
 cd olimpiadas-raiz
 npm install
 cp .env.example .env.local     # preencher credenciais
@@ -112,7 +112,7 @@ Definido em `lib/auth/roles.ts`. Verificação: `can(role, "recurso:acao")` no s
 
 Transferir/entrar no GitHub **não** dá acesso a Vercel nem Supabase. Cada dev precisa de:
 
-1. **GitHub** — colaborador no repo `bomhelio/olimpiadas-raiz` (ou membro da org, se migrado).
+1. **GitHub** — membro da org / colaborador no repo `raiz-edu/olimpiadas-raiz`.
 2. **Vercel** — Project → Settings → Members (papel _Member_/_Developer_).
 3. **Supabase** — Project → Settings → Team (papel _Developer_).
 
