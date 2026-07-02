@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RoleUsuario } from "@/lib/types/database";
 import {
-  isAllowedDomain,
+  isAllowedStaffEmail,
   getRoleForEmail,
   getMarcaSlugForEmail,
   ADMIN_EMAILS,
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?erro=oauth`);
   }
 
-  if (!isAllowedDomain(user.email)) {
+  if (!isAllowedStaffEmail(user.email)) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?erro=dominio`);
   }

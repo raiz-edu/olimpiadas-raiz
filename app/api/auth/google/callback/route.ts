@@ -6,7 +6,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { RoleUsuario } from "@/lib/types/database";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
-  isAllowedDomain,
+  isAllowedStaffEmail,
+  isAllowedStudentEmail,
   getRoleForEmail,
   getMarcaSlugForEmail,
   ADMIN_EMAILS,
@@ -88,14 +89,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
   }
 
-  if (!isAllowedDomain(email)) {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=dominio`);
-  }
-
   const admin = createAdminClient();
 
   // ── Portal staff (apenas admins designados) ─────────────────────────────
   if (mode === "staff") {
+    if (!isAllowedStaffEmail(email)) {
+      return NextResponse.redirect(`${origin}/login?erro=dominio`);
+    }
+
     if (!ADMIN_EMAILS.has(email)) {
       return NextResponse.redirect(`${origin}/aluno/login?erro=portal`);
     }
@@ -160,6 +161,10 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Portal aluno (default) ───────────────────────────────────────────────
+  if (!isAllowedStudentEmail(email)) {
+    return NextResponse.redirect(`${origin}/aluno/login?erro=dominio`);
+  }
+
   let { data: aluno } = await admin
     .from("aluno")
     .select("id, consentimento_responsavel")

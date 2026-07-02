@@ -17,6 +17,11 @@ export const ADMIN_EMAILS = new Set([
   "hugo.carvalho@raizeducacao.com.br",
 ]);
 
+export const ALLOWED_STUDENT_EMAILS = new Set([
+  "milena.gallotte@raizeducacao.com.br",
+  "bernardo.castro@raizeducacao.com.br",
+]);
+
 export const DOMAIN_TO_MARCA_SLUG: Record<string, string | null> = {
   "colegioapogeu.com.br": "apogeu",
   "matrizeducacao.com.br": "matriz-educacao",
@@ -44,7 +49,7 @@ export function matchAllowedBaseDomain(domain: string): AllowedDomain | null {
   return null;
 }
 
-export function isAllowedDomain(email: string): boolean {
+export function isAllowedStaffEmail(email: string): boolean {
   const base = matchAllowedBaseDomain(getEmailDomain(email));
   if (!base) return false;
 
@@ -54,6 +59,22 @@ export function isAllowedDomain(email: string): boolean {
   }
 
   return true;
+}
+
+export function isAllowedStudentEmail(email: string): boolean {
+  const normalizedEmail = email.toLowerCase();
+  const base = matchAllowedBaseDomain(getEmailDomain(normalizedEmail));
+  if (!base) return false;
+
+  if (base === "raizeducacao.com.br") {
+    return ADMIN_EMAILS.has(normalizedEmail) || ALLOWED_STUDENT_EMAILS.has(normalizedEmail);
+  }
+
+  return true;
+}
+
+export function isAllowedDomain(email: string): boolean {
+  return isAllowedStaffEmail(email);
 }
 
 /**
