@@ -9,7 +9,8 @@ describe("auth domains", () => {
   it("mantem staff da Raiz restrito aos admins designados", () => {
     expect(isAllowedStaffEmail("helio.barbosa@raizeducacao.com.br")).toBe(true);
     expect(isAllowedStaffEmail("bernardo.castro@raizeducacao.com.br")).toBe(true);
-    expect(isAllowedStaffEmail("milena.gallotte@raizeducacao.com.br")).toBe(false);
+    expect(isAllowedStaffEmail("milena.gallotte@raizeducacao.com.br")).toBe(true);
+    expect(isAllowedStaffEmail("pessoa.nao.autorizada@raizeducacao.com.br")).toBe(false);
   });
 
   it("permite os e-mails liberados no portal do aluno", () => {
