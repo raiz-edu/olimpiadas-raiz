@@ -16,6 +16,7 @@ export const ADMIN_EMAILS = new Set([
   "helio.barbosa@raizeducacao.com.br",
   "hugo.carvalho@raizeducacao.com.br",
   "bernardo.castro@raizeducacao.com.br",
+  "milena.gallotte@raizeducacao.com.br",
 ]);
 
 export const ALLOWED_STUDENT_EMAILS = new Set([
