@@ -8,6 +8,7 @@ import {
 describe("auth domains", () => {
   it("mantem staff da Raiz restrito aos admins designados", () => {
     expect(isAllowedStaffEmail("helio.barbosa@raizeducacao.com.br")).toBe(true);
+    expect(isAllowedStaffEmail("bernardo.castro@raizeducacao.com.br")).toBe(true);
     expect(isAllowedStaffEmail("milena.gallotte@raizeducacao.com.br")).toBe(false);
   });
 

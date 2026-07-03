@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?erro=dominio`);
   }
 
-  // Área administrativa restrita: apenas os 2 admins designados
+  // Area administrativa restrita: apenas admins designados.
   if (!ADMIN_EMAILS.has(user.email.toLowerCase())) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/aluno/login?erro=portal`);
