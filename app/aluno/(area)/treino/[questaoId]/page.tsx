@@ -20,27 +20,35 @@ export default async function RevisaoQuestaoPage({
   const { questaoId } = await params;
 
   const admin = createAdminClient() as any;
-  const [{ data: questao }, alternativas, solucao, resposta] = await Promise.all([
+  const [{ data: questao }, resposta] = await Promise.all([
     admin
       .from("questao")
       .select("*")
       .eq("id", questaoId)
+      .eq("ativo", true)
       .eq("status_cadastro", "publicado")
       .single(),
-    getAlternativasQuestao(questaoId),
-    getSolucaoQuestao(questaoId),
     getRespostaAluno(questaoId),
   ]);
 
   if (!questao) redirect("/aluno/treino");
+  if (!resposta) redirect("/aluno/treino");
 
-  // Busca a alternativa correta para exibir no gabarito
-  const { data: altCorreta } = await admin
-    .from("alternativa")
-    .select("id")
-    .eq("questao_id", questaoId)
-    .eq("correta", true)
-    .maybeSingle();
+  const [alternativas, solucao] = await Promise.all([
+    getAlternativasQuestao(questaoId),
+    getSolucaoQuestao(questaoId),
+  ]);
+
+  let altCorreta: { id: string } | null = null;
+  if (questao.tipo === "multipla_escolha") {
+    const { data } = await admin
+      .from("alternativa")
+      .select("id")
+      .eq("questao_id", questaoId)
+      .eq("correta", true)
+      .maybeSingle();
+    altCorreta = data;
+  }
 
   return (
     <div className="max-w-2xl">

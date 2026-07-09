@@ -9,6 +9,78 @@ import {
   avaliarFotoAberta,
 } from "@/lib/ai/groq";
 import type { FeedbackIA } from "@/lib/ai/types";
+import {
+  normalizeContextoResposta,
+  normalizeOptionalId,
+  validateContextoAula,
+  validateRespostaAbertaPayload,
+  type ContextoResposta,
+} from "@/lib/aluno/security";
+
+type ValidacaoQuestaoResposta =
+  | {
+      ok: true;
+      questao: { id: string; enunciado: string | null; tipo: string | null };
+      contexto: ContextoResposta;
+      aula_id: string | null;
+    }
+  | { ok: false; error: string };
+
+async function validarQuestaoParaResposta(
+  admin: any,
+  questaoId: string,
+  contextoRaw: FormDataEntryValue | null,
+  aulaIdRaw: FormDataEntryValue | null,
+): Promise<ValidacaoQuestaoResposta> {
+  const contexto = normalizeContextoResposta(contextoRaw);
+  const aulaId = normalizeOptionalId(aulaIdRaw);
+
+  if (!questaoId || !contexto) return { ok: false, error: "Dados invalidos." };
+
+  const contextoError = validateContextoAula(contexto, aulaId);
+  if (contextoError) return { ok: false, error: contextoError };
+
+  const { data: questao } = await admin
+    .from("questao")
+    .select("id, enunciado, tipo")
+    .eq("id", questaoId)
+    .eq("ativo", true)
+    .eq("status_cadastro", "publicado")
+    .maybeSingle();
+
+  if (!questao) return { ok: false, error: "Questao indisponivel." };
+
+  if (contexto === "banco") {
+    return { ok: true, questao, contexto, aula_id: null };
+  }
+
+  const { data: aula } = await admin
+    .from("preparacao_aula")
+    .select("id, tipo")
+    .eq("id", aulaId)
+    .eq("publicada", true)
+    .maybeSingle();
+
+  if (!aula) return { ok: false, error: "Atividade indisponivel." };
+  if (contexto === "simulado" && aula.tipo !== "simulado") {
+    return { ok: false, error: "Dados invalidos para simulado." };
+  }
+  if (contexto === "aula" && aula.tipo === "simulado") {
+    return { ok: false, error: "Dados invalidos para aula." };
+  }
+
+  const { data: vinculo } = await admin
+    .from("preparacao_aula_questao")
+    .select("id")
+    .eq("aula_id", aulaId)
+    .eq("questao_id", questaoId)
+    .eq("visivel_aluno", true)
+    .maybeSingle();
+
+  if (!vinculo) return { ok: false, error: "Questao indisponivel para esta atividade." };
+
+  return { ok: true, questao, contexto, aula_id: aulaId };
+}
 
 // ─── Questões para treino ────────────────────────────────────────────────────
 
@@ -235,7 +307,15 @@ export async function getAlternativasQuestao(questaoId: string) {
   if (!session) return [];
 
   const supabase = createAdminClient() as any;
-  // Retorna apenas id, letra e texto — NÃO retorna "correta" para o client
+  const { data: questao } = await supabase
+    .from("questao")
+    .select("id")
+    .eq("id", questaoId)
+    .eq("ativo", true)
+    .eq("status_cadastro", "publicado")
+    .maybeSingle();
+  if (!questao) return [];
+
   const { data } = await supabase
     .from("alternativa")
     .select("id, letra, texto, imagem_url, imagem_largura")
@@ -258,42 +338,44 @@ export async function responderQuestao(
   const session = await getStudentSession();
   if (!session) return { error: "Não autenticado" };
 
-  const questao_id = formData.get("questao_id") as string;
-  const alternativa_id = formData.get("alternativa_id") as string;
-  const contexto = (formData.get("contexto") as string) || "banco";
-  const aula_id = (formData.get("aula_id") as string) || null;
+  const questao_id = normalizeOptionalId(formData.get("questao_id"));
+  const alternativa_id = normalizeOptionalId(formData.get("alternativa_id"));
 
   if (!questao_id || !alternativa_id) return { error: "Dados inválidos" };
 
-  // Verifica resposta NO SERVIDOR via adminClient — campo "correta" nunca vai ao client
-
   const admin = createAdminClient() as any;
+  const validacao = await validarQuestaoParaResposta(
+    admin,
+    questao_id,
+    formData.get("contexto"),
+    formData.get("aula_id"),
+  );
+  if (!validacao.ok) return { error: validacao.error };
+
   const { data: alt } = await admin
     .from("alternativa")
     .select("correta, questao_id")
     .eq("id", alternativa_id)
-    .single();
+    .maybeSingle();
 
   if (!alt || alt.questao_id !== questao_id) return { error: "Alternativa inválida" };
 
   const correta: boolean = alt.correta === true;
 
-  // Busca alternativa correta para exibir no gabarito
   const { data: altCorreta } = await admin
     .from("alternativa")
     .select("id")
     .eq("questao_id", questao_id)
     .eq("correta", true)
-    .single();
+    .maybeSingle();
 
-  // Registra resposta com contexto
   await admin.from("resposta_aluno").insert({
     aluno_id: session.aluno.id,
     questao_id,
     alternativa_id,
     correta,
-    contexto,
-    aula_id,
+    contexto: validacao.contexto,
+    aula_id: validacao.aula_id,
   });
 
   return { correta, alternativa_correta_id: altCorreta?.id ?? null, questao_id };
@@ -306,6 +388,16 @@ export async function getSolucaoQuestao(questaoId: string) {
   if (!session) return null;
 
   const admin = createAdminClient() as any;
+  const { data: resposta } = await admin
+    .from("resposta_aluno")
+    .select("questao_id")
+    .eq("aluno_id", session.aluno.id)
+    .eq("questao_id", questaoId)
+    .limit(1)
+    .maybeSingle();
+
+  if (!resposta) return null;
+
   const { data } = await admin
     .from("solucao")
     .select("texto, imagem_url, imagem_largura, blocos")
@@ -504,24 +596,33 @@ export async function responderQuestaoAberta(
   const session = await getStudentSession();
   if (!session) return { error: "Não autenticado" };
 
-  const questao_id = formData.get("questao_id") as string;
+  const questao_id = normalizeOptionalId(formData.get("questao_id"));
   const resposta_texto = ((formData.get("resposta_texto") as string) ?? "").trim();
   const imagem_base64 = ((formData.get("imagem_base64") as string) ?? "").trim();
-  const contexto = (formData.get("contexto") as string) || "banco";
-  const aula_id = (formData.get("aula_id") as string) || null;
 
   if (!questao_id || (!resposta_texto && !imagem_base64)) {
     return { error: "Escreva sua resposta ou anexe uma foto antes de enviar." };
   }
 
+  const payloadError = validateRespostaAbertaPayload(resposta_texto, imagem_base64);
+  if (payloadError) return { error: payloadError };
+
   const respostaRegistrada = resposta_texto || "[Resposta enviada por foto]";
 
   const admin = createAdminClient() as any;
+  const validacao = await validarQuestaoParaResposta(
+    admin,
+    questao_id,
+    formData.get("contexto"),
+    formData.get("aula_id"),
+  );
+  if (!validacao.ok) return { error: validacao.error };
 
-  const [{ data: questao }, { data: solucao }] = await Promise.all([
-    admin.from("questao").select("enunciado").eq("id", questao_id).single(),
-    admin.from("solucao").select("texto, blocos").eq("questao_id", questao_id).maybeSingle(),
-  ]);
+  const { data: solucao } = await admin
+    .from("solucao")
+    .select("texto, blocos")
+    .eq("questao_id", questao_id)
+    .maybeSingle();
 
   const blocos =
     (solucao?.blocos as Array<{ tipo: string; conteudo?: string; url?: string }> | null) ?? [];
@@ -539,14 +640,18 @@ export async function responderQuestaoAberta(
     .filter((b) => b.tipo === "imagem" && b.url)
     .map((b) => b.url as string);
 
+  const registroBase = {
+    aluno_id: session.aluno.id,
+    questao_id,
+    resposta_texto: respostaRegistrada,
+    contexto: validacao.contexto,
+    aula_id: validacao.aula_id,
+  };
+
   if (!textoSolucao && imagensSolucao.length === 0) {
     await admin.from("resposta_aluno").insert({
-      aluno_id: session.aluno.id,
-      questao_id,
-      resposta_texto: respostaRegistrada,
+      ...registroBase,
       correta: false,
-      contexto,
-      aula_id,
     });
     return { questao_id };
   }
@@ -555,26 +660,26 @@ export async function responderQuestaoAberta(
   try {
     feedback = imagem_base64
       ? await avaliarFotoAberta(
-          questao?.enunciado ?? "",
+          validacao.questao.enunciado ?? "",
           textoSolucao,
           imagensSolucao,
           imagem_base64,
         )
       : textoSolucao
-        ? await avaliarRespostaAberta(questao?.enunciado ?? "", textoSolucao, resposta_texto)
+        ? await avaliarRespostaAberta(
+            validacao.questao.enunciado ?? "",
+            textoSolucao,
+            resposta_texto,
+          )
         : await avaliarRespostaAbertaComImagem(
-            questao?.enunciado ?? "",
+            validacao.questao.enunciado ?? "",
             imagensSolucao,
             resposta_texto,
           );
   } catch {
     await admin.from("resposta_aluno").insert({
-      aluno_id: session.aluno.id,
-      questao_id,
-      resposta_texto: respostaRegistrada,
+      ...registroBase,
       correta: false,
-      contexto,
-      aula_id,
     });
     return { error: "Avaliação temporariamente indisponível. Resposta registrada." };
   }
@@ -582,13 +687,9 @@ export async function responderQuestaoAberta(
   const correta = feedback.itens.length > 0 && feedback.itens.every((i) => i.status === "correto");
 
   await admin.from("resposta_aluno").insert({
-    aluno_id: session.aluno.id,
-    questao_id,
-    resposta_texto: respostaRegistrada,
+    ...registroBase,
     correta,
     feedback_ia: feedback,
-    contexto,
-    aula_id,
   });
 
   return { feedback, questao_id };
