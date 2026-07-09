@@ -6,10 +6,14 @@ import { getStudentSession } from "@/lib/auth/student-session";
 import {
   avaliarRespostaAberta,
   avaliarRespostaAbertaComImagem,
-  avaliarFotoAberta,
+  transcreverFotoAluno,
 } from "@/lib/ai/groq";
 import type { FeedbackIA } from "@/lib/ai/types";
-import { containsPromptInjection, createPromptInjectionFeedback } from "@/lib/ai/feedback-security";
+import {
+  containsPromptInjection,
+  createInvalidImageFeedback,
+  createPromptInjectionFeedback,
+} from "@/lib/ai/feedback-security";
 import {
   normalizeContextoResposta,
   normalizeOptionalId,
@@ -608,7 +612,8 @@ export async function responderQuestaoAberta(
   const payloadError = validateRespostaAbertaPayload(resposta_texto, imagem_base64);
   if (payloadError) return { error: payloadError };
 
-  const respostaRegistrada = resposta_texto || "[Resposta enviada por foto]";
+  let respostaRegistrada = resposta_texto || "[Resposta enviada por foto]";
+  let respostaParaAvaliar = resposta_texto;
 
   const admin = createAdminClient() as any;
   const validacao = await validarQuestaoParaResposta(
@@ -659,9 +664,45 @@ export async function responderQuestaoAberta(
     return { feedback, questao_id };
   }
 
+  try {
+    if (imagem_base64) {
+      const foto = await transcreverFotoAluno(validacao.questao.enunciado ?? "", imagem_base64);
+      const transcricao = foto.transcricao ? `[Transcrição da foto]\n${foto.transcricao}` : "";
+      respostaRegistrada = [resposta_texto, transcricao || "[Resposta enviada por foto]"]
+        .filter(Boolean)
+        .join("\n\n");
+
+      if (foto.tipo !== "resolucao") {
+        const feedback = createInvalidImageFeedback(validacao.questao.enunciado ?? "", foto.tipo);
+        await admin.from("resposta_aluno").insert({
+          ...registroBase,
+          resposta_texto: respostaRegistrada,
+          correta: false,
+          feedback_ia: feedback,
+        });
+        return { feedback, questao_id };
+      }
+
+      respostaParaAvaliar = [resposta_texto, transcricao].filter(Boolean).join("\n\n");
+      if (containsPromptInjection(respostaParaAvaliar)) {
+        const feedback = createPromptInjectionFeedback(validacao.questao.enunciado ?? "");
+        await admin.from("resposta_aluno").insert({
+          ...registroBase,
+          resposta_texto: respostaRegistrada,
+          correta: false,
+          feedback_ia: feedback,
+        });
+        return { feedback, questao_id };
+      }
+    }
+  } catch {
+    return { error: "Não foi possível avaliar agora. Tente enviar novamente." };
+  }
+
   if (!textoSolucao && imagensSolucao.length === 0) {
     await admin.from("resposta_aluno").insert({
       ...registroBase,
+      resposta_texto: respostaRegistrada,
       correta: false,
     });
     return { questao_id };
@@ -669,24 +710,17 @@ export async function responderQuestaoAberta(
 
   let feedback: FeedbackIA;
   try {
-    feedback = imagem_base64
-      ? await avaliarFotoAberta(
+    feedback = textoSolucao
+      ? await avaliarRespostaAberta(
           validacao.questao.enunciado ?? "",
           textoSolucao,
-          imagensSolucao,
-          imagem_base64,
+          respostaParaAvaliar,
         )
-      : textoSolucao
-        ? await avaliarRespostaAberta(
-            validacao.questao.enunciado ?? "",
-            textoSolucao,
-            resposta_texto,
-          )
-        : await avaliarRespostaAbertaComImagem(
-            validacao.questao.enunciado ?? "",
-            imagensSolucao,
-            resposta_texto,
-          );
+      : await avaliarRespostaAbertaComImagem(
+          validacao.questao.enunciado ?? "",
+          imagensSolucao,
+          respostaParaAvaliar,
+        );
   } catch {
     return { error: "Não foi possível avaliar agora. Tente enviar novamente." };
   }
@@ -695,6 +729,7 @@ export async function responderQuestaoAberta(
 
   await admin.from("resposta_aluno").insert({
     ...registroBase,
+    resposta_texto: respostaRegistrada,
     correta,
     feedback_ia: feedback,
   });

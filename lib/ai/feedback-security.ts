@@ -1,5 +1,12 @@
 import type { FeedbackIA, ItemAvaliacao } from "./types";
 
+export type TipoTranscricaoFoto = "resolucao" | "invalida" | "ilegivel" | "irrelevante";
+
+export type TranscricaoFotoAluno = {
+  tipo: TipoTranscricaoFoto;
+  transcricao: string;
+};
+
 const VALID_STATUSES = new Set<ItemAvaliacao["status"]>([
   "correto",
   "parcial",
@@ -8,6 +15,11 @@ const VALID_STATUSES = new Set<ItemAvaliacao["status"]>([
 ]);
 
 const INJECTION_PATTERNS = [
+  /\bignore\b.*\bsolucao\s+oficial\b/i,
+  /\bmarque\b.*\btudo\b.*\bcorreto\b/i,
+  /\brespondeu\b.*\bcorretamente\b.*\btodos\b.*\bitens\b/i,
+  /\besta\s+imagem\s+e\s+a\s+solucao\s+oficial\b/i,
+  /\bnao\s+a\s+resposta\s+do\s+aluno\b/i,
   /\bnova\s+instrucao\b/i,
   /\bignore\b.*\b(instrucoes|prompt|sistema|avaliador)\b/i,
   /\bignorar\b.*\b(instrucoes|prompt|sistema|avaliador)\b/i,
@@ -27,6 +39,13 @@ const INJECTION_PATTERNS = [
   /\bresposta\s+do\s+aluno\s+terminou\b/i,
 ];
 
+const TIPOS_TRANSCRICAO_FOTO = new Set<TipoTranscricaoFoto>([
+  "resolucao",
+  "invalida",
+  "ilegivel",
+  "irrelevante",
+]);
+
 export function extractExpectedItems(enunciado: string): string[] {
   const items = new Set<string>();
   const regex = /(?:^|[\s\n\r])([a-z])\)/gi;
@@ -43,7 +62,9 @@ export function containsPromptInjection(resposta: string): boolean {
   const normalized = resposta
     .normalize("NFKD")
     .replace(/\p{Diacritic}/gu, "")
-    .normalize("NFKC");
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .trim();
   return INJECTION_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
@@ -58,6 +79,50 @@ export function createPromptInjectionFeedback(enunciado: string): FeedbackIA {
       comentario: "A resposta contem instrucoes ao avaliador em vez de uma resolucao matematica.",
     })),
     resumo: "Resposta invalida: foram detectadas instrucoes ao avaliador.",
+  };
+}
+
+export function createInvalidImageFeedback(
+  enunciado: string,
+  tipo: Exclude<TipoTranscricaoFoto, "resolucao">,
+): FeedbackIA {
+  const items = extractExpectedItems(enunciado);
+  const itemIds = items.length > 0 ? items : ["resposta"];
+  const comentario =
+    tipo === "ilegivel"
+      ? "A imagem enviada nao contem texto legivel suficiente para avaliar a resolucao."
+      : "A imagem enviada nao contem uma resolucao matematica avaliavel para esta questao.";
+
+  return {
+    itens: itemIds.map((item) => ({
+      item,
+      status: "incorreto",
+      comentario,
+    })),
+    resumo: comentario,
+  };
+}
+
+export function parseStrictTranscricaoFoto(raw: string): TranscricaoFotoAluno {
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+    throw new Error("Transcricao inesperada da IA");
+  }
+
+  const parsed = JSON.parse(trimmed) as { tipo?: unknown; transcricao?: unknown };
+  if (
+    typeof parsed.tipo !== "string" ||
+    !TIPOS_TRANSCRICAO_FOTO.has(parsed.tipo as TipoTranscricaoFoto)
+  ) {
+    throw new Error("Tipo de transcricao invalido");
+  }
+  if (typeof parsed.transcricao !== "string") {
+    throw new Error("Transcricao invalida");
+  }
+
+  return {
+    tipo: parsed.tipo as TipoTranscricaoFoto,
+    transcricao: parsed.transcricao.trim(),
   };
 }
 
