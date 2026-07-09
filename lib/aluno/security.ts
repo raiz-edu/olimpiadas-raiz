@@ -50,7 +50,7 @@ export function validateRespostaAbertaPayload(
   imagemBase64: string,
 ): string | null {
   if (respostaTexto.length > RESPOSTA_ABERTA_MAX_CHARS) {
-    return `A resposta deve ter no máximo ${RESPOSTA_ABERTA_MAX_CHARS} caracteres.`;
+    return `Sua resposta excedeu o limite máximo de ${RESPOSTA_ABERTA_MAX_CHARS.toLocaleString("pt-BR")} caracteres. Reduza o texto e envie novamente.`;
   }
 
   if (!imagemBase64) return null;

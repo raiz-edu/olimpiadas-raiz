@@ -9,6 +9,7 @@ import {
   avaliarFotoAberta,
 } from "@/lib/ai/groq";
 import type { FeedbackIA } from "@/lib/ai/types";
+import { containsPromptInjection, createPromptInjectionFeedback } from "@/lib/ai/feedback-security";
 import {
   normalizeContextoResposta,
   normalizeOptionalId,
@@ -648,6 +649,16 @@ export async function responderQuestaoAberta(
     aula_id: validacao.aula_id,
   };
 
+  if (resposta_texto && containsPromptInjection(resposta_texto)) {
+    const feedback = createPromptInjectionFeedback(validacao.questao.enunciado ?? "");
+    await admin.from("resposta_aluno").insert({
+      ...registroBase,
+      correta: false,
+      feedback_ia: feedback,
+    });
+    return { feedback, questao_id };
+  }
+
   if (!textoSolucao && imagensSolucao.length === 0) {
     await admin.from("resposta_aluno").insert({
       ...registroBase,
@@ -677,11 +688,7 @@ export async function responderQuestaoAberta(
             resposta_texto,
           );
   } catch {
-    await admin.from("resposta_aluno").insert({
-      ...registroBase,
-      correta: false,
-    });
-    return { error: "Avaliação temporariamente indisponível. Resposta registrada." };
+    return { error: "Não foi possível avaliar agora. Tente enviar novamente." };
   }
 
   const correta = feedback.itens.length > 0 && feedback.itens.every((i) => i.status === "correto");
