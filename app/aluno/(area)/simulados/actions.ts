@@ -5,6 +5,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { revalidatePath } from "next/cache";
 import { sanitizeRespostasSimulado } from "@/lib/aluno/security";
+import {
+  escolherProjetoVisivelDoSimulado,
+  getSimuladoProjetoIds,
+  isSimuladoDisponivelParaAluno,
+  type AlunoSimuladoAccessContext,
+  type ProjetoAccessRow,
+} from "@/lib/aluno/simulado-access";
 
 const admin = () => createAdminClient() as any;
 
@@ -75,6 +82,100 @@ function normalizarInteiroNaoNegativo(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }
 
+type SimuladoAulaRow = {
+  id: string;
+  titulo: string;
+  tipo: string;
+  polos: string | null;
+  duracao_minutos: number | null;
+  data_hora: string | null;
+  descricao: string | null;
+  publicada: boolean;
+  projeto_id: string | null;
+  projeto_ids: string[] | null;
+  turma_ids: string[] | null;
+  series_elegiveis: string[] | null;
+};
+
+async function getContextoAcessoSimulado(
+  db: any,
+  session: NonNullable<Awaited<ReturnType<typeof getStudentSession>>>,
+): Promise<AlunoSimuladoAccessContext> {
+  const turmaId = (session.aluno as any).turma_id ?? null;
+  let turmaSerie: string | null = null;
+
+  if (turmaId) {
+    const { data: turma } = await db.from("turma").select("serie").eq("id", turmaId).maybeSingle();
+    turmaSerie = turma?.serie ?? null;
+  }
+
+  const { data: inscricoes } = await db
+    .from("inscricao")
+    .select("olimpiada_id")
+    .eq("aluno_id", session.aluno.id)
+    .eq("status", "confirmada");
+
+  return {
+    turmaId,
+    alunoSerie: (session.aluno as any).serie ?? null,
+    turmaSerie,
+    olimpiadaIdsConfirmadas: new Set(
+      (inscricoes ?? [])
+        .map((inscricao: any) => inscricao.olimpiada_id)
+        .filter((id: unknown): id is string => typeof id === "string"),
+    ),
+  };
+}
+
+async function getProjetosPorId(
+  db: any,
+  simulados: SimuladoAulaRow[],
+): Promise<Map<string, ProjetoAccessRow>> {
+  const projetoIds = [...new Set(simulados.flatMap((simulado) => getSimuladoProjetoIds(simulado)))];
+  if (projetoIds.length === 0) return new Map();
+
+  const { data: projetos } = await db
+    .from("preparacao_projeto")
+    .select("id, nome, olimpiada_sigla, olimpiada_id, publicado, ativo")
+    .in("id", projetoIds);
+
+  return new Map((projetos ?? []).map((projeto: ProjetoAccessRow) => [projeto.id, projeto]));
+}
+
+async function getSimuladosPermitidos(
+  db: any,
+  session: NonNullable<Awaited<ReturnType<typeof getStudentSession>>>,
+): Promise<Array<SimuladoAulaRow & { projeto_visivel: ProjetoAccessRow | null }>> {
+  const { data: aulas } = await db
+    .from("preparacao_aula")
+    .select(
+      "id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada, projeto_id, projeto_ids, turma_ids, series_elegiveis",
+    )
+    .eq("tipo", "simulado")
+    .eq("publicada", true);
+
+  const simulados = (aulas ?? []) as SimuladoAulaRow[];
+  if (simulados.length === 0) return [];
+
+  const [contexto, projetosPorId] = await Promise.all([
+    getContextoAcessoSimulado(db, session),
+    getProjetosPorId(db, simulados),
+  ]);
+
+  return simulados
+    .filter((simulado) => isSimuladoDisponivelParaAluno(simulado, contexto, projetosPorId))
+    .map((simulado) => ({
+      ...simulado,
+      projeto_visivel: escolherProjetoVisivelDoSimulado(simulado, contexto, projetosPorId),
+    }))
+    .sort((a, b) => {
+      if (a.data_hora && b.data_hora) return a.data_hora.localeCompare(b.data_hora);
+      if (a.data_hora) return -1;
+      if (b.data_hora) return 1;
+      return a.titulo.localeCompare(b.titulo);
+    });
+}
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export type RespostasSalvas = Record<
@@ -119,53 +220,20 @@ export async function getSimuladosDisponiveis(): Promise<SimuladoDisponivel[]> {
   if (!session) return [];
 
   const db = admin();
+  const todosPermitidos = await getSimuladosPermitidos(db, session);
+  if (!todosPermitidos.length) return [];
 
-  // ── 1. Simulados vinculados a projeto (modelo antigo: projeto_id) ────────────
-  const { data: aulas } = await db
-    .from("preparacao_aula")
-    .select(
-      "id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada, projeto:projeto_id(id, nome, olimpiada_sigla, publicado)",
-    )
-    .eq("tipo", "simulado")
-    .eq("publicada", true)
-    .not("projeto_id", "is", null);
-
-  const porProjeto = (aulas ?? []).filter((a: any) => a.projeto?.publicado);
-
-  // ── 2. Simulados standalone por série (series_elegiveis contém série do aluno) ─
-  const turmaId = (session.aluno as any).turma_id;
-  let porSerie: any[] = [];
-  if (turmaId) {
-    const { data: turmaRow } = await db.from("turma").select("serie").eq("id", turmaId).single();
-    const serie = turmaRow?.serie;
-    if (serie) {
-      const { data: standalone } = await db
-        .from("preparacao_aula")
-        .select("id, titulo, tipo, polos, duracao_minutos, data_hora, descricao, publicada")
-        .eq("tipo", "simulado")
-        .eq("publicada", true)
-        .is("projeto_id", null)
-        .filter("series_elegiveis", "cs", JSON.stringify([serie]));
-      porSerie = standalone ?? [];
-    }
-  }
-
-  const todos = [...porProjeto, ...porSerie.map((a: any) => ({ ...a, projeto: null }))];
-
-  if (!todos.length) return [];
-
-  // Busca sessões do aluno
-  const aulaIds = todos.map((a: any) => a.id);
-  const { data: sessoes } = await db
+  const aulaIdsPermitidos = todosPermitidos.map((a) => a.id);
+  const { data: sessoesPermitidas } = await db
     .from("simulado_sessao")
     .select("*")
     .eq("aluno_id", session.aluno.id)
-    .in("aula_id", aulaIds);
+    .in("aula_id", aulaIdsPermitidos);
 
-  const sessaoMap: Record<string, SimuladoSessao> = {};
-  for (const s of sessoes ?? []) sessaoMap[s.aula_id] = s;
+  const sessaoPermitidaMap: Record<string, SimuladoSessao> = {};
+  for (const s of sessoesPermitidas ?? []) sessaoPermitidaMap[s.aula_id] = s;
 
-  return todos.map((a: any) => ({
+  return todosPermitidos.map((a) => ({
     id: a.id,
     titulo: a.titulo,
     tipo: a.tipo,
@@ -173,9 +241,9 @@ export async function getSimuladosDisponiveis(): Promise<SimuladoDisponivel[]> {
     duracao_minutos: a.duracao_minutos,
     data_hora: a.data_hora,
     descricao: a.descricao,
-    projeto_nome: a.projeto?.nome ?? "",
-    projeto_sigla: a.projeto?.olimpiada_sigla ?? "",
-    sessao: sessaoMap[a.id] ?? null,
+    projeto_nome: a.projeto_visivel?.nome ?? "",
+    projeto_sigla: a.projeto_visivel?.olimpiada_sigla ?? "",
+    sessao: sessaoPermitidaMap[a.id] ?? null,
   }));
 }
 
@@ -191,6 +259,8 @@ export async function getOrCreateSessao(aulaId: string): Promise<{
   if (!session) return null;
 
   const db = admin();
+  const simuladosPermitidos = await getSimuladosPermitidos(db, session);
+  if (!simuladosPermitidos.some((simulado) => simulado.id === aulaId)) return null;
 
   // Busca aula
   const { data: aula } = await db

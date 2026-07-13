@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSimuladosDisponiveis } from "../simulados/actions";
 
 export const metadata = { title: "Início — Plataforma Olímpica" };
 
@@ -44,7 +45,7 @@ export default async function AlunoDashboard() {
   const tresHAtras = new Date(agora.getTime() - 3 * 60 * 60 * 1000);
   const seteDias = new Date(agora.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [respostasResult, proximasAulasResult, proximoSimuladoResult] = await Promise.all([
+  const [respostasResult, proximasAulasResult, simuladosDisponiveis] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any)
       .from("resposta_aluno")
@@ -62,14 +63,7 @@ export default async function AlunoDashboard() {
       .lte("data_hora", seteDias.toISOString())
       .order("data_hora")
       .limit(2),
-    admin
-      .from("preparacao_aula")
-      .select("id, titulo, data_hora")
-      .eq("tipo", "simulado")
-      .eq("publicada", true)
-      .gte("data_hora", agora.toISOString())
-      .order("data_hora")
-      .limit(1),
+    getSimuladosDisponiveis(),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,7 +86,11 @@ export default async function AlunoDashboard() {
     (a: any) => isLiveNow(a.data_hora) || isUpcoming(a.data_hora),
   );
 
-  const proximoSimulado = proximoSimuladoResult.data?.[0] ?? null;
+  const proximoSimulado =
+    simuladosDisponiveis.find(
+      (simulado) =>
+        !simulado.data_hora || isLiveNow(simulado.data_hora) || isUpcoming(simulado.data_hora),
+    ) ?? null;
 
   const kpis = [
     { label: "Respondidas", value: total.toLocaleString("pt-BR"), cls: "text-foreground" },
