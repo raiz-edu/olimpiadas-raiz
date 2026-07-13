@@ -2,19 +2,28 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { criarSimulado, getProjetos } from "../actions";
+import { criarSimulado, getProjetos, getTurmas } from "../actions";
 import { SimuladoForm } from "../simulado-form";
 import { useUser } from "@/lib/auth/context";
 
 type Projeto = { id: string; nome: string; olimpiada_sigla: string; ano_letivo: number };
+type Turma = {
+  id: string;
+  nome: string;
+  serie: string;
+  ano_letivo: number;
+  unidade_nome?: string;
+};
 
 export default function NovoSimuladoPage() {
   const { user } = useUser();
   const [state, action] = useActionState(criarSimulado, null);
   const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [turmas, setTurmas] = useState<Turma[]>([]);
 
   useEffect(() => {
     getProjetos().then(setProjetos);
+    getTurmas().then(setTurmas);
   }, []);
 
   const error = state && "error" in state ? state.error : null;
@@ -34,6 +43,7 @@ export default function NovoSimuladoPage() {
       <SimuladoForm
         action={action}
         projetos={projetos}
+        turmas={turmas}
         submitLabel="Criar simulado"
         error={error}
         isRaiz={user.role === "raiz"}

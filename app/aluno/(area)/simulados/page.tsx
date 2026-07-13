@@ -78,12 +78,18 @@ export default async function SimuladosPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span
-                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
-                        style={{ background: TEAL }}
-                      >
-                        {s.projeto_sigla}
-                      </span>
+                      {s.projeto_sigla ? (
+                        <span
+                          className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+                          style={{ background: TEAL }}
+                        >
+                          {s.projeto_sigla}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold text-violet-400">
+                          Turma
+                        </span>
+                      )}
                       <span
                         className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${presencial ? "bg-violet-500/10 text-violet-400" : "bg-sky-500/10 text-sky-400"}`}
                       >
@@ -96,7 +102,9 @@ export default async function SimuladosPage() {
                       )}
                     </div>
                     <h2 className="text-base font-semibold text-foreground">{s.titulo}</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">{s.projeto_nome}</p>
+                    {s.projeto_nome && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{s.projeto_nome}</p>
+                    )}
                     {s.data_hora && (
                       <p className="text-xs text-muted-foreground mt-1">
                         {fmtDateTime(s.data_hora)}

@@ -63,6 +63,7 @@ export default async function SimuladosPage() {
             <tbody className="divide-y divide-border">
               {simulados.map((s) => {
                 const temProjetos = (s.projeto_ids?.length ?? 0) > 0 || s.projeto_id != null;
+                const temTurmas = (s.turma_ids?.length ?? 0) > 0;
                 const temSeries = (s.series_elegiveis?.length ?? 0) > 0;
 
                 return (
@@ -76,7 +77,11 @@ export default async function SimuladosPage() {
                       {fmtData(s.data_hora)}
                     </td>
                     <td className="px-4 py-3">
-                      {temProjetos ? (
+                      {temTurmas ? (
+                        <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-400">
+                          {s.turma_ids.length} turma{s.turma_ids.length !== 1 ? "s" : ""}
+                        </span>
+                      ) : temProjetos ? (
                         <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-400">
                           {(s.projeto_ids?.length ?? 0) + (s.projeto_id ? 1 : 0)} projeto
                           {(s.projeto_ids?.length ?? 0) + (s.projeto_id ? 1 : 0) !== 1 ? "s" : ""}

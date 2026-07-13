@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   getSimuladoDetalhe,
   getProjetos,
+  getTurmas,
   atualizarSimulado,
   excluirSimulado,
   publicarSimulado,
@@ -22,6 +23,13 @@ import { useUser } from "@/lib/auth/context";
 
 type Simulado = Awaited<ReturnType<typeof getSimuladoDetalhe>>;
 type Projeto = { id: string; nome: string; olimpiada_sigla: string; ano_letivo: number };
+type Turma = {
+  id: string;
+  nome: string;
+  serie: string;
+  ano_letivo: number;
+  unidade_nome?: string;
+};
 type Questao = {
   id: string;
   olimpiada: string;
@@ -49,6 +57,7 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
   const [id, setId] = useState<string | null>(null);
   const [simulado, setSimulado] = useState<Simulado | null>(null);
   const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [turmas, setTurmas] = useState<Turma[]>([]);
   const [busca, setBusca] = useState("");
   const [resultados, setResultados] = useState<Questao[]>([]);
   const [buscando, startBusca] = useTransition();
@@ -65,6 +74,7 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
       setId(pid);
       getSimuladoDetalhe(pid).then(setSimulado);
       getProjetos().then(setProjetos);
+      getTurmas().then(setTurmas);
     });
   }, [params]);
 
@@ -175,6 +185,7 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
       <SimuladoForm
         action={formAction as any}
         projetos={projetos}
+        turmas={turmas}
         defaults={{
           titulo: simulado.titulo,
           modalidade: simulado.link_aula ? "online" : simulado.polos ? "presencial" : "online",
@@ -185,6 +196,7 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
           descricao: simulado.descricao ?? undefined,
           publicada: simulado.publicada,
           projeto_ids: simulado.projeto_ids ?? [],
+          turma_ids: simulado.turma_ids ?? [],
           series_elegiveis: simulado.series_elegiveis ?? [],
         }}
         submitLabel="Salvar alterações"

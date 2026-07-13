@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import type { Permission } from "@/lib/auth/roles";
+import { fromSaoPauloDatetimeLocal } from "@/lib/time/sao-paulo";
 
 const PATH = "/academico/simulados";
 
@@ -20,11 +21,6 @@ function parseDuracao(raw: string | null | undefined): number | null {
   if (parts.length === 3) return (parts[0] ?? 0) * 3600 + (parts[1] ?? 0) * 60 + (parts[2] ?? 0);
   if (parts.length === 2) return (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
   return null;
-}
-
-function withBRT(dt: string | null): string | null {
-  if (!dt) return null;
-  return dt.includes("T") && !dt.includes("+") && !dt.endsWith("Z") ? dt + ":00-03:00" : dt;
 }
 
 async function requireSession(permission?: Permission) {
@@ -45,6 +41,7 @@ export type SimuladoAdmin = {
   descricao: string | null;
   projeto_id: string | null;
   projeto_ids: string[];
+  turma_ids: string[];
   series_elegiveis: string[];
   criado_em: string;
 };
@@ -54,7 +51,7 @@ export async function getSimulados(): Promise<SimuladoAdmin[]> {
   const { data } = await supabase
     .from("preparacao_aula")
     .select(
-      "id, titulo, publicada, data_hora, duracao_minutos, descricao, projeto_id, projeto_ids, series_elegiveis, criado_em",
+      "id, titulo, publicada, data_hora, duracao_minutos, descricao, projeto_id, projeto_ids, turma_ids, series_elegiveis, criado_em",
     )
     .eq("tipo", "simulado")
     .order("criado_em", { ascending: false });
@@ -67,7 +64,7 @@ export async function getSimuladoDetalhe(id: string) {
     .from("preparacao_aula")
     .select(
       `id, titulo, publicada, data_hora, duracao_minutos, link_aula, polos, descricao,
-       projeto_id, projeto_ids, series_elegiveis, criado_em,
+       projeto_id, projeto_ids, turma_ids, series_elegiveis, criado_em,
        questoes:preparacao_aula_questao(
          id, ordem, questao_id, visivel_aluno, questao:questao_id(
            id, olimpiada, nivel, fase, ano, numero, enunciado, topico, subtopico
@@ -115,7 +112,7 @@ export async function criarSimulado(
   if (!titulo) return { error: "Título é obrigatório" };
 
   const modalidade = formData.get("modalidade") as string;
-  const data_hora = withBRT((formData.get("data_hora") as string) || null);
+  const data_hora = fromSaoPauloDatetimeLocal((formData.get("data_hora") as string) || null);
   const duracao = parseDuracao(formData.get("duracao") as string);
   const link = (formData.get("link") as string)?.trim() || null;
   const polos = (formData.get("polos") as string)?.trim() || null;
@@ -123,6 +120,7 @@ export async function criarSimulado(
   // Só o raiz pode publicar; gestor cria sempre despublicado (aguardando aprovação)
   const publicada = session.user.role === "raiz" && formData.get("publicada") === "true";
   const projetoIds = formData.getAll("projeto_ids[]") as string[];
+  const turmaIds = formData.getAll("turma_ids[]") as string[];
   const seriesElegiveis = formData.getAll("series_elegiveis[]") as string[];
 
   const supabase = createAdminClient() as any;
@@ -139,6 +137,7 @@ export async function criarSimulado(
       descricao,
       publicada,
       projeto_ids: projetoIds,
+      turma_ids: turmaIds,
       series_elegiveis: seriesElegiveis,
       ordem: 0,
     })
@@ -161,7 +160,7 @@ export async function atualizarSimulado(
   if (!titulo) return { error: "Título é obrigatório" };
 
   const modalidade = formData.get("modalidade") as string;
-  const data_hora = withBRT((formData.get("data_hora") as string) || null);
+  const data_hora = fromSaoPauloDatetimeLocal((formData.get("data_hora") as string) || null);
   const duracao = parseDuracao(formData.get("duracao") as string);
   const link = (formData.get("link") as string)?.trim() || null;
   const polos = (formData.get("polos") as string)?.trim() || null;
@@ -169,6 +168,7 @@ export async function atualizarSimulado(
   // Só o raiz controla publicação; edição de gestor mantém/torna despublicado
   const publicada = session.user.role === "raiz" && formData.get("publicada") === "true";
   const projetoIds = formData.getAll("projeto_ids[]") as string[];
+  const turmaIds = formData.getAll("turma_ids[]") as string[];
   const seriesElegiveis = formData.getAll("series_elegiveis[]") as string[];
 
   const supabase = createAdminClient() as any;
@@ -184,6 +184,7 @@ export async function atualizarSimulado(
       descricao,
       publicada,
       projeto_ids: projetoIds,
+      turma_ids: turmaIds,
       series_elegiveis: seriesElegiveis,
     })
     .eq("id", id)

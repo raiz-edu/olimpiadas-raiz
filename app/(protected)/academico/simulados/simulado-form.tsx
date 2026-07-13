@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { inputClass, selectClass } from "@/components/ui/form-field";
+import { toSaoPauloDatetimeLocal } from "@/lib/time/sao-paulo";
 
 const SERIES_SEGMENTOS = [
   { label: "EFAI — 1º ao 5º ano", series: ["1º", "2º", "3º", "4º", "5º"] },
@@ -11,10 +12,18 @@ const SERIES_SEGMENTOS = [
 ];
 
 type Projeto = { id: string; nome: string; olimpiada_sigla: string; ano_letivo: number };
+type Turma = {
+  id: string;
+  nome: string;
+  serie: string;
+  ano_letivo: number;
+  unidade_nome?: string;
+};
 
 type SimuladoFormProps = {
   action: (formData: FormData) => void;
   projetos: Projeto[];
+  turmas?: Turma[];
   defaults?: {
     titulo?: string;
     modalidade?: string;
@@ -25,6 +34,7 @@ type SimuladoFormProps = {
     descricao?: string;
     publicada?: boolean;
     projeto_ids?: string[];
+    turma_ids?: string[];
     series_elegiveis?: string[];
   };
   submitLabel?: string;
@@ -37,6 +47,7 @@ type SimuladoFormProps = {
 export function SimuladoForm({
   action,
   projetos,
+  turmas = [],
   defaults = {},
   submitLabel = "Salvar",
   cancelHref = "/academico/simulados",
@@ -46,10 +57,12 @@ export function SimuladoForm({
   const [modalidade, setModalidade] = useState<"online" | "presencial">(
     (defaults.modalidade as "online" | "presencial") ?? "online",
   );
-  const [vinculo, setVinculo] = useState<"projetos" | "series">(
-    (defaults.projeto_ids?.length ?? 0) > 0 || (defaults.series_elegiveis?.length ?? 0) === 0
-      ? "projetos"
-      : "series",
+  const [vinculo, setVinculo] = useState<"projetos" | "turmas" | "series">(
+    (defaults.turma_ids?.length ?? 0) > 0
+      ? "turmas"
+      : (defaults.projeto_ids?.length ?? 0) > 0 || (defaults.series_elegiveis?.length ?? 0) === 0
+        ? "projetos"
+        : "series",
   );
 
   return (
@@ -128,7 +141,7 @@ export function SimuladoForm({
             <input
               name="data_hora"
               type="datetime-local"
-              defaultValue={defaults.data_hora?.slice(0, 16) ?? ""}
+              defaultValue={toSaoPauloDatetimeLocal(defaults.data_hora)}
               className={inputClass}
             />
           </div>
@@ -189,7 +202,7 @@ export function SimuladoForm({
             Quem pode acessar
           </h2>
           <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
-            {(["projetos", "series"] as const).map((v) => (
+            {(["projetos", "turmas", "series"] as const).map((v) => (
               <button
                 key={v}
                 type="button"
@@ -200,7 +213,7 @@ export function SimuladoForm({
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {v === "projetos" ? "Por projeto" : "Por série"}
+                {v === "projetos" ? "Por projeto" : v === "turmas" ? "Por turma" : "Por série"}
               </button>
             ))}
           </div>
@@ -231,6 +244,39 @@ export function SimuladoForm({
                       {p.nome}
                       <span className="ml-1 text-xs text-muted-foreground">
                         ({p.olimpiada_sigla} {p.ano_letivo})
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : vinculo === "turmas" ? (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Alunos das turmas selecionadas poderão acessar este simulado.
+            </p>
+            {turmas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma turma ativa cadastrada.</p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {turmas.map((t) => (
+                  <label
+                    key={t.id}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:border-primary/40 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      name="turma_ids[]"
+                      value={t.id}
+                      defaultChecked={defaults.turma_ids?.includes(t.id)}
+                      className="accent-primary"
+                    />
+                    <span className="text-sm text-foreground">
+                      {t.nome}
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({t.serie} {t.ano_letivo}
+                        {t.unidade_nome ? ` · ${t.unidade_nome}` : ""})
                       </span>
                     </span>
                   </label>

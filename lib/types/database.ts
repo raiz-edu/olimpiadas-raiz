@@ -564,9 +564,13 @@ export type Database = {
       preparacao_aula: {
         Row: {
           id: string;
-          projeto_id: string;
+          projeto_id: string | null;
+          projeto_ids: string[];
+          turma_ids: string[];
+          series_elegiveis: string[];
           titulo: string;
           tipo: "online" | "presencial" | "simulado";
+          modalidade_online: "ao_vivo" | "gravada" | null;
           data_hora: string | null;
           duracao_minutos: number | null;
           link_aula: string | null;
@@ -578,9 +582,13 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          projeto_id: string;
+          projeto_id?: string | null;
+          projeto_ids?: string[];
+          turma_ids?: string[];
+          series_elegiveis?: string[];
           titulo: string;
           tipo: "online" | "presencial" | "simulado";
+          modalidade_online?: "ao_vivo" | "gravada" | null;
           data_hora?: string | null;
           duracao_minutos?: number | null;
           link_aula?: string | null;
@@ -592,9 +600,13 @@ export type Database = {
         };
         Update: {
           id?: string;
-          projeto_id?: string;
+          projeto_id?: string | null;
+          projeto_ids?: string[];
+          turma_ids?: string[];
+          series_elegiveis?: string[];
           titulo?: string;
           tipo?: "online" | "presencial" | "simulado";
+          modalidade_online?: "ao_vivo" | "gravada" | null;
           data_hora?: string | null;
           duracao_minutos?: number | null;
           link_aula?: string | null;
@@ -607,12 +619,20 @@ export type Database = {
         Relationships: [];
       };
       preparacao_aula_questao: {
-        Row: { id: string; aula_id: string; questao_id: string; ordem: number; criado_em: string };
+        Row: {
+          id: string;
+          aula_id: string;
+          questao_id: string;
+          ordem: number;
+          visivel_aluno: boolean;
+          criado_em: string;
+        };
         Insert: {
           id?: string;
           aula_id: string;
           questao_id: string;
           ordem?: number;
+          visivel_aluno?: boolean;
           criado_em?: string;
         };
         Update: {
@@ -620,6 +640,7 @@ export type Database = {
           aula_id?: string;
           questao_id?: string;
           ordem?: number;
+          visivel_aluno?: boolean;
           criado_em?: string;
         };
         Relationships: [];
