@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import type { FeedbackIA, ItemAvaliacao } from "@/lib/ai/types";
+import { RESPOSTA_ABERTA_MAX_CHARS } from "@/lib/aluno/security";
 
 const TEAL = "rgb(91,184,193)";
 
@@ -158,6 +159,7 @@ export function RespostaAbertaInput({
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Escreva aqui a resolução completa da questão (todos os itens)…"
           rows={6}
+          maxLength={RESPOSTA_ABERTA_MAX_CHARS}
           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[rgb(91,184,193)] resize-none mb-2"
         />
 

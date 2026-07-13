@@ -4,8 +4,76 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { revalidatePath } from "next/cache";
+import { sanitizeRespostasSimulado } from "@/lib/aluno/security";
 
 const admin = () => createAdminClient() as any;
+
+async function sanitizarRespostasDoSimulado(
+  db: any,
+  aulaId: string,
+  respostas: RespostasSalvas,
+): Promise<RespostasSalvas> {
+  const { data: aulaQuestoes } = await db
+    .from("preparacao_aula_questao")
+    .select("questao_id, questao:questao_id(id, ativo, status_cadastro)")
+    .eq("aula_id", aulaId)
+    .eq("visivel_aluno", true);
+
+  const questoesPermitidas = new Set<string>();
+  for (const row of aulaQuestoes ?? []) {
+    const questao = Array.isArray(row.questao) ? row.questao[0] : row.questao;
+    if (questao?.ativo === true && questao?.status_cadastro === "publicado") {
+      questoesPermitidas.add(row.questao_id);
+    }
+  }
+
+  const alternativaIds = [
+    ...new Set(
+      Object.values(respostas)
+        .map((r) => r?.alternativa_id)
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0),
+    ),
+  ];
+
+  const alternativasPorId = new Map<string, { id: string; questao_id: string; correta: boolean }>();
+  if (alternativaIds.length > 0) {
+    const { data: alternativas } = await db
+      .from("alternativa")
+      .select("id, questao_id, correta")
+      .in("id", alternativaIds);
+
+    for (const alternativa of alternativas ?? []) {
+      alternativasPorId.set(alternativa.id, alternativa);
+    }
+  }
+
+  const questaoIds = [...questoesPermitidas];
+  const alternativaCorretaPorQuestao = new Map<string, string>();
+  if (questaoIds.length > 0) {
+    const { data: corretas } = await db
+      .from("alternativa")
+      .select("id, questao_id")
+      .in("questao_id", questaoIds)
+      .eq("correta", true);
+
+    for (const correta of corretas ?? []) {
+      if (!alternativaCorretaPorQuestao.has(correta.questao_id)) {
+        alternativaCorretaPorQuestao.set(correta.questao_id, correta.id);
+      }
+    }
+  }
+
+  return sanitizeRespostasSimulado(
+    respostas,
+    questoesPermitidas,
+    alternativasPorId,
+    alternativaCorretaPorQuestao,
+  );
+}
+
+function normalizarInteiroNaoNegativo(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -138,7 +206,7 @@ export async function getOrCreateSessao(aulaId: string): Promise<{
   const { data: aulaQuestoes } = await db
     .from("preparacao_aula_questao")
     .select(
-      "*, questao:questao_id(id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, ativo)",
+      "*, questao:questao_id(id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, ativo, status_cadastro)",
     )
     .eq("aula_id", aulaId)
     .eq("visivel_aluno", true)
@@ -146,7 +214,7 @@ export async function getOrCreateSessao(aulaId: string): Promise<{
 
   const questoes = (aulaQuestoes ?? [])
     .map((aq: any) => aq.questao)
-    .filter((q: any) => q && q.ativo);
+    .filter((q: any) => q && q.ativo && q.status_cadastro === "publicado");
 
   // Pré-carrega alternativas da primeira questão
   const primeiraAlt =
@@ -215,9 +283,22 @@ export async function salvarProgresso(
   const session = await getStudentSession();
   if (!session) return;
   const db = admin();
+  const { data: sessao } = await db
+    .from("simulado_sessao")
+    .select("id, aula_id, status")
+    .eq("id", sessaoId)
+    .eq("aluno_id", session.aluno.id)
+    .maybeSingle();
+  if (!sessao || sessao.status === "concluido") return;
+
+  const respostasSanitizadas = await sanitizarRespostasDoSimulado(db, sessao.aula_id, respostas);
   await db
     .from("simulado_sessao")
-    .update({ tempo_restante: tempoRestante, questao_idx: questaoIdx, respostas })
+    .update({
+      tempo_restante: normalizarInteiroNaoNegativo(tempoRestante),
+      questao_idx: normalizarInteiroNaoNegativo(questaoIdx),
+      respostas: respostasSanitizadas,
+    })
     .eq("id", sessaoId)
     .eq("aluno_id", session.aluno.id);
 }
@@ -233,13 +314,22 @@ export async function pausarSimulado(
   const session = await getStudentSession();
   if (!session) return;
   const db = admin();
+  const { data: sessao } = await db
+    .from("simulado_sessao")
+    .select("id, aula_id, status")
+    .eq("id", sessaoId)
+    .eq("aluno_id", session.aluno.id)
+    .maybeSingle();
+  if (!sessao || sessao.status === "concluido") return;
+
+  const respostasSanitizadas = await sanitizarRespostasDoSimulado(db, sessao.aula_id, respostas);
   await db
     .from("simulado_sessao")
     .update({
       status: "pausado",
-      tempo_restante: tempoRestante,
-      questao_idx: questaoIdx,
-      respostas,
+      tempo_restante: normalizarInteiroNaoNegativo(tempoRestante),
+      questao_idx: normalizarInteiroNaoNegativo(questaoIdx),
+      respostas: respostasSanitizadas,
       pausado_em: new Date().toISOString(),
     })
     .eq("id", sessaoId)
@@ -258,15 +348,25 @@ export async function finalizarSimulado(
   const session = await getStudentSession();
   if (!session) return;
   const db = admin();
+  const { data: sessao } = await db
+    .from("simulado_sessao")
+    .select("id, aula_id, status")
+    .eq("id", sessaoId)
+    .eq("aluno_id", session.aluno.id)
+    .eq("aula_id", aulaId)
+    .maybeSingle();
+  if (!sessao || sessao.status === "concluido") return;
+
+  const respostasSanitizadas = await sanitizarRespostasDoSimulado(db, sessao.aula_id, respostas);
 
   // Registra respostas em resposta_aluno com contexto simulado
-  const inserts = Object.entries(respostas).map(([questao_id, r]) => ({
+  const inserts = Object.entries(respostasSanitizadas).map(([questao_id, r]) => ({
     aluno_id: session.aluno.id,
     questao_id,
     alternativa_id: r.alternativa_id || null,
     correta: r.correta,
     contexto: "simulado",
-    aula_id: aulaId,
+    aula_id: sessao.aula_id,
   }));
 
   if (inserts.length > 0) {
@@ -278,7 +378,7 @@ export async function finalizarSimulado(
     .from("simulado_sessao")
     .update({
       status: "concluido",
-      respostas,
+      respostas: respostasSanitizadas,
       concluido_em: new Date().toISOString(),
     })
     .eq("id", sessaoId)
