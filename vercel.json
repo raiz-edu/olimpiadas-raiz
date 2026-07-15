@@ -2,10 +2,7 @@
   "headers": [
     {
       "source": "/trilha-olimpica.html",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
-      ]
+      "headers": [{ "key": "Content-Type", "value": "text/html; charset=utf-8" }]
     }
   ]
 }
