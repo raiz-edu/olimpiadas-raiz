@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { loginAluno } from "@/app/aluno/login/actions";
 
 const TEAL = "rgb(91,184,193)";
+
+const subscribeNoop = () => () => {};
 
 const ERROS_OAUTH: Record<string, string> = {
   oauth: "Não foi possível autenticar com o Google. Tente novamente.",
@@ -27,10 +29,15 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
 
   // Plataforma embutida em iframe (Painel Pedagógico): o Google proíbe OAuth em
   // contexto embutido, então o login abre em popup e a sessão volta por postMessage.
-  const embutido = () => window.self !== window.top;
+  // useSyncExternalStore: false no server/hydration, valor real no client.
+  const embutido = useSyncExternalStore(
+    subscribeNoop,
+    () => window.self !== window.top,
+    () => false,
+  );
   // popup=1: este documento É o popup de login (erros e consentimento continuam nele)
   const popupMode = searchParams.get("popup") === "1";
-  const [popupBlockedUrl, setPopupBlockedUrl] = useState<string | null>(null);
+  const [popupBloqueado, setPopupBloqueado] = useState(false);
   const [handoffErro, setHandoffErro] = useState(false);
   const handoffEmAndamento = useRef(false);
 
@@ -73,14 +80,16 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
   }, []);
 
   function handleGoogle() {
-    if (embutido()) {
+    if (embutido) {
+      // window.open síncrono dentro do clique conta como gesto do usuário e
+      // não é bloqueado; a URL já é final (OAuth próprio, sem await antes).
       const popupUrl = "/api/auth/google?mode=aluno&popup=1";
       const win = window.open(popupUrl, "olimpiadas-google-login", "popup,width=500,height=650");
       if (!win) {
-        setPopupBlockedUrl(popupUrl);
+        setPopupBloqueado(true);
         return;
       }
-      setPopupBlockedUrl(null);
+      setPopupBloqueado(false);
       setHandoffErro(false);
       setGooglePending(true);
       const timer = setInterval(() => {
@@ -154,17 +163,19 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
         </button>
       )}
 
-      {/* Popup bloqueado pelo navegador (modo embutido) */}
-      {popupBlockedUrl && !needsConsent && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          O navegador bloqueou a janela de login. Permita popups para este site ou{" "}
-          {/* rel="opener" é necessário para a aba devolver a sessão via postMessage */}
-          <a href={popupBlockedUrl} target="_blank" rel="opener" className="font-medium underline">
-            entre por esta aba
-          </a>
-          .
-        </p>
-      )}
+      {/* Expectativa do popup (modo embutido); vira alerta se o popup for bloqueado */}
+      {embutido &&
+        !needsConsent &&
+        (popupBloqueado ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            Seu navegador bloqueou a janela de login. Permita pop-ups para este site e tente
+            novamente.
+          </p>
+        ) : (
+          <p className="text-center text-xs text-muted-foreground">
+            O login abre em uma janela segura do Google.
+          </p>
+        ))}
 
       {/* Falha na troca do handoff pela sessão (modo embutido) */}
       {handoffErro && !needsConsent && (
