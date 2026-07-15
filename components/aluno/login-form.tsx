@@ -25,9 +25,77 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
   const searchParams = useSearchParams();
   const erroOAuth = searchParams.get("erro") ? ERROS_OAUTH[searchParams.get("erro")!] : null;
 
+  // Plataforma embutida em iframe (Painel Pedagógico): o Google proíbe OAuth em
+  // contexto embutido, então o login abre em popup e a sessão volta por postMessage.
+  const embutido = () => window.self !== window.top;
+  // popup=1: este documento É o popup de login (erros e consentimento continuam nele)
+  const popupMode = searchParams.get("popup") === "1";
+  const [popupBlockedUrl, setPopupBlockedUrl] = useState<string | null>(null);
+  const [handoffErro, setHandoffErro] = useState(false);
+  const handoffEmAndamento = useRef(false);
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (window.self === window.top) return;
+      // Segurança: só aceita tokens vindos da própria origem (o popup é nosso).
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as { type?: string; handoff?: string } | null;
+      if (data?.type !== "olimpiadas-auth" || typeof data.handoff !== "string") return;
+      if (handoffEmAndamento.current) return;
+      handoffEmAndamento.current = true;
+
+      // Troca o handoff pela sessão. O particionamento de storage de terceiros
+      // do Chrome impede o iframe de enxergar a sessão criada no popup — o
+      // cookie precisa ser aplicado explicitamente neste contexto.
+      fetch("/api/auth/popup-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handoff: data.handoff }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            window.location.href = "/aluno/dashboard";
+          } else {
+            handoffEmAndamento.current = false;
+            setGooglePending(false);
+            setHandoffErro(true);
+          }
+        })
+        .catch(() => {
+          handoffEmAndamento.current = false;
+          setGooglePending(false);
+          setHandoffErro(true);
+        });
+    }
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   function handleGoogle() {
+    if (embutido()) {
+      const popupUrl = "/api/auth/google?mode=aluno&popup=1";
+      const win = window.open(popupUrl, "olimpiadas-google-login", "popup,width=500,height=650");
+      if (!win) {
+        setPopupBlockedUrl(popupUrl);
+        return;
+      }
+      setPopupBlockedUrl(null);
+      setHandoffErro(false);
+      setGooglePending(true);
+      const timer = setInterval(() => {
+        if (win.closed) {
+          clearInterval(timer);
+          setGooglePending(false);
+        }
+      }, 500);
+      return;
+    }
     setGooglePending(true);
-    window.location.href = "/api/auth/google?mode=aluno";
+    // Dentro do popup, mantém o flag para o fluxo voltar ao handoff.
+    window.location.href = popupMode
+      ? "/api/auth/google?mode=aluno&popup=1"
+      : "/api/auth/google?mode=aluno";
   }
 
   useEffect(() => {
@@ -86,6 +154,25 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
         </button>
       )}
 
+      {/* Popup bloqueado pelo navegador (modo embutido) */}
+      {popupBlockedUrl && !needsConsent && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          O navegador bloqueou a janela de login. Permita popups para este site ou{" "}
+          {/* rel="opener" é necessário para a aba devolver a sessão via postMessage */}
+          <a href={popupBlockedUrl} target="_blank" rel="opener" className="font-medium underline">
+            entre por esta aba
+          </a>
+          .
+        </p>
+      )}
+
+      {/* Falha na troca do handoff pela sessão (modo embutido) */}
+      {handoffErro && !needsConsent && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          Não foi possível concluir o login. Tente novamente.
+        </p>
+      )}
+
       {/* Erro de OAuth (vindo por query param) */}
       {erroOAuth && !needsConsent && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -103,6 +190,8 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
       )}
 
       <form ref={formRef} action={formAction} className="space-y-4">
+        {/* Consentimento dado dentro do popup: a action redireciona ao handoff */}
+        {popupMode && <input type="hidden" name="popup" value="1" />}
         {/* ── Passo 1: credenciais ─────────────────────────────── */}
         {!needsConsent && (
           <>

@@ -52,8 +52,13 @@ export async function GET(request: NextRequest) {
   const savedState = cookieStore.get("_goauth_state")?.value;
   cookieStore.set("_goauth_state", "", { maxAge: 0, path: "/" });
 
+  // Login iniciado em popup (plataforma embutida no Painel Pedagógico):
+  // erros voltam para o login com popup=1 para manter o fluxo dentro do popup.
+  const isPopup = ((state ?? savedState ?? "").split(":")[2] ?? "") === "popup";
+  const popupQS = isPopup ? "&popup=1" : "";
+
   if (!code || !state || state !== savedState) {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
+    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
   }
 
   const mode = state.split(":")[1] ?? "aluno";
@@ -71,7 +76,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
+    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
   }
 
   const tokens = (await tokenRes.json()) as GoogleTokens;
@@ -80,13 +85,13 @@ export async function GET(request: NextRequest) {
   try {
     payload = await verifyIdToken(tokens.id_token);
   } catch {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
+    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
   }
 
   const email = payload.email?.toLowerCase();
 
   if (!email || !payload.email_verified) {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
+    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
   }
 
   const admin = createAdminClient();
@@ -162,7 +167,7 @@ export async function GET(request: NextRequest) {
 
   // ── Portal aluno (default) ───────────────────────────────────────────────
   if (!isAllowedStudentEmail(email)) {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=dominio`);
+    return NextResponse.redirect(`${origin}/aluno/login?erro=dominio${popupQS}`);
   }
 
   let { data: aluno } = await admin
@@ -195,7 +200,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!aluno) {
-    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth`);
+    return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
   }
 
   const marcaSlugHint = getMarcaSlugForEmail(email);
@@ -209,10 +214,14 @@ export async function GET(request: NextRequest) {
   if (!aluno.consentimento_responsavel) {
     if (marcaSlugHint) cookieStore.set("marca_hint", marcaSlugHint, marcaHintOpts);
     cookieStore.set(ALUNO_PENDING_COOKIE, signStudentCookie(aluno.id), cookiePendingOpts());
-    return NextResponse.redirect(`${origin}/aluno/login`);
+    // Em popup, o passo de consentimento acontece no próprio popup (top-level,
+    // cookies funcionam normalmente); após autorizar, a action envia ao handoff.
+    return NextResponse.redirect(`${origin}/aluno/login${isPopup ? "?popup=1" : ""}`);
   }
 
   if (marcaSlugHint) cookieStore.set("marca_hint", marcaSlugHint, marcaHintOpts);
   cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());
-  return NextResponse.redirect(`${origin}/aluno/dashboard`);
+  // Em popup, a sessão foi criada no jar do popup; /auth/popup-callback gera o
+  // token de handoff e o entrega ao iframe via postMessage.
+  return NextResponse.redirect(`${origin}${isPopup ? "/auth/popup-callback" : "/aluno/dashboard"}`);
 }

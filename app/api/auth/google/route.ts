@@ -5,10 +5,11 @@ import { randomBytes } from "crypto";
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get("mode") ?? "aluno";
+  const isPopup = request.nextUrl.searchParams.get("popup") === "1";
   const origin = request.nextUrl.origin;
 
   const nonce = randomBytes(16).toString("hex");
-  const state = `${nonce}:${mode}`;
+  const state = `${nonce}:${mode}${isPopup ? ":popup" : ""}`;
 
   const cookieStore = await cookies();
   cookieStore.set("_goauth_state", state, {
