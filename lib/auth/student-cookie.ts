@@ -34,6 +34,35 @@ export function cookieSessionOpts() {
   };
 }
 
+/**
+ * Variante para sessão criada dentro do iframe (Painel Pedagógico).
+ * SameSite=None + Partitioned (CHIPS): com o particionamento de storage de
+ * terceiros do Chrome, cookies Lax não são enviados em contexto embutido.
+ */
+export function cookieSessionEmbedOpts() {
+  return { ...cookieSessionOpts(), sameSite: "none" as const, partitioned: true };
+}
+
+// ── Handoff do login em popup ─────────────────────────────────────────────────
+// O OAuth do Google roda num popup top-level; o token de handoff (curta duração,
+// propósito exclusivo) é entregue ao iframe via postMessage e trocado pela
+// sessão em /api/auth/popup-session.
+
+const HANDOFF_TTL_MS = 60 * 1000;
+
+export function signPopupHandoff(alunoId: string): string {
+  return signStudentCookie(`popup:${alunoId}:${Date.now() + HANDOFF_TTL_MS}`);
+}
+
+export function verifyPopupHandoff(signed: string): string | null {
+  const value = verifyStudentCookie(signed);
+  if (!value) return null;
+  const [tag, alunoId, exp] = value.split(":");
+  if (tag !== "popup" || !alunoId || !exp) return null;
+  if (Date.now() > Number(exp)) return null;
+  return alunoId;
+}
+
 export function cookiePendingOpts() {
   return { httpOnly: true, secure: true, sameSite: "lax" as const, maxAge: 60 * 10, path: "/" };
 }

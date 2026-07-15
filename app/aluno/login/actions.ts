@@ -78,6 +78,9 @@ export async function loginAluno(
     cookieStore.delete(ALUNO_PENDING_COOKIE);
     cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(pendingAlunoId), cookieSessionOpts());
     await adminClient.rpc("registrar_login_aluno", { p_aluno_id: pendingAlunoId });
+    // Consentimento dado dentro do popup de login (plataforma embutida):
+    // segue para o handoff que devolve a sessão ao iframe via postMessage.
+    if (formData.get("popup") === "1") redirect("/auth/popup-callback");
     redirect("/aluno/dashboard");
   }
 

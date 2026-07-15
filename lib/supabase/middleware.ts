@@ -8,6 +8,10 @@ function getRouteAccess(pathname: string) {
   const isStaffCallback = pathname.startsWith("/auth/callback");
   const isAcceptInvite = pathname.startsWith("/aceitar-convite");
   const isGoogleOAuth = pathname.startsWith("/api/auth/google");
+  // Login Google em popup (plataforma embutida no Painel Pedagógico):
+  // handoff da sessão do aluno — não há sessão Supabase nesse fluxo.
+  const isPopupAuth =
+    pathname.startsWith("/auth/popup-callback") || pathname.startsWith("/api/auth/popup-session");
 
   return {
     isPublicPath:
@@ -16,7 +20,8 @@ function getRouteAccess(pathname: string) {
       isAlunoArea ||
       isStaffCallback ||
       isAcceptInvite ||
-      isGoogleOAuth,
+      isGoogleOAuth ||
+      isPopupAuth,
   };
 }
 
