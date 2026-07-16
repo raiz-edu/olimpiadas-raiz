@@ -1,179 +1,167 @@
 import { Reveal } from "./reveal";
+import { CountUp, BarraAnimada } from "./count-up";
 
-// ─── Fontes oficiais ──────────────────────────────────────────────────────────
+// Todas as informações vêm de editais e páginas oficiais (pesquisa verificada
+// em 16/07/2026). As fontes são indicadas no texto, sem links externos — a
+// experiência mantém o usuário na plataforma.
 
-const F = {
-  fuvest: "https://www.fuvest.br/olimpiadas/",
-  comvest: "https://www.comvest.unicamp.br/ingresso-2026/vagas-olimpicas-2026/",
-  vunesp: "https://www.vunesp.com.br/VNSP2510",
-  unesp: "https://vestibular.unesp.br/",
-  impatech:
-    "https://impatech.edu.br/wp-content/uploads/2025/10/Edital-IMPA-Tech-2026-versao-final-2025-10-23site.pdf",
-  ufabc: "https://prograd.ufabc.edu.br/pdf/edital_58_2025_ingresso_vagas_olimpicas_2026.pdf",
-  ufc: "https://olimpiadas.prograd.ufc.br",
-  unifei: "https://prg.unifei.edu.br/cops/vagas-olimpicas/",
-  ufms: "https://ingresso.ufms.br/olimpiadas-conhecimento/",
-  unb: "https://noticias.unb.br/ensino/8634-unb-institui-vagas-extraordinarias-para-medalhistas-de-competicoes-do-conhecimento-e-atletas-de-alto-rendimento",
-  insper:
-    "https://www.insper.edu.br/content/dam/insper-portal/documentos/vestibular/vestibular-26-2/Edital%202026-2.pdf",
-  fgv: "https://vestibular.fgv.br/en/undergraduate/admission-forms/knowledge-olympics",
-  fgvCdmc: "https://cdmc.fgv.br/selecao-de-talentos",
-  mitOlympians: "https://mitadmissions.org/blogs/entry/mit_olympians/",
-  mitNeedBlind: "https://mitadmissions.org/help/faq/need-blind-admissions/",
-  impaMit: "https://impa.br/en_US/noticias/medalhistas-da-obmep-sao-aprovados-no-prestigiado-mit/",
-  cambridgeStep: "https://www.undergraduate.study.cam.ac.uk/apply/after/sixth-term-exam-STEP",
-  nus: "https://www.nus.edu.sg/oam/admissions/aptitude-based-admissions",
-  nusComputing: "https://www.comp.nus.edu.sg/programmes/ug/exemptions/olympiad/",
-  waterloo: "https://cs.uwaterloo.ca/future-undergraduate-students/applying-admissions",
-  ethFaq:
-    "https://ethz.ch/en/studies/bachelor/application/non-swiss-matriculation-certificate/faq.html",
-  camara: "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2380083",
-  obmRoundup:
-    "https://www.obm.org.br/2025/11/19/universidades-ampliam-vagas-olimpicas-para-2026-e-reforcam-valorizacao-de-medalhistas/",
-};
-
-function Fonte({ href, children }: { href: string; children: React.ReactNode }) {
+function Fonte({ children }: { children: React.ReactNode }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-slate-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-slate-300"
-    >
-      {children} ↗
-    </a>
+    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+      Fonte: {children}
+    </span>
   );
 }
 
-function Kicker({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-violet-400">{children}</p>
-  );
+function Kicker({
+  children,
+  cor = "text-violet-400",
+}: {
+  children: React.ReactNode;
+  cor?: string;
+}) {
+  return <p className={`text-[11px] font-black uppercase tracking-[0.35em] ${cor}`}>{children}</p>;
 }
 
 // ─── Dados narrativos ─────────────────────────────────────────────────────────
 
-const VAGAS_2026: { n: string; uni: string; extra: string; fonte: string; fonteLabel: string }[] = [
+const VAGAS_2026: {
+  n: number;
+  uni: string;
+  extra: string;
+  fonte: string;
+  cor: string;
+  glow: string;
+}[] = [
   {
-    n: "451",
+    n: 451,
     uni: "UNESP",
     extra: "o maior programa do país",
-    fonte: F.vunesp,
-    fonteLabel: "Vunesp",
+    fonte: "Vunesp",
+    cor: "text-emerald-400",
+    glow: "rgba(52,211,153,.35)",
   },
-  { n: "234", uni: "USP", extra: "100+ cursos, 7 campi", fonte: F.fuvest, fonteLabel: "Fuvest" },
-  { n: "133", uni: "UNICAMP", extra: "37 cursos", fonte: F.comvest, fonteLabel: "Comvest" },
-  { n: "104", uni: "UFC", extra: "41 cursos", fonte: F.ufc, fonteLabel: "UFC" },
   {
-    n: "80",
+    n: 234,
+    uni: "USP",
+    extra: "100+ cursos, 7 campi",
+    fonte: "Fuvest",
+    cor: "text-violet-400",
+    glow: "rgba(167,139,250,.35)",
+  },
+  {
+    n: 133,
+    uni: "UNICAMP",
+    extra: "37 cursos",
+    fonte: "Comvest",
+    cor: "text-amber-400",
+    glow: "rgba(251,191,36,.35)",
+  },
+  {
+    n: 104,
+    uni: "UFC",
+    extra: "41 cursos",
+    fonte: "UFC/Prograd",
+    cor: "text-sky-400",
+    glow: "rgba(56,189,248,.35)",
+  },
+  {
+    n: 80,
     uni: "IMPA Tech",
     extra: "80% das vagas do curso",
-    fonte: F.impatech,
-    fonteLabel: "Edital",
+    fonte: "Edital IMPA Tech 2026",
+    cor: "text-blue-400",
+    glow: "rgba(96,165,250,.35)",
   },
   {
-    n: "20",
+    n: 20,
     uni: "UFABC",
     extra: "bacharelados interdisciplinares",
-    fonte: F.ufabc,
-    fonteLabel: "Edital",
+    fonte: "Edital UFABC 58/2025",
+    cor: "text-rose-400",
+    glow: "rgba(251,113,133,.35)",
   },
 ];
 
-const REGRAS_RESUMO: {
-  uni: string;
-  regra: string;
-  fonte: string;
-  fonteLabel: string;
-}[] = [
+const REGRAS_RESUMO: { uni: string; medalha: string; regra: string; fonte: string }[] = [
   {
     uni: "USP",
+    medalha: "🥇",
     regra:
       "Pontos por medalha: ouro internacional vale 6, bronze nacional vale 1. Valem os 2 últimos anos, no Ensino Médio. Inscrição gratuita em janeiro.",
-    fonte: F.fuvest,
-    fonteLabel: "Fuvest",
+    fonte: "Fuvest",
   },
   {
     uni: "UNICAMP",
+    medalha: "🏅",
     regra: "28 competições aceitas, da OBMEP à IMO, pontuadas por abrangência. Sem vestibular.",
-    fonte: F.comvest,
-    fonteLabel: "Comvest",
+    fonte: "Comvest",
   },
   {
     uni: "UFC",
+    medalha: "🥉",
     regra:
       "Uma medalha (ouro, prata ou bronze) de 2022 a 2025 basta para concorrer — âmbito local, nacional ou internacional.",
-    fonte: F.ufc,
-    fonteLabel: "UFC",
+    fonte: "UFC/Prograd",
   },
   {
     uni: "IMPA Tech",
+    medalha: "🎓",
     regra:
-      "Gratuito, com alojamento, alimentação e passagem. Seleção por dinâmicas e entrevistas para medalhistas de OBMEP, OBM, OBFEP, OBQ e OBI.",
-    fonte: F.impatech,
-    fonteLabel: "Edital 2026",
+      "Gratuito, com alojamento, alimentação e passagem aérea. Seleção por dinâmicas e entrevistas para medalhistas de OBMEP, OBM, OBFEP, OBQ e OBI.",
+    fonte: "Edital IMPA Tech 2026",
   },
   {
     uni: "UnB",
+    medalha: "🆕",
     regra:
       "Vagas extraordinárias aprovadas em julho de 2026 (Resolução CEPE 129/2026) — medalhistas do EM com nota de redação. Primeiro edital a caminho.",
-    fonte: F.unb,
-    fonteLabel: "UnB Notícias",
+    fonte: "UnB Notícias",
   },
   {
     uni: "Insper e FGV",
+    medalha: "💎",
     regra:
       "Privadas com via olímpica: no Insper, medalhista faz só a redação; na FGV, o 1º colocado da modalidade ganha bolsa de 100%.",
-    fonte: F.fgv,
-    fonteLabel: "FGV",
+    fonte: "Editais Insper 2026.2 e FGV 1º/2026",
   },
 ];
 
-export type ImprensaItem = { veiculo: string; titulo: string; data: string; url: string };
-
-// Reportagens de grande circulação — pesquisa verificada em 16/07/2026
-const IMPRENSA: ImprensaItem[] = [
+const IMPRENSA: { veiculo: string; titulo: string; data: string }[] = [
   {
     veiculo: "CNN Brasil",
     titulo: "USP oferece 234 vagas para medalhistas de olimpíadas",
     data: "dez/2025",
-    url: "https://www.cnnbrasil.com.br/educacao/usp-oferece-234-vagas-para-medalhistas-de-olimpiadas/",
   },
   {
     veiculo: "CNN Brasil",
     titulo: "Unicamp 2026: lista de aprovados inclui as vagas olímpicas",
     data: "mar/2026",
-    url: "https://www.cnnbrasil.com.br/educacao/unicamp-2026-veja-lista-de-aprovados-da-5a-chamada-enem-e-vagas-olimpicas/",
   },
   {
     veiculo: "G1",
     titulo: "IMPA terá primeiro curso de graduação, e de graça, no Porto Maravalley",
     data: "nov/2022",
-    url: "https://g1.globo.com/rj/rio-de-janeiro/noticia/2022/11/17/rio-lanca-polo-de-desenvolvimento-tecnologico-para-gerar-mais-de-5-mil-empregos-impa-tera-primeiro-curso-de-graduacao-e-de-graca.ghtml",
   },
   {
     veiculo: "Agência Brasil",
     titulo: "Faculdade do IMPA usa olimpíada de conhecimento para selecionar alunos",
     data: "abr/2024",
-    url: "https://agenciabrasil.ebc.com.br/educacao/noticia/2024-04/faculdade-do-impa-usa-olimpiada-de-conhecimento-para-selecionar-alunos",
   },
   {
     veiculo: "O Povo",
     titulo: "Cearense é aprovado no MIT aos 18 anos, após ~30 medalhas em olimpíadas",
     data: "mar/2019",
-    url: "https://www.opovo.com.br/noticias/fortaleza/2019/03/21/cearense-e-aprovado-no-mit-aos-18-anos.html",
   },
   {
     veiculo: "CNN Brasil",
     titulo: "OBMEP bate recorde e medalhas abrem portas para IMPA Tech, USP, Unicamp e Unesp",
     data: "dez/2024",
-    url: "https://www.cnnbrasil.com.br/educacao/obmep-divulga-resultado-dos-medalhistas-acesse-lista/",
   },
   {
     veiculo: "Agência Câmara",
     titulo: "Comissão aprova reserva de vagas em universidades para olímpicos (PL 3943/23)",
     data: "nov/2024",
-    url: "https://www.camara.leg.br/noticias/1112816-comissao-aprova-reserva-de-vagas-em-universidades-para-estudantes-que-participaram-de-olimpiadas-cientificas/",
   },
 ];
 
@@ -181,23 +169,46 @@ const IMPRENSA: ImprensaItem[] = [
 
 export function TrilhaOlimpica() {
   return (
-    <article className="bg-[#0b1120] text-slate-200" style={{ colorScheme: "dark" }}>
-      <div className="mx-auto max-w-2xl space-y-24 px-6 py-16 sm:space-y-32 sm:py-24">
+    <article
+      className="relative overflow-hidden bg-[#0b1120] text-slate-200"
+      style={{ colorScheme: "dark" }}
+    >
+      {/* Brilhos de fundo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: [
+            "radial-gradient(600px 400px at 80% 0%, rgba(168,85,247,.14), transparent 70%)",
+            "radial-gradient(500px 380px at 10% 28%, rgba(245,158,11,.10), transparent 70%)",
+            "radial-gradient(560px 420px at 90% 62%, rgba(56,189,248,.10), transparent 70%)",
+            "radial-gradient(520px 400px at 15% 95%, rgba(34,197,94,.10), transparent 70%)",
+          ].join(", "),
+        }}
+      />
+
+      <div className="relative mx-auto max-w-2xl space-y-24 px-6 py-16 sm:space-y-28 sm:py-24">
         {/* ── Abertura ─────────────────────────────────────────────── */}
         <header className="space-y-6">
           <Reveal>
-            <Kicker>Especial · A Trilha Olímpica</Kicker>
+            <Kicker>🏅 Especial · A Trilha Olímpica</Kicker>
           </Reveal>
           <Reveal delay={100}>
-            <h1 className="font-serif text-5xl leading-[1.05] text-slate-50 sm:text-6xl">
-              A medalha é<br />o ingresso.
+            <h1 className="font-serif text-5xl leading-[1.02] text-slate-50 sm:text-7xl">
+              A medalha é{" "}
+              <span
+                className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent"
+                style={{ textShadow: "none" }}
+              >
+                o ingresso.
+              </span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
             <p className="text-lg leading-relaxed text-slate-400">
               Universidades do Brasil e do mundo reservam vagas, bolsas integrais e portas de
               entrada próprias para quem se destaca nas olimpíadas do conhecimento. Esta é a trilha
-              — com cada regra ligada à sua fonte oficial.
+              — cada informação com sua fonte oficial.
             </p>
           </Reveal>
           <Reveal delay={300}>
@@ -208,7 +219,7 @@ export function TrilhaOlimpica() {
         </header>
 
         {/* ── O número ─────────────────────────────────────────────── */}
-        <section className="space-y-8">
+        <section className="space-y-10">
           <Reveal>
             <p className="text-lg leading-relaxed text-slate-400">
               Você passou anos resolvendo problemas que quase ninguém consegue. O que talvez ninguém
@@ -216,20 +227,41 @@ export function TrilhaOlimpica() {
             </p>
           </Reveal>
           <Reveal delay={100}>
-            <p className="font-serif text-7xl tabular-nums text-amber-400 sm:text-8xl">1.000+</p>
-            <p className="mt-1 text-sm uppercase tracking-widest text-slate-500">
+            <p
+              className="font-serif text-8xl tabular-nums sm:text-9xl"
+              style={{ textShadow: "0 0 60px rgba(251,191,36,.45)" }}
+            >
+              <CountUp
+                value={1000}
+                suffix="+"
+                className="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent"
+              />
+            </p>
+            <p className="mt-2 text-sm font-bold uppercase tracking-widest text-slate-400">
               vagas universitárias para medalhistas — sem vestibular
             </p>
           </Reveal>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-slate-800 pt-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {VAGAS_2026.map((v, i) => (
               <Reveal key={v.uni} delay={i * 80}>
-                <p className="font-serif text-4xl tabular-nums text-slate-50">{v.n}</p>
-                <p className="mt-0.5 text-sm font-semibold text-slate-300">{v.uni}</p>
-                <p className="text-xs text-slate-500">{v.extra}</p>
-                <p className="mt-1 text-xs">
-                  <Fonte href={v.fonte}>{v.fonteLabel}</Fonte>
-                </p>
+                <div
+                  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+                  style={{
+                    boxShadow: `inset 0 1px 0 rgba(255,255,255,.04), 0 0 40px -18px ${v.glow}`,
+                  }}
+                >
+                  <p
+                    className={`font-serif text-5xl tabular-nums ${v.cor}`}
+                    style={{ textShadow: `0 0 30px ${v.glow}` }}
+                  >
+                    <CountUp value={v.n} />
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-slate-100">{v.uni}</p>
+                  <p className="text-xs text-slate-500">{v.extra}</p>
+                  <p className="mt-2">
+                    <Fonte>{v.fonte}</Fonte>
+                  </p>
+                </div>
               </Reveal>
             ))}
           </div>
@@ -238,20 +270,23 @@ export function TrilhaOlimpica() {
         {/* ── Como funciona ────────────────────────────────────────── */}
         <section className="space-y-8">
           <Reveal>
-            <Kicker>Como funciona</Kicker>
-            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-4xl">
+            <Kicker cor="text-emerald-400">Como funciona</Kicker>
+            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-5xl">
               Cada universidade, uma porta diferente
             </h2>
           </Reveal>
-          <div className="divide-y divide-slate-800/80">
+          <div className="space-y-4">
             {REGRAS_RESUMO.map((r, i) => (
               <Reveal key={r.uni} delay={i * 60}>
-                <div className="grid gap-1 py-5 sm:grid-cols-[140px_1fr] sm:gap-6">
-                  <p className="font-semibold text-slate-100">{r.uni}</p>
+                <div className="flex gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+                  <span className="text-3xl" aria-hidden="true">
+                    {r.medalha}
+                  </span>
                   <div>
-                    <p className="text-[15px] leading-relaxed text-slate-400">{r.regra}</p>
-                    <p className="mt-1 text-xs">
-                      <Fonte href={r.fonte}>{r.fonteLabel}</Fonte>
+                    <p className="font-bold text-slate-50">{r.uni}</p>
+                    <p className="mt-1 text-[15px] leading-relaxed text-slate-400">{r.regra}</p>
+                    <p className="mt-2">
+                      <Fonte>{r.fonte}</Fonte>
                     </p>
                   </div>
                 </div>
@@ -260,10 +295,8 @@ export function TrilhaOlimpica() {
           </div>
           <Reveal>
             <p className="text-sm leading-relaxed text-slate-500">
-              UNIFEI (<Fonte href={F.unifei}>pioneira entre as federais</Fonte>) e UFMS (
-              <Fonte href={F.ufms}>ingresso por olimpíadas</Fonte>) mantêm programas próprios com
-              editais anuais. O panorama completo do movimento das universidades está na{" "}
-              <Fonte href={F.obmRoundup}>OBM</Fonte>.
+              UNIFEI — a pioneira entre as federais — e UFMS mantêm programas próprios com editais
+              anuais. <Fonte>UNIFEI/COPS e UFMS/Ingresso</Fonte>
             </p>
           </Reveal>
         </section>
@@ -271,16 +304,16 @@ export function TrilhaOlimpica() {
         {/* ── Vagas sobram ─────────────────────────────────────────── */}
         <section className="space-y-8">
           <Reveal>
-            <Kicker>O paradoxo</Kicker>
-            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-4xl">
-              A maioria dessas vagas fica vazia
+            <Kicker cor="text-amber-400">O paradoxo</Kicker>
+            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-5xl">
+              A maioria dessas vagas fica <span className="text-amber-400">vazia</span>
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-slate-400">
               Nos históricos divulgados pelas próprias universidades, o aproveitamento das vagas
               olímpicas é baixo — por puro desconhecimento dos estudantes.
             </p>
           </Reveal>
-          <div className="space-y-5">
+          <div className="space-y-6">
             {[
               { uni: "UNESP", usado: "137 de 863 vagas desde 2020", pct: 16 },
               { uni: "UNICAMP", usado: "267 de 564 vagas em 5 edições", pct: 47 },
@@ -288,21 +321,23 @@ export function TrilhaOlimpica() {
             ].map((b, i) => (
               <Reveal key={b.uni} delay={i * 100}>
                 <div className="flex items-baseline justify-between text-sm">
-                  <span className="font-semibold text-slate-200">{b.uni}</span>
+                  <span className="font-bold text-slate-100">{b.uni}</span>
                   <span className="text-slate-500">{b.usado}</span>
                 </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-800">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300"
-                    style={{ width: `${b.pct}%` }}
+                <div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-800">
+                  <BarraAnimada
+                    pct={b.pct}
+                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-400"
                   />
                 </div>
-                <p className="mt-1 text-right text-xs tabular-nums text-amber-400">{b.pct}%</p>
+                <p className="mt-1.5 text-right font-serif text-2xl tabular-nums text-amber-400">
+                  <CountUp value={b.pct} suffix="%" duration={1200} />
+                </p>
               </Reveal>
             ))}
           </div>
           <Reveal>
-            <p className="border-l-2 border-amber-400/60 pl-4 font-serif text-xl italic leading-relaxed text-slate-300">
+            <p className="rounded-2xl border border-amber-400/30 bg-amber-400/5 p-5 font-serif text-xl italic leading-relaxed text-amber-100/90 sm:text-2xl">
               Quem conhece as regras compete por vagas que a maioria nem sabe que existem.
             </p>
           </Reveal>
@@ -311,50 +346,55 @@ export function TrilhaOlimpica() {
         {/* ── Exterior ─────────────────────────────────────────────── */}
         <section className="space-y-8">
           <Reveal>
-            <Kicker>E no exterior</Kicker>
-            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-4xl">
-              Do MIT a Singapura
+            <Kicker cor="text-sky-400">E no exterior</Kicker>
+            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-5xl">
+              Do MIT a Singapura 🌍
             </h2>
           </Reveal>
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Reveal>
-              <p className="text-[15px] leading-relaxed text-slate-400">
-                <strong className="text-slate-100">MIT, Harvard e Princeton</strong> avaliam
-                candidatos de forma holística — e uma medalha internacional é um dos sinais mais
-                fortes que existem: o blog oficial de admissões do MIT celebra seus{" "}
-                <Fonte href={F.mitOlympians}>“MIT Olympians”</Fonte>. As três são{" "}
-                <em>need-blind</em> com bolsa integral por necessidade, inclusive para estrangeiros
-                (<Fonte href={F.mitNeedBlind}>MIT Admissions</Fonte>).
-              </p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+                <p className="text-[15px] leading-relaxed text-slate-400">
+                  <strong className="text-slate-50">MIT, Harvard e Princeton</strong> avaliam
+                  candidatos de forma holística — e uma medalha internacional é um dos sinais mais
+                  fortes que existem: o blog oficial de admissões do MIT celebra seus{" "}
+                  <em>“MIT Olympians”</em>. As três dão <em>bolsa integral por necessidade</em>,
+                  inclusive para estrangeiros. <Fonte>MIT Admissions</Fonte>
+                </p>
+              </div>
             </Reveal>
             <Reveal>
-              <p className="text-[15px] leading-relaxed text-slate-400">
-                Não é teoria: em 2019, os medalhistas da OBMEP{" "}
-                <strong className="text-slate-100">Pedro Sponchiado</strong> (ouro na IMO) e{" "}
-                <strong className="text-slate-100">Orisvaldo Salviano Neto</strong> (bronze na IChO)
-                entraram no MIT com bolsa integral (<Fonte href={F.impaMit}>IMPA</Fonte>).
-              </p>
+              <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/5 p-5">
+                <p className="text-[15px] leading-relaxed text-slate-300">
+                  🇧🇷 Não é teoria: em 2019, os medalhistas da OBMEP{" "}
+                  <strong className="text-emerald-300">Pedro Sponchiado</strong> (ouro na IMO) e{" "}
+                  <strong className="text-emerald-300">Orisvaldo Salviano Neto</strong> (bronze na
+                  IChO) entraram no MIT com bolsa integral. <Fonte>IMPA</Fonte>
+                </p>
+              </div>
             </Reveal>
             <Reveal>
-              <p className="text-[15px] leading-relaxed text-slate-400">
-                <strong className="text-slate-100">NUS</strong> (Singapura) cita medalhas de IMO,
-                IPhO, IChO, IOI e IBO nominalmente na regra de admissão por aptidão (
-                <Fonte href={F.nus}>NUS</Fonte>), com isenção de disciplinas para medalhistas de IOI
-                em Computing (<Fonte href={F.nusComputing}>NUS Computing</Fonte>).{" "}
-                <strong className="text-slate-100">Waterloo</strong> (Canadá) documenta os contests
-                Euclid e CCC como critério em Computer Science (
-                <Fonte href={F.waterloo}>Waterloo CS</Fonte>).
-              </p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+                <p className="text-[15px] leading-relaxed text-slate-400">
+                  <strong className="text-slate-50">NUS</strong> (Singapura) cita medalhas de IMO,
+                  IPhO, IChO, IOI e IBO nominalmente na regra de admissão por aptidão — com isenção
+                  de disciplinas para medalhistas de IOI em Computing.{" "}
+                  <strong className="text-slate-50">Waterloo</strong> (Canadá) usa os contests
+                  Euclid e CCC como critério documentado em Computer Science.{" "}
+                  <Fonte>NUS Admissions e Waterloo CS</Fonte>
+                </p>
+              </div>
             </Reveal>
             <Reveal>
-              <p className="text-[15px] leading-relaxed text-slate-400">
-                No <strong className="text-slate-100">Reino Unido</strong>, a olimpíada prepara para
-                o que realmente decide: o STEP de Cambridge (
-                <Fonte href={F.cambridgeStep}>Cambridge</Fonte>), o MAT de Oxford e as entrevistas.
-                E um alerta honesto: a <strong className="text-slate-100">ETH Zurich</strong> afirma
-                que prêmios de olimpíada <em>não</em> são considerados na admissão (
-                <Fonte href={F.ethFaq}>ETH FAQ</Fonte>) — lá, o caminho é o exame de admissão.
-              </p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+                <p className="text-[15px] leading-relaxed text-slate-400">
+                  No <strong className="text-slate-50">Reino Unido</strong>, a olimpíada prepara
+                  para o que decide: o STEP de Cambridge, o MAT de Oxford e as entrevistas. E um
+                  alerta honesto: a <strong className="text-slate-50">ETH Zurich</strong> (Suíça)
+                  afirma que prêmios de olimpíada <em>não</em> contam na admissão — lá, o caminho é
+                  o exame. <Fonte>Cambridge Admissions e ETH Zurich FAQ</Fonte>
+                </p>
+              </div>
             </Reveal>
           </div>
         </section>
@@ -362,64 +402,65 @@ export function TrilhaOlimpica() {
         {/* ── O futuro ─────────────────────────────────────────────── */}
         <section className="space-y-6">
           <Reveal>
-            <Kicker>O futuro</Kicker>
-            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-4xl">
+            <Kicker cor="text-emerald-400">O futuro</Kicker>
+            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-5xl">
               Isso é só o começo
             </h2>
           </Reveal>
           <Reveal>
-            <p className="text-[15px] leading-relaxed text-slate-400">
-              O <strong className="text-slate-100">PL 3943/2023</strong> quer obrigar todas as
-              universidades federais a criar vagas olímpicas, com regras publicadas em edital. Já
-              passou pela Comissão de Educação da Câmara, recebeu parecer favorável na CCJC e
-              aguarda votação (<Fonte href={F.camara}>Câmara dos Deputados</Fonte>). Se aprovado, o
-              que hoje é vanguarda de algumas universidades vira regra nacional.
-            </p>
+            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/5 p-5">
+              <p className="text-[15px] leading-relaxed text-slate-300">
+                O <strong className="text-emerald-300">PL 3943/2023</strong> quer obrigar todas as
+                universidades federais a criar vagas olímpicas, com regras publicadas em edital. Já
+                passou pela Comissão de Educação da Câmara, recebeu parecer favorável na CCJC e
+                aguarda votação. Se aprovado, o que hoje é vanguarda vira regra nacional.{" "}
+                <Fonte>Câmara dos Deputados, PL 3943/2023</Fonte>
+              </p>
+            </div>
           </Reveal>
         </section>
 
         {/* ── Na imprensa ──────────────────────────────────────────── */}
-        {IMPRENSA.length > 0 && (
-          <section className="space-y-6">
-            <Reveal>
-              <Kicker>Na imprensa</Kicker>
-            </Reveal>
-            <div className="divide-y divide-slate-800/80">
-              {IMPRENSA.map((m, i) => (
-                <Reveal key={m.url} delay={i * 50}>
-                  <a
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group block py-4"
-                  >
-                    <p className="text-xs uppercase tracking-widest text-slate-600">
-                      {m.veiculo} · {m.data}
-                    </p>
-                    <p className="mt-1 text-[15px] leading-snug text-slate-300 transition-colors group-hover:text-slate-50">
-                      {m.titulo} ↗
-                    </p>
-                  </a>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="space-y-6">
+          <Reveal>
+            <Kicker cor="text-rose-400">Na imprensa</Kicker>
+            <h2 className="mt-3 font-serif text-3xl text-slate-50 sm:text-4xl">
+              Quem já noticiou essa trilha
+            </h2>
+          </Reveal>
+          <div className="divide-y divide-slate-800/80">
+            {IMPRENSA.map((m, i) => (
+              <Reveal key={m.titulo} delay={i * 50}>
+                <div className="py-4">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-600">
+                    {m.veiculo} · {m.data}
+                  </p>
+                  <p className="mt-1 text-[15px] leading-snug text-slate-300">{m.titulo}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
 
         {/* ── Fecho ────────────────────────────────────────────────── */}
         <footer className="space-y-6 border-t border-slate-800 pt-12">
           <Reveal>
-            <p className="font-serif text-4xl leading-tight text-slate-50 sm:text-5xl">
+            <p className="font-serif text-4xl leading-tight text-slate-50 sm:text-6xl">
               Se você compete,
               <br />
-              <span className="text-amber-400">seu caminho está aberto.</span>
+              <span
+                className="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent"
+                style={{ textShadow: "none" }}
+              >
+                seu caminho está aberto.
+              </span>
             </p>
           </Reveal>
           <Reveal delay={150}>
             <p className="text-sm leading-relaxed text-slate-500">
               Fale com a coordenação da sua escola para montar a sua trilha. Todos os dados desta
-              página vêm de editais e páginas oficiais, verificados em 16/07/2026 — os links
-              acompanham cada informação. Editais mudam a cada ciclo: confirme sempre na fonte.
+              página vêm de editais e páginas oficiais das universidades, verificados em 16/07/2026.
+              Editais mudam a cada ciclo: a coordenação tem os detalhes de cada um.
             </p>
           </Reveal>
         </footer>
