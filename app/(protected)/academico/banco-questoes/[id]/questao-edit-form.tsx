@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { atualizarQuestao } from "../actions";
 import { inputClass, selectClass } from "@/components/ui/form-field";
+import { TopicoSubtopicoSelect } from "@/components/academico/topico-subtopico-select";
 import type { Questao } from "@/lib/types/database";
 import { EnunciadoBlocosEditor, type BlocoEnunciado } from "../enunciado-blocos-editor";
 
@@ -151,33 +152,12 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
         </div>
       </div>
 
-      {/* Linha 3: Tópico + Subtópico */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Tópico
-          </label>
-          <input
-            name="topico"
-            type="text"
-            defaultValue={questao.topico ?? questao.assunto ?? ""}
-            placeholder="ex: Geometria, Aritmética…"
-            className={inputClass}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Subtópico
-          </label>
-          <input
-            name="subtopico"
-            type="text"
-            defaultValue={questao.subtopico ?? ""}
-            placeholder="ex: Triângulos, Frações…"
-            className={inputClass}
-          />
-        </div>
-      </div>
+      {/* Linha 3: Tópico + Subtópico (taxonomia canônica) */}
+      <TopicoSubtopicoSelect
+        defaultTopico={questao.topico ?? null}
+        defaultSubtopico={questao.subtopico ?? null}
+        labelClass="block text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+      />
 
       {/* Linha 4: Dificuldade + Público-alvo */}
       <div className="grid grid-cols-2 gap-4">
