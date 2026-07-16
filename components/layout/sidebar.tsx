@@ -200,6 +200,12 @@ function SidebarContent() {
             Olimpíadas
           </SubItem>
           <SubItem
+            active={pathname.startsWith("/academico/ingresso")}
+            onClick={() => go("/academico/ingresso")}
+          >
+            Ingresso via Olimpíadas
+          </SubItem>
+          <SubItem
             active={pathname.startsWith("/academico/preparacao")}
             onClick={() => go("/academico/preparacao")}
           >

@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>A Trilha Olímpica</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -86,11 +87,52 @@ html, body {
              display:flex; align-items:center; padding-left:16px;
              font-size:26px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; }
 
-/* ===== HUD ===== */
+/* ===== HUD =====
+   Oculto por padrão (uso como fundo do login). Quando a página roda
+   top-level (/apresentacao), o JS adiciona body.interactive e o HUD aparece. */
 .progress-wrap { display:none; }
 .progress-fill { display:none; }
 .hud-num  { display:none; }
 .hud-play { display:none; }
+
+body.interactive .progress-wrap {
+  display:block; position:absolute; left:0; right:0; bottom:0; height:10px;
+  background:rgba(255,255,255,.08); z-index:30;
+}
+body.interactive .progress-fill {
+  display:block; height:100%; width:0%;
+  background:linear-gradient(90deg,#a855f7,#3b82f6);
+}
+body.interactive .hud-num {
+  display:block; position:absolute; top:28px; right:36px; z-index:30;
+  font-size:30px; font-weight:700; color:rgba(255,255,255,.35); letter-spacing:2px;
+}
+body.interactive .hud-play {
+  display:flex; position:absolute; top:16px; left:28px; z-index:30;
+  width:72px; height:72px; align-items:center; justify-content:center;
+  font-size:34px; color:rgba(255,255,255,.45); cursor:pointer; user-select:none;
+}
+/* Zonas de toque (mobile): metade esquerda volta, direita avança */
+.tapzone { position:absolute; top:0; bottom:0; width:34%; z-index:20; }
+#tap-prev { left:0; }
+#tap-next { right:0; width:66%; }
+
+/* ===== PORTRAIT (mobile) =====
+   O stage vira 1080x1920 e os layouts horizontais empilham. Os tamanhos em px
+   são mantidos — no stage mais estreito, o texto fica ~1,8x maior em proporção. */
+body.portrait .slide { padding:72px 52px; }
+body.portrait .duo { flex-direction:column !important; gap:56px !important; }
+body.portrait .duo > div { min-width:0 !important; width:100%; }
+body.portrait .g2 { grid-template-columns:1fr !important; gap:36px !important; }
+body.portrait .g3 { grid-template-columns:1fr !important; gap:28px !important; }
+body.portrait .g3 .card { display:flex; align-items:baseline; justify-content:center; gap:20px; padding:32px 24px; }
+body.portrait .g4 { grid-template-columns:1fr 1fr !important; }
+body.portrait .stats { flex-direction:column !important; gap:36px !important; }
+body.portrait .stats .vdiv { width:120px !important; height:2px !important; }
+body.portrait .brow { gap:20px !important; }
+body.portrait .brow > div:first-child { width:150px !important; font-size:34px !important; }
+body.portrait .brow > div:last-child { width:96px !important; font-size:38px !important; }
+body.portrait .pts { flex-wrap:wrap; gap:28px !important; }
 
 .noise {
   position:absolute; inset:0; pointer-events:none; opacity:.025;
@@ -102,6 +144,8 @@ html, body {
 <div id="wrapper">
 <div id="stage">
 <div class="noise"></div>
+<div class="tapzone" id="tap-prev"></div>
+<div class="tapzone" id="tap-next"></div>
 <div class="progress-wrap"><div class="progress-fill" id="pbar"></div></div>
 <div class="hud-num"  id="hnum">1 / 13</div>
 <div class="hud-play" id="hplay">▶</div>
@@ -144,13 +188,13 @@ html, body {
     <div class="title e" data-d="500" style="color:#fafafa;font-size:68px">vagas universitárias <span class="ggold" style="font-weight:900">EXCLUSIVAS</span></div>
     <div class="sub e" data-d="700" style="font-size:46px;margin-top:16px">para medalhistas de olimpíadas do conhecimento</div>
     <div style="height:44px"></div>
-    <div class="e" data-d="900" style="font-size:32px;color:#52525b">USP · UNICAMP · UNESP · IMPA TECH · UFABC</div>
+    <div class="e" data-d="900" style="font-size:32px;color:#52525b">USP · UNICAMP · UNESP · IMPA TECH · UFC · UFABC · UNIFEI · UFMS</div>
   </div>
 </div>
 
 <!-- ===== S4: UNESP ===== -->
 <div class="slide" id="s4" style="background:#0f172a">
-  <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
+  <div class="duo" style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
     <div style="flex-shrink:0;text-align:center;min-width:440px">
       <div class="label e" data-d="0" style="color:#4ade80;margin-bottom:12px">MAIOR DO BRASIL</div>
       <div class="e" data-d="0" style="font-size:100px;font-weight:900;color:#22c55e">UNESP</div>
@@ -181,7 +225,7 @@ html, body {
     <div class="e" data-d="400" style="font-size:32px;color:#a1a1aa;margin-top:12px">100+ cursos · 7 campi · Inscrição gratuita · Jan/2026</div>
     <div style="height:40px"></div>
     <div class="e" data-d="450" style="font-size:34px;color:#a1a1aa;margin-bottom:24px;font-weight:600">Sistema de pontos por nível de medalha:</div>
-    <div style="display:flex;justify-content:center;gap:40px;margin-bottom:40px">
+    <div class="pts" style="display:flex;justify-content:center;gap:40px;margin-bottom:40px">
       <div class="e" data-d="500" style="display:flex;flex-direction:column;align-items:center;gap:10px">
         <div style="font-size:30px;color:#a78bfa;font-weight:700">Internacional</div>
         <div style="display:flex;gap:5px"><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div><div style="width:44px;height:36px;background:#a855f7;border-radius:6px"></div></div>
@@ -204,7 +248,7 @@ html, body {
 
 <!-- ===== S6: UNICAMP ===== -->
 <div class="slide" id="s6" style="background:#0f172a">
-  <div style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
+  <div class="duo" style="display:flex;align-items:center;gap:110px;width:100%;max-width:1700px">
     <div style="flex-shrink:0;text-align:center;min-width:420px">
       <div class="e" data-d="0" style="font-size:88px;font-weight:900;color:#f59e0b">UNICAMP</div>
       <div class="unum es ggold" data-d="200" id="c-unicamp">0</div>
@@ -235,7 +279,7 @@ html, body {
       <div style="width:80%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;color:#fff">80% — EXCLUSIVO PARA MEDALHISTAS</div>
       <div style="width:20%;background:#27272a;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#52525b">20% ENEM</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:1400px;margin:0 auto 36px">
+    <div class="g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:1400px;margin:0 auto 36px">
       <div class="card e" data-d="400" style="border-color:rgba(59,130,246,.3)"><div style="font-size:56px;font-weight:900;color:#60a5fa">80 vagas</div><div style="font-size:28px;color:#a1a1aa;margin-top:10px">exclusivas para medalhistas</div></div>
       <div class="card e" data-d="550" style="border-color:rgba(34,197,94,.3)"><div style="font-size:56px;font-weight:900;color:#22c55e">100%</div><div style="font-size:28px;color:#a1a1aa;margin-top:10px">GRATUITO</div></div>
       <div class="card e" data-d="700" style="border-color:rgba(245,158,11,.3)"><div style="font-size:56px;font-weight:900;color:#fbbf24">5</div><div style="font-size:28px;color:#a1a1aa;margin-top:10px">olimpíadas aceitas no nível máximo</div></div>
@@ -247,18 +291,27 @@ html, body {
 <!-- ===== S8: UFABC + IME ===== -->
 <div class="slide" id="s8" style="background:#0f172a">
   <div style="text-align:center;max-width:1600px;width:100%">
-    <div class="label e" data-d="0" style="color:#a78bfa;margin-bottom:36px;font-size:30px">E AINDA TEM MAIS</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
-      <div class="card e" data-d="200" style="border-color:rgba(168,85,247,.3);padding:56px">
-        <div style="font-size:72px;font-weight:900;color:#a855f7;margin-bottom:20px">UFABC</div>
-        <div style="font-size:34px;color:#fafafa;line-height:1.8">Bacharelado em Ciência & Tecnologia<br>Bacharelado em Ciências & Humanidades<br>Licenciaturas em CN e CH</div>
-        <div style="margin-top:24px;font-size:28px;color:#71717a">Modelo único: entra em ciência, especializa-se depois</div>
+    <div class="label e" data-d="0" style="color:#a78bfa;margin-bottom:36px;font-size:30px">AS FEDERAIS ABRIRAM AS PORTAS</div>
+    <div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:36px">
+      <div class="card e" data-d="200" style="border-color:rgba(34,197,94,.3);padding:40px">
+        <div style="font-size:60px;font-weight:900;color:#22c55e;margin-bottom:12px">UFC</div>
+        <div style="font-size:32px;color:#fafafa;line-height:1.6"><strong style="color:#4ade80">104 vagas</strong> em 41 cursos<br>sem prova</div>
+        <div style="margin-top:14px;font-size:26px;color:#71717a">Medalhas de 2022 a 2025 · Inscrição gratuita</div>
       </div>
-      <div class="card e" data-d="400" style="border-color:rgba(34,197,94,.3);padding:56px">
-        <div style="font-size:72px;font-weight:900;color:#22c55e;margin-bottom:20px">IME-USP</div>
-        <div style="font-size:36px;color:#fafafa;margin-bottom:16px">Programa <strong style="color:#4ade80">iCEM</strong></div>
-        <div style="font-size:32px;color:#a1a1aa;line-height:1.7">Bolsas de iniciação científica<br>para calouros medalhistas<br>OBM · OBMEP · OBI · OBF</div>
-        <div style="margin-top:20px;font-size:28px;color:#52525b">~80 alunos beneficiados por turma</div>
+      <div class="card e" data-d="350" style="border-color:rgba(168,85,247,.3);padding:40px">
+        <div style="font-size:60px;font-weight:900;color:#a855f7;margin-bottom:12px">UFABC</div>
+        <div style="font-size:32px;color:#fafafa;line-height:1.6"><strong style="color:#c084fc">20 vagas</strong> nos bacharelados<br>interdisciplinares</div>
+        <div style="margin-top:14px;font-size:26px;color:#71717a">Entra em ciência, especializa-se depois</div>
+      </div>
+      <div class="card e" data-d="500" style="border-color:rgba(59,130,246,.3);padding:40px">
+        <div style="font-size:48px;font-weight:900;color:#60a5fa;margin-bottom:12px">UNIFEI · UFMS · UnB</div>
+        <div style="font-size:32px;color:#fafafa;line-height:1.6">Programas próprios de<br>vagas olímpicas</div>
+        <div style="margin-top:14px;font-size:26px;color:#71717a">UnB aprovou as vagas em julho de 2026</div>
+      </div>
+      <div class="card e" data-d="650" style="border-color:rgba(245,158,11,.3);padding:40px">
+        <div style="font-size:48px;font-weight:900;color:#fbbf24;margin-bottom:12px">Insper · FGV</div>
+        <div style="font-size:32px;color:#fafafa;line-height:1.6">Privadas com seleção olímpica<br>e <strong style="color:#fbbf24">bolsas de 100%</strong></div>
+        <div style="margin-top:14px;font-size:26px;color:#71717a">FGV: bolsa integral ao 1º colocado</div>
       </div>
     </div>
   </div>
@@ -270,17 +323,17 @@ html, body {
     <div class="e" data-d="0" style="font-size:52px;color:#71717a;margin-bottom:16px">E mesmo com tudo isso...</div>
     <div class="big es gred" data-d="200" style="font-size:100px;margin-bottom:52px">A MAIORIA DAS VAGAS FICA VAZIA</div>
     <div style="width:100%;max-width:1500px;margin:0 auto">
-      <div class="e" data-d="400" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
+      <div class="e brow" data-d="400" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
         <div style="font-size:44px;font-weight:800;color:#22c55e;width:200px;text-align:right">UNESP</div>
         <div class="bar-track" style="flex:1"><div class="bar-bg"></div><div class="bar-used" id="b2-unesp" style="background:#ef4444">137 de 863</div></div>
         <div style="font-size:48px;font-weight:900;color:#ef4444;width:120px;text-align:right" id="p2-unesp">0%</div>
       </div>
-      <div class="e" data-d="600" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
+      <div class="e brow" data-d="600" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
         <div style="font-size:44px;font-weight:800;color:#fbbf24;width:200px;text-align:right">UNICAMP</div>
         <div class="bar-track" style="flex:1"><div class="bar-bg"></div><div class="bar-used" id="b2-unicamp" style="background:#f59e0b">267 de 564</div></div>
         <div style="font-size:48px;font-weight:900;color:#f59e0b;width:120px;text-align:right" id="p2-unicamp">0%</div>
       </div>
-      <div class="e" data-d="800" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
+      <div class="e brow" data-d="800" style="display:flex;align-items:center;gap:40px;margin-bottom:36px">
         <div style="font-size:44px;font-weight:800;color:#a78bfa;width:200px;text-align:right">USP</div>
         <div class="bar-track" style="flex:1"><div class="bar-bg"></div><div class="bar-used" id="b2-usp" style="background:#a855f7">30 de 113 (2019)</div></div>
         <div style="font-size:48px;font-weight:900;color:#a855f7;width:120px;text-align:right" id="p2-usp">0%</div>
@@ -312,17 +365,17 @@ html, body {
 <div class="slide" id="s11" style="background:#0f172a">
   <div style="text-align:center;max-width:1600px">
     <div class="label e" data-d="0" style="color:#60a5fa;margin-bottom:24px;font-size:32px">E NO EXTERIOR?</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:44px">
+    <div class="g4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:44px">
       <div class="card e" data-d="200" style="padding:40px 24px"><div style="font-size:52px;font-weight:900;color:#fafafa;margin-bottom:10px">MIT</div><div style="font-size:24px;color:#52525b">EUA</div></div>
       <div class="card e" data-d="350" style="padding:40px 24px"><div style="font-size:42px;font-weight:900;color:#fafafa;margin-bottom:10px">Caltech</div><div style="font-size:24px;color:#52525b">EUA</div></div>
       <div class="card e" data-d="500" style="padding:40px 24px"><div style="font-size:40px;font-weight:900;color:#fafafa;margin-bottom:10px">Cambridge</div><div style="font-size:24px;color:#52525b">Reino Unido</div></div>
-      <div class="card e" data-d="650" style="padding:40px 24px"><div style="font-size:40px;font-weight:900;color:#fafafa;margin-bottom:10px">ETH Zurich</div><div style="font-size:24px;color:#52525b">Suíça</div></div>
+      <div class="card e" data-d="650" style="padding:40px 24px"><div style="font-size:44px;font-weight:900;color:#fafafa;margin-bottom:10px">NUS</div><div style="font-size:24px;color:#52525b">Singapura</div></div>
     </div>
     <div class="e" data-d="700" style="background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.3);border-radius:20px;padding:44px;margin-bottom:32px">
-      <div style="font-size:40px;font-weight:700;color:#fbbf24;margin-bottom:16px">Sem vagas formais reservadas para brasileiros</div>
-      <div style="font-size:40px;color:#fafafa;line-height:1.6">Mas uma medalha no <strong style="color:#fbbf24">IMO, IPhO ou IOI</strong><br>é diferencial decisivo no processo seletivo holístico</div>
+      <div style="font-size:40px;font-weight:700;color:#fbbf24;margin-bottom:16px">NUS e Waterloo têm regras explícitas para medalhistas</div>
+      <div style="font-size:40px;color:#fafafa;line-height:1.6">Nos EUA, medalha no <strong style="color:#fbbf24">IMO, IPhO ou IOI</strong> é diferencial decisivo<br>— e MIT, Harvard e Princeton dão <strong style="color:#4ade80">bolsa integral</strong> por necessidade</div>
     </div>
-    <div class="e" data-d="900" style="font-size:34px;color:#52525b">Casos reais de brasileiros admitidos em universidades de elite via desempenho olímpico</div>
+    <div class="e" data-d="900" style="font-size:34px;color:#52525b">Medalhistas da OBMEP já entraram no MIT com bolsa integral</div>
   </div>
 </div>
 
@@ -331,9 +384,9 @@ html, body {
   <div style="text-align:center;max-width:1400px">
     <div class="label e" data-d="0" style="color:#4ade80;margin-bottom:32px;font-size:32px">O FUTURO</div>
     <div class="e" data-d="100" style="font-size:92px;font-weight:900;color:#22c55e;margin-bottom:20px;text-shadow:0 0 60px rgba(34,197,94,.35)">PL 3943/23</div>
-    <div class="e" data-d="300" style="font-size:46px;color:#fafafa;margin-bottom:36px">Em tramitação na Câmara dos Deputados</div>
+    <div class="e" data-d="300" style="font-size:46px;color:#fafafa;margin-bottom:36px">Aprovado na Comissão de Educação · pronto para pauta na CCJC</div>
     <div class="e" data-d="500" style="background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:20px;padding:52px;margin-bottom:36px">
-      <div style="font-size:42px;color:#fafafa;line-height:1.7">Se aprovado: <strong style="color:#4ade80">TODAS</strong> as universidades federais do Brasil<br>serão obrigadas a criar vagas olímpicas.<br><br>Hoje: apenas SP tem programa estruturado<br>Amanhã: <strong style="color:#fafafa">UFMG · UFRJ · UnB · UFRGS · UFPE</strong> e todas as outras</div>
+      <div style="font-size:42px;color:#fafafa;line-height:1.7">Se aprovado: <strong style="color:#4ade80">TODAS</strong> as universidades federais do Brasil<br>serão obrigadas a criar vagas olímpicas.<br><br>Hoje: SP na frente + <strong style="color:#fafafa">UFC · UFABC · UNIFEI · UFMS · UnB</strong> já abriram<br>Amanhã: <strong style="color:#fafafa">UFMG · UFRJ · UFRGS · UFPE</strong> e todas as outras</div>
     </div>
     <div class="e" data-d="700" style="font-size:34px;color:#52525b">Obrigação: publicar lista de olimpíadas, nº de vagas e sistema de pontuação por edital</div>
   </div>
@@ -344,11 +397,11 @@ html, body {
   <div style="text-align:center;max-width:1400px">
     <div class="e" data-d="0" style="font-size:54px;color:#71717a;margin-bottom:32px">Se você compete em olimpíadas...</div>
     <div class="big es ggold" data-d="200" style="font-size:100px;margin-bottom:48px">Seu caminho está aberto.</div>
-    <div style="display:flex;justify-content:center;align-items:center;gap:64px;margin:0 0 48px">
+    <div class="stats" style="display:flex;justify-content:center;align-items:center;gap:64px;margin:0 0 48px">
       <div class="e" data-d="400" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#fbbf24">1.000+</div><div style="font-size:32px;color:#71717a">vagas esperando</div></div>
-      <div style="width:2px;height:120px;background:rgba(255,255,255,.1)"></div>
-      <div class="e" data-d="550" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#60a5fa">5</div><div style="font-size:32px;color:#71717a">universidades de topo</div></div>
-      <div style="width:2px;height:120px;background:rgba(255,255,255,.1)"></div>
+      <div class="vdiv" style="width:2px;height:120px;background:rgba(255,255,255,.1)"></div>
+      <div class="e" data-d="550" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#60a5fa">10+</div><div style="font-size:32px;color:#71717a">instituições com regras próprias</div></div>
+      <div class="vdiv" style="width:2px;height:120px;background:rgba(255,255,255,.1)"></div>
       <div class="e" data-d="700" style="text-align:center"><div style="font-size:88px;font-weight:900;color:#22c55e">0</div><div style="font-size:32px;color:#71717a">vestibulares necessários</div></div>
     </div>
     <div class="e" data-d="900" style="font-size:48px;color:#fafafa;font-weight:700">A medalha é o ingresso.</div>
@@ -360,12 +413,24 @@ html, body {
 
 <script>
 // ===== SCALE =====
+// Landscape: stage 1920x1080. Portrait (mobile): stage 1080x1920 com layouts
+// empilhados via body.portrait — o texto fica proporcionalmente maior.
 function scaleStage(){
-  const sc = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  document.getElementById('stage').style.transform = 'scale(' + sc + ')';
+  const w = window.innerWidth, h = window.innerHeight;
+  const portrait = h / w > 1.05;
+  document.body.classList.toggle('portrait', portrait);
+  const stage = document.getElementById('stage');
+  const SW = portrait ? 1080 : 1920, SH = portrait ? 1920 : 1080;
+  stage.style.width = SW + 'px';
+  stage.style.height = SH + 'px';
+  stage.style.transform = 'scale(' + Math.min(w / SW, h / SH) + ')';
 }
 window.addEventListener('resize', scaleStage);
 scaleStage();
+
+// Top-level (rota /apresentacao): mostra HUD e habilita navegação por toque.
+// Como fundo do login (iframe), permanece sem controles.
+if (window.self === window.top) document.body.classList.add('interactive');
 
 // ===== COUNTER =====
 function counter(el, to, ms) {
@@ -480,6 +545,13 @@ document.addEventListener('keydown', function(e) {
 document.getElementById('hplay').addEventListener('click', function() {
   paused = !paused;
   document.getElementById('hplay').textContent = paused ? '⏸' : '▶';
+});
+// Toque/clique: esquerda volta, direita avança (só no modo interativo)
+document.getElementById('tap-prev').addEventListener('click', function() {
+  if (document.body.classList.contains('interactive')) showSlide(Math.max(cur-1, 0));
+});
+document.getElementById('tap-next').addEventListener('click', function() {
+  if (document.body.classList.contains('interactive')) showSlide((cur+1) % N);
 });
 
 // ===== INIT =====
