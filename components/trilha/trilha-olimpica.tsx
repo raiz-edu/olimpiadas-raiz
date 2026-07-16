@@ -1,4 +1,13 @@
-import { Award, Trophy, Medal, GraduationCap, Sparkles, Gem, type LucideIcon } from "lucide-react";
+import {
+  Award,
+  Trophy,
+  Medal,
+  GraduationCap,
+  Sparkles,
+  Gem,
+  ChevronDown,
+  type LucideIcon,
+} from "lucide-react";
 import { Reveal } from "./reveal";
 import { CountUp, BarraAnimada } from "./count-up";
 
@@ -207,51 +216,54 @@ export function TrilhaOlimpica() {
         }}
       />
 
-      <div className="relative mx-auto max-w-2xl space-y-24 px-6 py-16 sm:space-y-28 sm:py-24">
-        {/* ── Abertura ─────────────────────────────────────────────── */}
-        <header className="space-y-10 text-center">
-          <Reveal>
-            <div className="space-y-4">
-              <Medal
-                className="mx-auto h-8 w-8 text-amber-400"
-                strokeWidth={1.8}
-                aria-hidden="true"
-                style={{ filter: "drop-shadow(0 0 14px rgba(251,191,36,.55))" }}
-              />
-              <p className="text-lg font-semibold uppercase tracking-[0.4em] text-slate-100 sm:text-xl">
-                A Trilha Olímpica
-              </p>
-              <div
-                className="mx-auto h-px w-20"
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent, rgba(251,191,36,.7), transparent)",
-                }}
-              />
-              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-600">
-                Ciclo 2026 · Atualizado em 16/07/2026
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={150}>
-            <h1 className="font-serif text-5xl leading-[1.02] text-slate-50 sm:text-7xl">
-              A medalha é{" "}
-              <span
-                className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent"
-                style={{ textShadow: "none" }}
-              >
-                o ingresso.
-              </span>
-            </h1>
-          </Reveal>
-          <Reveal delay={250}>
-            <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-400">
-              Universidades do Brasil e do mundo reservam vagas, bolsas integrais e portas de
-              entrada próprias para quem se destaca nas olimpíadas do conhecimento.
+      {/* ── Abertura: hero de tela cheia, tudo centrado ─────────────── */}
+      <header className="relative flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-16 text-center">
+        <Reveal>
+          <div className="space-y-4">
+            <Medal
+              className="mx-auto h-8 w-8 text-amber-400"
+              strokeWidth={1.8}
+              aria-hidden="true"
+              style={{ filter: "drop-shadow(0 0 14px rgba(251,191,36,.55))" }}
+            />
+            <p className="text-lg font-semibold uppercase tracking-[0.4em] text-slate-100 sm:text-xl">
+              A Trilha Olímpica
             </p>
-          </Reveal>
-        </header>
+            <div
+              className="mx-auto h-px w-20"
+              style={{
+                background: "linear-gradient(90deg, transparent, rgba(251,191,36,.7), transparent)",
+              }}
+            />
+            <p className="text-[10px] uppercase tracking-[0.3em] text-slate-600">
+              Ciclo 2026 · Atualizado em 16/07/2026
+            </p>
+          </div>
+        </Reveal>
+        <Reveal delay={150}>
+          <h1 className="font-serif text-5xl leading-[1.02] text-slate-50 sm:text-7xl">
+            A medalha é{" "}
+            <span
+              className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent"
+              style={{ textShadow: "none" }}
+            >
+              o ingresso.
+            </span>
+          </h1>
+        </Reveal>
+        <Reveal delay={250}>
+          <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-400">
+            Universidades do Brasil e do mundo reservam vagas, bolsas integrais e portas de entrada
+            próprias para quem se destaca nas olimpíadas do conhecimento.
+          </p>
+        </Reveal>
+        <ChevronDown
+          className="absolute bottom-8 left-1/2 h-6 w-6 -translate-x-1/2 animate-bounce text-slate-600"
+          aria-hidden="true"
+        />
+      </header>
 
+      <div className="relative mx-auto max-w-2xl space-y-24 px-6 pb-16 pt-8 sm:space-y-28 sm:pb-24">
         {/* ── O número ─────────────────────────────────────────────── */}
         <section className="space-y-10">
           <Reveal>
