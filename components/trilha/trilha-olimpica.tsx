@@ -221,7 +221,7 @@ export function TrilhaOlimpica() {
               </span>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.35em] text-violet-400">
-                  Especial · Ciclo 2026
+                  Ciclo 2026
                 </p>
                 <p className="font-serif text-3xl leading-tight text-slate-50 sm:text-4xl">
                   A Trilha Olímpica
