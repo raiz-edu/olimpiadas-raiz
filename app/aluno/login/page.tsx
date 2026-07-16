@@ -1,7 +1,6 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import { cookies } from "next/headers";
 import { LoginAlunoForm } from "@/components/aluno/login-form";
+import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
 import { getConfigValue } from "@/app/(protected)/configuracoes/actions";
 import { ALUNO_PENDING_COOKIE } from "@/lib/auth/student-cookie";
 
@@ -99,10 +98,6 @@ export default async function LoginAlunoPage({
   const effectiveMarca = marca ?? marcaHint;
   const logoFile = effectiveMarca ? SLUG_TO_LOGO[effectiveMarca] : null;
   const marcaNome = effectiveMarca ? SLUG_TO_NOME[effectiveMarca] : null;
-  const presentationHtml = readFileSync(
-    join(process.cwd(), "public", "trilha-olimpica.html"),
-    "utf-8",
-  );
 
   return (
     <main className="relative flex min-h-screen">
@@ -118,31 +113,33 @@ export default async function LoginAlunoPage({
             "linear-gradient(to bottom, transparent, rgba(148,163,184,0.25) 20%, rgba(148,163,184,0.25) 80%, transparent)",
         }}
       />
-      {/* ── Lado esquerdo: vídeo ───────────────────────────────────────── */}
+      {/* ── Lado esquerdo: vídeo configurado ou a Trilha Olímpica rolável ── */}
       <div
         className="relative hidden w-2/3 overflow-hidden sm:block"
-        style={{ background: "#0f172a" }}
+        style={{ background: "#0b1120" }}
       >
         {videoSrc ? (
-          <VideoBackground src={videoSrc} />
+          <>
+            <VideoBackground src={videoSrc} />
+            {/* Vinheta — fades em todas as bordas */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: [
+                  "linear-gradient(to right,  #0f172a 0%, transparent 15%, transparent 80%, #0f172a 100%)",
+                  "linear-gradient(to bottom, #0f172a 0%, transparent 12%, transparent 88%, #0f172a 100%)",
+                ].join(", "),
+              }}
+            />
+          </>
         ) : (
-          <iframe
-            srcDoc={presentationHtml}
-            className="absolute inset-0 h-full w-full"
-            style={{ border: "none", pointerEvents: "none" }}
-            title="A Trilha Olímpica"
-          />
+          <div
+            className="absolute inset-0 overflow-y-auto"
+            style={{ scrollbarWidth: "thin", scrollbarColor: "#1e293b transparent" }}
+          >
+            <TrilhaOlimpica />
+          </div>
         )}
-        {/* Vinheta — fades em todas as bordas */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: [
-              "linear-gradient(to right,  #0f172a 0%, transparent 15%, transparent 80%, #0f172a 100%)",
-              "linear-gradient(to bottom, #0f172a 0%, transparent 12%, transparent 88%, #0f172a 100%)",
-            ].join(", "),
-          }}
-        />
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
@@ -164,17 +161,6 @@ export default async function LoginAlunoPage({
             <LoginAlunoForm initialNeedsConsent={initialNeedsConsent} />
           </div>
 
-          {/* Mobile: o painel da apresentação fica oculto — este atalho a abre em tela cheia */}
-          <a
-            href="/apresentacao"
-            className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:hidden"
-          >
-            <span aria-hidden="true" style={{ color: TEAL }}>
-              ▶
-            </span>
-            Conheça a Trilha Olímpica
-          </a>
-
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Dificuldades para acessar?{" "}
             <a
@@ -185,6 +171,11 @@ export default async function LoginAlunoPage({
               Fale com a coordenação
             </a>
           </p>
+        </div>
+
+        {/* Mobile: a Trilha Olímpica continua logo abaixo do login — sem cliques */}
+        <div className="-mb-8 mt-10 w-full sm:hidden">
+          <TrilhaOlimpica />
         </div>
       </div>
     </main>
