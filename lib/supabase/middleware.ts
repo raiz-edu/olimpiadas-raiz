@@ -12,6 +12,10 @@ function getRouteAccess(pathname: string) {
   // handoff da sessão do aluno — não há sessão Supabase nesse fluxo.
   const isPopupAuth =
     pathname.startsWith("/auth/popup-callback") || pathname.startsWith("/api/auth/popup-session");
+  // Apresentação "A Trilha Olímpica" — material de divulgação exibido no login
+  // (o botão do login mobile abre /apresentacao em tela cheia).
+  const isApresentacao =
+    pathname.startsWith("/apresentacao") || pathname === "/trilha-olimpica.html";
 
   return {
     isPublicPath:
@@ -21,7 +25,8 @@ function getRouteAccess(pathname: string) {
       isStaffCallback ||
       isAcceptInvite ||
       isGoogleOAuth ||
-      isPopupAuth,
+      isPopupAuth ||
+      isApresentacao,
   };
 }
 

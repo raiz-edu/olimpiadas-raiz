@@ -164,6 +164,17 @@ export default async function LoginAlunoPage({
             <LoginAlunoForm initialNeedsConsent={initialNeedsConsent} />
           </div>
 
+          {/* Mobile: o painel da apresentação fica oculto — este atalho a abre em tela cheia */}
+          <a
+            href="/apresentacao"
+            className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:hidden"
+          >
+            <span aria-hidden="true" style={{ color: TEAL }}>
+              ▶
+            </span>
+            Conheça a Trilha Olímpica
+          </a>
+
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Dificuldades para acessar?{" "}
             <a
