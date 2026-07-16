@@ -1,3 +1,4 @@
+import { Award, Trophy, Medal, GraduationCap, Sparkles, Gem, type LucideIcon } from "lucide-react";
 import { Reveal } from "./reveal";
 import { CountUp, BarraAnimada } from "./count-up";
 
@@ -83,44 +84,63 @@ const VAGAS_2026: {
   },
 ];
 
-const REGRAS_RESUMO: { uni: string; medalha: string; regra: string; fonte: string }[] = [
+const REGRAS_RESUMO: {
+  uni: string;
+  Icone: LucideIcon;
+  corIcone: string;
+  bgIcone: string;
+  regra: string;
+  fonte: string;
+}[] = [
   {
     uni: "USP",
-    medalha: "🥇",
+    Icone: Award,
+    corIcone: "text-violet-400",
+    bgIcone: "bg-violet-400/10",
     regra:
       "Pontos por medalha: ouro internacional vale 6, bronze nacional vale 1. Valem os 2 últimos anos, no Ensino Médio. Inscrição gratuita em janeiro.",
     fonte: "Fuvest",
   },
   {
     uni: "UNICAMP",
-    medalha: "🏅",
+    Icone: Trophy,
+    corIcone: "text-amber-400",
+    bgIcone: "bg-amber-400/10",
     regra: "28 competições aceitas, da OBMEP à IMO, pontuadas por abrangência. Sem vestibular.",
     fonte: "Comvest",
   },
   {
     uni: "UFC",
-    medalha: "🥉",
+    Icone: Medal,
+    corIcone: "text-sky-400",
+    bgIcone: "bg-sky-400/10",
     regra:
       "Uma medalha (ouro, prata ou bronze) de 2022 a 2025 basta para concorrer — âmbito local, nacional ou internacional.",
     fonte: "UFC/Prograd",
   },
   {
     uni: "IMPA Tech",
-    medalha: "🎓",
+    Icone: GraduationCap,
+    corIcone: "text-blue-400",
+    bgIcone: "bg-blue-400/10",
     regra:
       "Gratuito, com alojamento, alimentação e passagem aérea. Seleção por dinâmicas e entrevistas para medalhistas de OBMEP, OBM, OBFEP, OBQ e OBI.",
     fonte: "Edital IMPA Tech 2026",
   },
   {
     uni: "UnB",
-    medalha: "🆕",
+    Icone: Sparkles,
+    corIcone: "text-emerald-400",
+    bgIcone: "bg-emerald-400/10",
     regra:
       "Vagas extraordinárias aprovadas em julho de 2026 (Resolução CEPE 129/2026) — medalhistas do EM com nota de redação. Primeiro edital a caminho.",
     fonte: "UnB Notícias",
   },
   {
     uni: "Insper e FGV",
-    medalha: "💎",
+    Icone: Gem,
+    corIcone: "text-rose-400",
+    bgIcone: "bg-rose-400/10",
     regra:
       "Privadas com via olímpica: no Insper, medalhista faz só a redação; na FGV, o 1º colocado da modalidade ganha bolsa de 100%.",
     fonte: "Editais Insper 2026.2 e FGV 1º/2026",
@@ -279,8 +299,11 @@ export function TrilhaOlimpica() {
             {REGRAS_RESUMO.map((r, i) => (
               <Reveal key={r.uni} delay={i * 60}>
                 <div className="flex gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-                  <span className="text-3xl" aria-hidden="true">
-                    {r.medalha}
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${r.bgIcone}`}
+                    aria-hidden="true"
+                  >
+                    <r.Icone className={`h-5 w-5 ${r.corIcone}`} strokeWidth={2.2} />
                   </span>
                   <div>
                     <p className="font-bold text-slate-50">{r.uni}</p>
