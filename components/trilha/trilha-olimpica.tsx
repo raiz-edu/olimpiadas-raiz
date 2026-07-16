@@ -3,7 +3,7 @@ import { Reveal } from "./reveal";
 import { CountUp, BarraAnimada } from "./count-up";
 
 // Todas as informações vêm de editais e páginas oficiais (pesquisa verificada
-// em 16/07/2026). As fontes são indicadas no texto, sem links externos — a
+// em 16/07/2026). As fontes são indicadas no texto, sem links externos - a
 // experiência mantém o usuário na plataforma.
 
 function Fonte({ children }: { children: React.ReactNode }) {
@@ -115,7 +115,7 @@ const REGRAS_RESUMO: {
     corIcone: "text-sky-400",
     bgIcone: "bg-sky-400/10",
     regra:
-      "Uma medalha (ouro, prata ou bronze) de 2022 a 2025 basta para concorrer — âmbito local, nacional ou internacional.",
+      "Uma medalha (ouro, prata ou bronze) de 2022 a 2025 basta para concorrer - âmbito local, nacional ou internacional.",
     fonte: "UFC/Prograd",
   },
   {
@@ -133,7 +133,7 @@ const REGRAS_RESUMO: {
     corIcone: "text-emerald-400",
     bgIcone: "bg-emerald-400/10",
     regra:
-      "Vagas extraordinárias aprovadas em julho de 2026 (Resolução CEPE 129/2026) — medalhistas do EM com nota de redação. Primeiro edital a caminho.",
+      "Vagas extraordinárias aprovadas em julho de 2026 (Resolução CEPE 129/2026) - medalhistas do EM com nota de redação. Primeiro edital a caminho.",
     fonte: "UnB Notícias",
   },
   {
@@ -209,9 +209,25 @@ export function TrilhaOlimpica() {
 
       <div className="relative mx-auto max-w-2xl space-y-24 px-6 py-16 sm:space-y-28 sm:py-24">
         {/* ── Abertura ─────────────────────────────────────────────── */}
-        <header className="space-y-6">
+        <header className="space-y-8">
           <Reveal>
-            <Kicker>🏅 Especial · A Trilha Olímpica</Kicker>
+            <div className="flex items-center gap-4">
+              <span
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10"
+                aria-hidden="true"
+                style={{ boxShadow: "0 0 40px -12px rgba(251,191,36,.5)" }}
+              >
+                <Medal className="h-7 w-7 text-amber-400" strokeWidth={2} />
+              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-violet-400">
+                  Especial · Ciclo 2026
+                </p>
+                <p className="font-serif text-3xl leading-tight text-slate-50 sm:text-4xl">
+                  A Trilha Olímpica
+                </p>
+              </div>
+            </div>
           </Reveal>
           <Reveal delay={100}>
             <h1 className="font-serif text-5xl leading-[1.02] text-slate-50 sm:text-7xl">
@@ -227,13 +243,12 @@ export function TrilhaOlimpica() {
           <Reveal delay={200}>
             <p className="text-lg leading-relaxed text-slate-400">
               Universidades do Brasil e do mundo reservam vagas, bolsas integrais e portas de
-              entrada próprias para quem se destaca nas olimpíadas do conhecimento. Esta é a trilha
-              — cada informação com sua fonte oficial.
+              entrada próprias para quem se destaca nas olimpíadas do conhecimento.
             </p>
           </Reveal>
           <Reveal delay={300}>
             <p className="text-xs uppercase tracking-widest text-slate-600">
-              Ciclo 2026 · Atualizado em 16/07/2026
+              Atualizado em 16/07/2026
             </p>
           </Reveal>
         </header>
@@ -258,7 +273,7 @@ export function TrilhaOlimpica() {
               />
             </p>
             <p className="mt-2 text-sm font-bold uppercase tracking-widest text-slate-400">
-              vagas universitárias para medalhistas — sem vestibular
+              vagas universitárias para medalhistas - sem vestibular
             </p>
           </Reveal>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -318,7 +333,7 @@ export function TrilhaOlimpica() {
           </div>
           <Reveal>
             <p className="text-sm leading-relaxed text-slate-500">
-              UNIFEI — a pioneira entre as federais — e UFMS mantêm programas próprios com editais
+              UNIFEI - a pioneira entre as federais - e UFMS mantêm programas próprios com editais
               anuais. <Fonte>UNIFEI/COPS e UFMS/Ingresso</Fonte>
             </p>
           </Reveal>
@@ -333,7 +348,7 @@ export function TrilhaOlimpica() {
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-slate-400">
               Nos históricos divulgados pelas próprias universidades, o aproveitamento das vagas
-              olímpicas é baixo — por puro desconhecimento dos estudantes.
+              olímpicas é baixo - por puro desconhecimento dos estudantes.
             </p>
           </Reveal>
           <div className="space-y-6">
@@ -379,7 +394,7 @@ export function TrilhaOlimpica() {
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
                 <p className="text-[15px] leading-relaxed text-slate-400">
                   <strong className="text-slate-50">MIT, Harvard e Princeton</strong> avaliam
-                  candidatos de forma holística — e uma medalha internacional é um dos sinais mais
+                  candidatos de forma holística - e uma medalha internacional é um dos sinais mais
                   fortes que existem: o blog oficial de admissões do MIT celebra seus{" "}
                   <em>“MIT Olympians”</em>. As três dão <em>bolsa integral por necessidade</em>,
                   inclusive para estrangeiros. <Fonte>MIT Admissions</Fonte>
@@ -400,7 +415,7 @@ export function TrilhaOlimpica() {
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
                 <p className="text-[15px] leading-relaxed text-slate-400">
                   <strong className="text-slate-50">NUS</strong> (Singapura) cita medalhas de IMO,
-                  IPhO, IChO, IOI e IBO nominalmente na regra de admissão por aptidão — com isenção
+                  IPhO, IChO, IOI e IBO nominalmente na regra de admissão por aptidão - com isenção
                   de disciplinas para medalhistas de IOI em Computing.{" "}
                   <strong className="text-slate-50">Waterloo</strong> (Canadá) usa os contests
                   Euclid e CCC como critério documentado em Computer Science.{" "}
@@ -414,7 +429,7 @@ export function TrilhaOlimpica() {
                   No <strong className="text-slate-50">Reino Unido</strong>, a olimpíada prepara
                   para o que decide: o STEP de Cambridge, o MAT de Oxford e as entrevistas. E um
                   alerta honesto: a <strong className="text-slate-50">ETH Zurich</strong> (Suíça)
-                  afirma que prêmios de olimpíada <em>não</em> contam na admissão — lá, o caminho é
+                  afirma que prêmios de olimpíada <em>não</em> contam na admissão - lá, o caminho é
                   o exame. <Fonte>Cambridge Admissions e ETH Zurich FAQ</Fonte>
                 </p>
               </div>
