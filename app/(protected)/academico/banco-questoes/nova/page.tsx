@@ -4,6 +4,7 @@ import { useActionState, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { criarQuestao, buscarQuestoesSimilares, uploadSolucaoImagem } from "../actions";
 import { inputClass, selectClass } from "@/components/ui/form-field";
+import { TopicoSubtopicoSelect } from "@/components/academico/topico-subtopico-select";
 import { EnunciadoBlocosEditor } from "../enunciado-blocos-editor";
 
 type SimilaresResult = Awaited<ReturnType<typeof buscarQuestoesSimilares>>;
@@ -258,27 +259,8 @@ export default function NovaBancoQuestaoPage() {
           </div>
         </div>
 
-        {/* Linha 4: Tópico + Subtópico */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-foreground">Tópico</label>
-            <input
-              name="topico"
-              type="text"
-              placeholder="ex: Geometria, Aritmética…"
-              className={inputClass}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-foreground">Subtópico</label>
-            <input
-              name="subtopico"
-              type="text"
-              placeholder="ex: Triângulos, Frações…"
-              className={inputClass}
-            />
-          </div>
-        </div>
+        {/* Linha 4: Tópico + Subtópico (taxonomia canônica) */}
+        <TopicoSubtopicoSelect />
 
         {/* Dificuldade */}
         <div className="space-y-1.5">
