@@ -209,27 +209,31 @@ export function TrilhaOlimpica() {
 
       <div className="relative mx-auto max-w-2xl space-y-24 px-6 py-16 sm:space-y-28 sm:py-24">
         {/* ── Abertura ─────────────────────────────────────────────── */}
-        <header className="space-y-8">
+        <header className="space-y-10 text-center">
           <Reveal>
-            <div className="flex items-center gap-4">
-              <span
-                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10"
+            <div className="space-y-4">
+              <Medal
+                className="mx-auto h-8 w-8 text-amber-400"
+                strokeWidth={1.8}
                 aria-hidden="true"
-                style={{ boxShadow: "0 0 40px -12px rgba(251,191,36,.5)" }}
-              >
-                <Medal className="h-7 w-7 text-amber-400" strokeWidth={2} />
-              </span>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-violet-400">
-                  Ciclo 2026
-                </p>
-                <p className="font-serif text-3xl leading-tight text-slate-50 sm:text-4xl">
-                  A Trilha Olímpica
-                </p>
-              </div>
+                style={{ filter: "drop-shadow(0 0 14px rgba(251,191,36,.55))" }}
+              />
+              <p className="text-lg font-semibold uppercase tracking-[0.4em] text-slate-100 sm:text-xl">
+                A Trilha Olímpica
+              </p>
+              <div
+                className="mx-auto h-px w-20"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(251,191,36,.7), transparent)",
+                }}
+              />
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-600">
+                Ciclo 2026 · Atualizado em 16/07/2026
+              </p>
             </div>
           </Reveal>
-          <Reveal delay={100}>
+          <Reveal delay={150}>
             <h1 className="font-serif text-5xl leading-[1.02] text-slate-50 sm:text-7xl">
               A medalha é{" "}
               <span
@@ -240,15 +244,10 @@ export function TrilhaOlimpica() {
               </span>
             </h1>
           </Reveal>
-          <Reveal delay={200}>
-            <p className="text-lg leading-relaxed text-slate-400">
+          <Reveal delay={250}>
+            <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-400">
               Universidades do Brasil e do mundo reservam vagas, bolsas integrais e portas de
               entrada próprias para quem se destaca nas olimpíadas do conhecimento.
-            </p>
-          </Reveal>
-          <Reveal delay={300}>
-            <p className="text-xs uppercase tracking-widest text-slate-600">
-              Atualizado em 16/07/2026
             </p>
           </Reveal>
         </header>
