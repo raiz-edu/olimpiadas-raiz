@@ -267,6 +267,29 @@ export async function getQuestoesTreino(filtros: {
     return { questoes: final, totalDisponivel: pool.length };
   }
 
+  // Prova na íntegra: origem + nível + fase + ano definidos, sem recorte de
+  // tópico/subtópico — o aluno quer fazer uma prova específica completa.
+  // Retorna todas as questões dela, sem cota de sessão nem distribuição de
+  // dificuldade, na ordem oficial da prova (ou embaralhada no modo aleatório).
+  const provaCompleta =
+    !!filtros.olimpiada &&
+    !!filtros.nivel &&
+    filtros.fase !== undefined &&
+    !Number.isNaN(filtros.fase) &&
+    filtros.ano !== undefined &&
+    !Number.isNaN(filtros.ano) &&
+    !filtros.topico &&
+    !filtros.subtopico &&
+    !filtros.assunto;
+
+  if (provaCompleta) {
+    const final =
+      filtros.modo === "aleatorio"
+        ? embaralhar(pool)
+        : [...pool].sort((a, b) => a.numero - b.numero);
+    return { questoes: final, totalDisponivel: pool.length };
+  }
+
   // Embaralha o pool uma vez — a ordem aqui decide quais questões "ganham"
   // dentro de cada faixa de dificuldade quando há mais disponíveis que a cota.
   const embaralhado = embaralhar(pool);
