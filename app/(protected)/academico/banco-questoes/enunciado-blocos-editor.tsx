@@ -3,7 +3,7 @@
 import { useState, useRef, useTransition } from "react";
 import { uploadQuestaoImagem } from "./actions";
 import { inputClass } from "@/components/ui/form-field";
-import { MathToolbar, insertAtCursor } from "@/components/ui/math-toolbar";
+import { MathToolbar, insertAtCursor, convertSelection } from "@/components/ui/math-toolbar";
 
 type UploadFn = (fd: FormData) => Promise<{ url: string } | { error: string }>;
 
@@ -250,6 +250,13 @@ export function EnunciadoBlocosEditor({
                   <div className="mt-1.5 rounded-lg border border-border bg-muted/30 p-2">
                     <MathToolbar
                       onInsert={(simbolo) => inserirSimbolo(i, bloco.conteudo, simbolo)}
+                      onConvert={(modo) => {
+                        const el = textareaRefs.current[i];
+                        if (!el) return;
+                        convertSelection(el, modo, bloco.conteudo, (next) =>
+                          update(i, { tipo: "texto", conteudo: next }),
+                        );
+                      }}
                     />
                   </div>
                 )}
