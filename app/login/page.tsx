@@ -1,7 +1,5 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import { LoginForm } from "@/components/auth/login-form";
-import { PresentationPanel } from "@/components/auth/presentation-panel";
+import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
 
 export const metadata = {
   title: "Login — Olimpíadas do Conhecimento",
@@ -33,10 +31,6 @@ export default async function LoginPage({
   const { marca } = await searchParams;
   const logoFile = marca ? SLUG_TO_LOGO[marca] : null;
   const marcaNome = marca ? SLUG_TO_NOME[marca] : null;
-  const presentationHtml = readFileSync(
-    join(process.cwd(), "public", "trilha-olimpica.html"),
-    "utf-8",
-  );
 
   return (
     <main className="relative flex min-h-screen">
@@ -55,9 +49,14 @@ export default async function LoginPage({
       {/* ── Lado esquerdo: apresentação (somente desktop — não carrega/roda no mobile) ── */}
       <div
         className="relative hidden overflow-hidden md:block md:w-2/3"
-        style={{ background: "#0f172a" }}
+        style={{ background: "#0b1120" }}
       >
-        <PresentationPanel html={presentationHtml} />
+        <div
+          className="absolute inset-0 overflow-y-auto"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "#1e293b transparent" }}
+        >
+          <TrilhaOlimpica />
+        </div>
       </div>
 
       {/* ── Lado direito: formulário ───────────────────────────────────── */}
