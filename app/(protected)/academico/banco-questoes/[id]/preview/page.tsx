@@ -34,9 +34,15 @@ export default async function QuestaoPreviewPage({
 
   const { id } = await params;
   const { ret } = await searchParams;
-  const voltarHref = ret
-    ? `/academico/banco-questoes?${decodeURIComponent(ret)}`
+  const retDec = ret ? decodeURIComponent(ret) : "";
+  const voltarHref = retDec
+    ? retDec.startsWith("/")
+      ? retDec
+      : `/academico/banco-questoes?${retDec}`
     : "/academico/banco-questoes";
+  const voltarLabel = retDec.startsWith("/academico/banco-questoes/prova")
+    ? "Prova"
+    : "Banco de Questões";
   const editarHref = `/academico/banco-questoes/${id}${ret ? `?ret=${encodeURIComponent(ret)}` : ""}`;
   const { questao, alternativas, solucao } = await getQuestaoDetalhe(id);
   if (!questao) redirect(voltarHref);
@@ -52,7 +58,7 @@ export default async function QuestaoPreviewPage({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link href={voltarHref} className="hover:text-foreground">
-            Banco de Questões
+            {voltarLabel}
           </Link>
           <span>/</span>
           <Link href={editarHref} className="hover:text-foreground">
