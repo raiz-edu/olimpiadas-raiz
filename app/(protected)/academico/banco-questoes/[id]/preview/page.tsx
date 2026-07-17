@@ -22,13 +22,24 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   },
 };
 
-export default async function QuestaoPreviewPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuestaoPreviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ ret?: string }>;
+}) {
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:read")) redirect("/dashboard");
 
   const { id } = await params;
+  const { ret } = await searchParams;
+  const voltarHref = ret
+    ? `/academico/banco-questoes?${decodeURIComponent(ret)}`
+    : "/academico/banco-questoes";
+  const editarHref = `/academico/banco-questoes/${id}${ret ? `?ret=${encodeURIComponent(ret)}` : ""}`;
   const { questao, alternativas, solucao } = await getQuestaoDetalhe(id);
-  if (!questao) redirect("/academico/banco-questoes");
+  if (!questao) redirect(voltarHref);
 
   const corretaId = alternativas.find((a: any) => a.correta)?.id ?? null;
   const status = STATUS_LABEL[questao.status_cadastro] ?? {
@@ -40,11 +51,11 @@ export default async function QuestaoPreviewPage({ params }: { params: Promise<{
     <div className="max-w-2xl" data-questao-id={id} data-status-cadastro={questao.status_cadastro}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/academico/banco-questoes" className="hover:text-foreground">
+          <Link href={voltarHref} className="hover:text-foreground">
             Banco de Questões
           </Link>
           <span>/</span>
-          <Link href={`/academico/banco-questoes/${id}`} className="hover:text-foreground">
+          <Link href={editarHref} className="hover:text-foreground">
             {OLIMPIADA_LABEL[questao.olimpiada] ?? questao.olimpiada} · {questao.fase}ª Fase ·{" "}
             {questao.ano} · Q{questao.numero}
           </Link>
@@ -58,7 +69,7 @@ export default async function QuestaoPreviewPage({ params }: { params: Promise<{
             {status.label}
           </span>
           <Link
-            href={`/academico/banco-questoes/${id}`}
+            href={editarHref}
             className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
           >
             Editar
