@@ -49,17 +49,25 @@ export default async function QuestaoDetalhePage({
             {questao.numero}
           </span>
         </div>
-        {can(session.user.role, "questao:delete") && (
-          <form action={excluirQuestao}>
-            <input type="hidden" name="id" value={id} />
-            <ConfirmButton
-              message={`Excluir esta questão permanentemente? Alternativas, resolução e respostas dos alunos serão removidas.`}
-              className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-            >
-              Excluir questão
-            </ConfirmButton>
-          </form>
-        )}
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/academico/banco-questoes/${id}/preview`}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+          >
+            Ver como o aluno
+          </Link>
+          {can(session.user.role, "questao:delete") && (
+            <form action={excluirQuestao}>
+              <input type="hidden" name="id" value={id} />
+              <ConfirmButton
+                message={`Excluir esta questão permanentemente? Alternativas, resolução e respostas dos alunos serão removidas.`}
+                className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                Excluir questão
+              </ConfirmButton>
+            </form>
+          )}
+        </div>
       </div>
 
       {/* Estatísticas */}
