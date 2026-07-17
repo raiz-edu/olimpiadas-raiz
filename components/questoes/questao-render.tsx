@@ -1,0 +1,248 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { FormattedText } from "@/components/ui/formatted-text";
+
+const OLIMPIADA_LABEL: Record<string, string> = { obmep_mirim: "OBMEP Mirim", obmep: "OBMEP" };
+const TEAL = "rgb(91,184,193)";
+
+type Bloco = { tipo: string; conteudo?: string; url?: string; largura?: string };
+
+/**
+ * Render canônico de uma questão como o aluno vê (card completo: meta,
+ * enunciado, alternativas com gabarito e resolução). Usado na revisão do
+ * treino do aluno e no preview do banco de questões — mudanças aqui afetam
+ * as duas superfícies.
+ */
+export function QuestaoRender({
+  questao,
+  alternativas,
+  solucao,
+  corretaId,
+  resposta,
+  children,
+}: {
+  questao: any;
+  alternativas: any[];
+  solucao: any;
+  corretaId: string | null;
+  resposta?: { alternativa_id: string | null; correta: boolean | null } | null;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 space-y-5" data-questao-render>
+      {/* Meta */}
+      <div className="flex flex-wrap gap-2">
+        <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400">
+          {OLIMPIADA_LABEL[questao.olimpiada] ?? questao.olimpiada}
+        </span>
+        <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
+          {questao.fase != null ? `${questao.fase}ª Fase · ` : ""}
+          {questao.ano}
+        </span>
+        {questao.assunto && (
+          <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-400">
+            {questao.assunto}
+          </span>
+        )}
+      </div>
+
+      {/* Enunciado (blocos texto+imagem ou texto plano legado) */}
+      {Array.isArray((questao as any).enunciado_blocos) ? (
+        ((questao as any).enunciado_blocos as Bloco[]).map((b, i) =>
+          b.tipo === "texto" ? (
+            <p key={i} className="text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
+              <FormattedText text={b.conteudo ?? ""} />
+            </p>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={b.url}
+              alt={`Figura ${i + 1}`}
+              className="max-w-full rounded-lg border border-border"
+              style={
+                b.largura && b.largura !== "completa"
+                  ? {
+                      maxWidth: (
+                        {
+                          pequena: "min(200px, 100%)",
+                          media: "min(320px, 100%)",
+                          grande: "min(480px, 100%)",
+                        } as Record<string, string>
+                      )[b.largura],
+                    }
+                  : { maxWidth: "100%" }
+              }
+            />
+          ),
+        )
+      ) : (
+        <>
+          <p className="text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
+            {questao.enunciado}
+          </p>
+          {questao.imagem_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={questao.imagem_url}
+              alt="Figura"
+              className="max-w-full rounded-lg border border-border"
+            />
+          )}
+        </>
+      )}
+
+      {/* Alternativas (read-only com gabarito) */}
+      <div className="space-y-2">
+        {alternativas.map((alt: any) => {
+          const isCorreta = alt.id === corretaId;
+          const isAluno = alt.id === resposta?.alternativa_id;
+          return (
+            <div
+              key={alt.id}
+              className={`flex items-start gap-3 rounded-lg border-2 p-3 ${isCorreta ? "border-emerald-500 bg-emerald-500/8" : isAluno && !resposta?.correta ? "border-red-500 bg-red-500/8" : "border-border opacity-60"}`}
+            >
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${isCorreta ? "border-emerald-500 text-emerald-400" : "border-muted-foreground text-muted-foreground"}`}
+              >
+                {alt.letra}
+              </span>
+              <div className="flex-1">
+                {alt.texto && <p className="text-sm text-foreground">{alt.texto}</p>}
+                {alt.imagem_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={alt.imagem_url}
+                    alt={`Alt ${alt.letra}`}
+                    className="mt-1 rounded border border-border"
+                    style={{
+                      width:
+                        (
+                          {
+                            pequena: "120px",
+                            media: "220px",
+                            grande: "360px",
+                            completa: "100%",
+                          } as Record<string, string>
+                        )[(alt as any).imagem_largura ?? "media"] ?? "220px",
+                      maxWidth: "100%",
+                    }}
+                  />
+                )}
+                {isAluno && !resposta?.correta && (
+                  <p className="text-xs text-red-400 mt-1">← sua resposta</p>
+                )}
+                {isCorreta && <p className="text-xs text-emerald-400 mt-1">✓ resposta correta</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Gabarito / Resolução */}
+      <div className="rounded-xl border border-border bg-background overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-border">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2">
+            <path d="M9 12l2 2 4-4" />
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: TEAL }}>
+            Gabarito
+          </span>
+        </div>
+        <div className="p-5 space-y-4">
+          {(solucao as any)?.blocos?.length ? (
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                Resolução
+              </p>
+              {((solucao as any).blocos as Bloco[]).map((b, i) =>
+                b.tipo === "texto" ? (
+                  <p
+                    key={i}
+                    className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
+                  >
+                    <FormattedText text={b.conteudo ?? ""} />
+                  </p>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={b.url!}
+                    alt="Resolução"
+                    className="rounded-lg border border-border"
+                    style={{
+                      width:
+                        (
+                          {
+                            pequena: "180px",
+                            media: "360px",
+                            grande: "560px",
+                          } as Record<string, string>
+                        )[b.largura ?? ""] ?? "100%",
+                      maxWidth: "100%",
+                    }}
+                  />
+                ),
+              )}
+            </div>
+          ) : solucao?.texto ? (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                Resolução
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {solucao.texto}
+              </p>
+            </div>
+          ) : solucao?.imagem_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={solucao.imagem_url}
+              alt="Resolução"
+              className="rounded-lg border border-border"
+              style={{
+                width:
+                  (
+                    {
+                      pequena: "180px",
+                      media: "360px",
+                      grande: "560px",
+                      completa: "100%",
+                    } as Record<string, string>
+                  )[(solucao as any).imagem_largura ?? "completa"] ?? "100%",
+                maxWidth: "100%",
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Resolução não disponível.</p>
+          )}
+          {questao.video_url && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                Resolução em vídeo
+              </p>
+              <a
+                href={questao.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl border border-violet-500/30 bg-violet-500/8 px-4 py-3 hover:bg-violet-500/15 transition-colors"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                    <polygon points="5,3 19,12 5,21" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Assistir resolução</p>
+                  <p className="text-xs text-violet-400">Abre em nova aba</p>
+                </div>
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {children}
+    </div>
+  );
+}
