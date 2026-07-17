@@ -51,7 +51,7 @@ export default async function QuestaoDetalhePage({
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href={`/academico/banco-questoes/${id}/preview`}
+            href={`/academico/banco-questoes/${id}/preview${ret ? `?ret=${encodeURIComponent(ret)}` : ""}`}
             className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
           >
             Ver como o aluno
