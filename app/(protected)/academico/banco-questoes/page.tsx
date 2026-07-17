@@ -111,6 +111,14 @@ export default async function BancoQuestoesPage({
           >
             Limpar
           </Link>
+          {sp.olimpiada && sp.nivel && sp.fase && sp.ano && (
+            <Link
+              href={`/academico/banco-questoes/prova?olimpiada=${sp.olimpiada}&nivel=${sp.nivel}&fase=${sp.fase}&ano=${sp.ano}${filtrosQS ? `&ret=${encodeURIComponent(filtrosQS)}` : ""}`}
+              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+            >
+              Ver prova como o aluno
+            </Link>
+          )}
         </div>
         {/* Linha 2: dropdowns */}
         <div className="flex flex-wrap gap-2">
