@@ -25,9 +25,17 @@ export default async function QuestaoDetalhePage({
 
   const { id } = await params;
   const { ret } = await searchParams;
-  const voltarHref = ret
-    ? `/academico/banco-questoes?${decodeURIComponent(ret)}`
+  // ret pode ser o querystring de filtros da lista OU um caminho absoluto de retorno
+  // (ex.: a prova inteira, quando editada de lá) — nesse caso começa com "/".
+  const retDec = ret ? decodeURIComponent(ret) : "";
+  const voltarHref = retDec
+    ? retDec.startsWith("/")
+      ? retDec
+      : `/academico/banco-questoes?${retDec}`
     : "/academico/banco-questoes";
+  const voltarLabel = retDec.startsWith("/academico/banco-questoes/prova")
+    ? "Prova"
+    : "Banco de Questões";
   const { questao, alternativas, solucao, stats } = await getQuestaoDetalhe(id);
   if (!questao) redirect(voltarHref);
 
@@ -41,7 +49,7 @@ export default async function QuestaoDetalhePage({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link href={voltarHref} className="hover:text-foreground">
-            Banco de Questões
+            {voltarLabel}
           </Link>
           <span>/</span>
           <span className="text-foreground">

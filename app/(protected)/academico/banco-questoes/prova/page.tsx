@@ -63,7 +63,12 @@ export default async function ProvaPreviewPage({
   const titulo = `${OLIMPIADA_LABEL[olimpiada] ?? olimpiada} · ${fase}ª Fase · ${ano} · ${
     NIVEL_LABEL[nivel] ?? nivel
   }`;
-  const retParam = ret ? `?ret=${encodeURIComponent(ret)}` : "";
+  // Editar volta PARA A PROVA (na questão editada), não para a lista: o ret passado
+  // é o path completo da prova + âncora. A página de edição reconhece ret que começa
+  // com "/" como caminho absoluto de retorno.
+  const provaPath = `/academico/banco-questoes/prova?olimpiada=${olimpiada}&nivel=${nivel}&fase=${fase}&ano=${ano}${
+    ret ? `&ret=${encodeURIComponent(ret)}` : ""
+  }`;
   const pendentes = questoes.filter((q: any) => q.status_cadastro === "aguardando_revisao").length;
 
   return (
@@ -134,7 +139,7 @@ export default async function ProvaPreviewPage({
                   </span>
                 </div>
                 <Link
-                  href={`/academico/banco-questoes/${q.id}${retParam}`}
+                  href={`/academico/banco-questoes/${q.id}?ret=${encodeURIComponent(`${provaPath}#q${q.numero}`)}`}
                   className="rounded-lg border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
                 >
                   Editar
