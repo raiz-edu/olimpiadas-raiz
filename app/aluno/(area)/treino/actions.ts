@@ -718,7 +718,8 @@ export async function responderQuestaoAberta(
         return { feedback, questao_id };
       }
     }
-  } catch {
+  } catch (err) {
+    console.error("[treino] transcricao de foto falhou:", err);
     return { error: "Não foi possível avaliar agora. Tente enviar novamente." };
   }
 
@@ -744,7 +745,8 @@ export async function responderQuestaoAberta(
           imagensSolucao,
           respostaParaAvaliar,
         );
-  } catch {
+  } catch (err) {
+    console.error("[treino] avaliacao aberta falhou:", err);
     return { error: "Não foi possível avaliar agora. Tente enviar novamente." };
   }
 
