@@ -34,7 +34,8 @@ export default async function QuestaoPreviewPage({
 
   const { id } = await params;
   const { ret } = await searchParams;
-  const retDec = ret ? decodeURIComponent(ret) : "";
+  // searchParams já decodificado pelo Next — não decodar de novo (corrompe ret aninhado)
+  const retDec = ret ?? "";
   const voltarHref = retDec
     ? retDec.startsWith("/")
       ? retDec
