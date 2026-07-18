@@ -27,7 +27,9 @@ export default async function QuestaoDetalhePage({
   const { ret } = await searchParams;
   // ret pode ser o querystring de filtros da lista OU um caminho absoluto de retorno
   // (ex.: a prova inteira, quando editada de lá) — nesse caso começa com "/".
-  const retDec = ret ? decodeURIComponent(ret) : "";
+  // searchParams JÁ vem decodificado pelo Next: decodar de novo corrompe ret ANINHADO
+  // (prova com ret da lista dentro) e o retorno cai na lista em vez da prova.
+  const retDec = ret ?? "";
   const voltarHref = retDec
     ? retDec.startsWith("/")
       ? retDec

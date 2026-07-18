@@ -43,9 +43,8 @@ export default async function ProvaPreviewPage({
   if (!session || !can(session.user.role, "questao:read")) redirect("/dashboard");
 
   const { olimpiada, nivel, fase, ano, ret } = await searchParams;
-  const voltarHref = ret
-    ? `/academico/banco-questoes?${decodeURIComponent(ret)}`
-    : "/academico/banco-questoes";
+  // searchParams já decodificado pelo Next — não decodar de novo (corrompe busca com %/acentos)
+  const voltarHref = ret ? `/academico/banco-questoes?${ret}` : "/academico/banco-questoes";
   if (!olimpiada || !nivel || !fase || !ano) redirect(voltarHref);
 
   const supabase = createAdminClient() as any;
