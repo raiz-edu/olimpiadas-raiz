@@ -1167,6 +1167,7 @@ function NovaQuestaoAulaForm({ aulaId, onClose }: { aulaId: string; onClose: () 
       <datalist id={`dl-orig-${aulaId}`}>
         <option value="obmep" />
         <option value="obmep_mirim" />
+        <option value="canguru" />
         <option value="obm" />
         <option value="obf" />
         <option value="obi" />
@@ -1178,6 +1179,12 @@ function NovaQuestaoAulaForm({ aulaId, onClose }: { aulaId: string; onClose: () 
         <option value="nivel_2" />
         <option value="nivel_3" />
         <option value="mirim" />
+        <option value="P" label="Canguru P (3º-4º ano)" />
+        <option value="E" label="Canguru E (5º-6º ano)" />
+        <option value="B" label="Canguru B (7º-8º ano)" />
+        <option value="C" label="Canguru C (9º ano)" />
+        <option value="J" label="Canguru J (1ª-2ª série EM)" />
+        <option value="S" label="Canguru S (3ª série EM)" />
       </datalist>
 
       <div className="grid grid-cols-2 gap-3">

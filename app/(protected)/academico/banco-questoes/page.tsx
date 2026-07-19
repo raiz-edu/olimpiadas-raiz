@@ -7,10 +7,12 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { getQuestoes, excluirQuestao, toggleAtivo, aprovarQuestao } from "./actions";
 
-const OLIMPIADA_LABEL: Record<string, string> = {
-  obmep_mirim: "OBMEP Mirim",
-  obmep: "OBMEP",
-};
+import {
+  OLIMPIADA_LABEL,
+  NIVEL_LABEL,
+  NIVEIS_POR_OLIMPIADA,
+  NIVEIS_TODOS,
+} from "@/lib/questoes/olimpiadas";
 
 const DIFICULDADE_LABEL: Record<string, string> = {
   elementar: "Elementar",
@@ -126,6 +128,7 @@ export default async function BancoQuestoesPage({
             <option value="">Origem</option>
             <option value="obmep">OBMEP</option>
             <option value="obmep_mirim">OBMEP Mirim</option>
+            <option value="canguru">Canguru</option>
             <option value="obm">OBM</option>
             <option value="obf">OBF</option>
             <option value="obi">OBI</option>
@@ -133,9 +136,11 @@ export default async function BancoQuestoesPage({
 
           <select name="nivel" defaultValue={sp.nivel ?? ""} className={seletorClass}>
             <option value="">Nível</option>
-            <option value="nivel_1">Nível 1</option>
-            <option value="nivel_2">Nível 2</option>
-            <option value="nivel_3">Nível 3</option>
+            {(NIVEIS_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? NIVEIS_TODOS).map((n) => (
+              <option key={n} value={n}>
+                {NIVEL_LABEL[n] ?? n}
+              </option>
+            ))}
           </select>
 
           <select name="fase" defaultValue={sp.fase ?? ""} className={seletorClass}>

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FormattedText } from "@/components/ui/formatted-text";
-
-const OLIMPIADA_LABEL: Record<string, string> = { obmep_mirim: "OBMEP Mirim", obmep: "OBMEP" };
+import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
 const TEAL = "rgb(91,184,193)";
 
 type Bloco = { tipo: string; conteudo?: string; url?: string; largura?: string };

@@ -5,17 +5,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { QuestaoRender } from "@/components/questoes/questao-render";
-
-const OLIMPIADA_LABEL: Record<string, string> = {
-  obmep_mirim: "OBMEP Mirim",
-  obmep: "OBMEP",
-};
-
-const NIVEL_LABEL: Record<string, string> = {
-  nivel_1: "Nível 1",
-  nivel_2: "Nível 2",
-  nivel_3: "Nível 3",
-};
+import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   publicado: {

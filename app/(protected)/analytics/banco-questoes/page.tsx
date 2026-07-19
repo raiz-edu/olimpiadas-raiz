@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { can } from "@/lib/auth/roles";
+import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
 
 export const metadata = { title: "Banco de Questões — Gestão" };
 
@@ -76,18 +77,6 @@ function BarRow({
 }
 
 // ─── Mapas de label ────────────────────────────────────────────────────────────
-
-const OLIMPIADA_LABEL: Record<string, string> = {
-  obmep: "OBMEP",
-  obmep_mirim: "OBMEP Mirim",
-};
-
-const NIVEL_LABEL: Record<string, string> = {
-  nivel_1: "Nível 1",
-  nivel_2: "Nível 2",
-  nivel_3: "Nível 3",
-  mirim: "Mirim",
-};
 
 const DIFICULDADE_ORDER = ["elementar", "facil", "medio", "dificil", "muito_dificil"];
 const DIFICULDADE_LABEL: Record<string, string> = {
