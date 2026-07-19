@@ -5,11 +5,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { getQuestaoDetalhe } from "../../actions";
 import { QuestaoRender } from "@/components/questoes/questao-render";
-
-const OLIMPIADA_LABEL: Record<string, string> = {
-  obmep_mirim: "OBMEP Mirim",
-  obmep: "OBMEP",
-};
+import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   publicado: {

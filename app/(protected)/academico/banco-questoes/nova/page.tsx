@@ -172,6 +172,7 @@ export default function NovaBancoQuestaoPage() {
         <datalist id="dl-olimpiada">
           <option value="obmep" />
           <option value="obmep_mirim" />
+          <option value="canguru" />
           <option value="obm" />
           <option value="obf" />
           <option value="obi" />
@@ -187,6 +188,12 @@ export default function NovaBancoQuestaoPage() {
           <option value="mirim" />
           <option value="junior" />
           <option value="senior" />
+          <option value="P" label="Canguru P (3º-4º ano)" />
+          <option value="E" label="Canguru E (5º-6º ano)" />
+          <option value="B" label="Canguru B (7º-8º ano)" />
+          <option value="C" label="Canguru C (9º ano)" />
+          <option value="J" label="Canguru J (1ª-2ª série EM)" />
+          <option value="S" label="Canguru S (3ª série EM)" />
         </datalist>
 
         {/* Linha 1: Origem + Nível/Categoria */}

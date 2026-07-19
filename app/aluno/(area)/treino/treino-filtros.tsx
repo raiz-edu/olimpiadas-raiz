@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { NIVEL_LABEL, NIVEIS_POR_OLIMPIADA, NIVEIS_TODOS } from "@/lib/questoes/olimpiadas";
 
 const cls =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground";
@@ -111,9 +112,11 @@ export function TreinoFiltros({
           <span className={labelCls}>Nível</span>
           <select name="nivel" defaultValue={defaults.nivel ?? ""} className={cls}>
             <option value="">Todos</option>
-            <option value="nivel_1">Nível 1</option>
-            <option value="nivel_2">Nível 2</option>
-            <option value="nivel_3">Nível 3</option>
+            {(NIVEIS_POR_OLIMPIADA[olimpiadaSel] ?? NIVEIS_TODOS).map((n) => (
+              <option key={n} value={n}>
+                {NIVEL_LABEL[n] ?? n}
+              </option>
+            ))}
           </select>
         </div>
 

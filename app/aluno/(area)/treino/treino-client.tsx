@@ -16,8 +16,7 @@ import { FormattedText } from "@/components/ui/formatted-text";
 import { RespostaAbertaInput, FeedbackAberto } from "@/components/aluno/resposta-aberta-input";
 import type { FeedbackIA } from "@/lib/ai/types";
 import type { Questao, Alternativa } from "@/lib/types/database";
-
-const OLIMPIADA_LABEL: Record<string, string> = { obmep_mirim: "OBMEP Mirim", obmep: "OBMEP" };
+import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
 const TEAL = "rgb(91,184,193)";
 
 type RespostaLocal = {
@@ -416,9 +415,7 @@ export function TreinoClient({
           </span>
           {questao.nivel && (
             <span className="inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-bold text-sky-400">
-              {{ nivel_1: "Nível 1", nivel_2: "Nível 2", nivel_3: "Nível 3", mirim: "Mirim" }[
-                questao.nivel
-              ] ?? questao.nivel}
+              {NIVEL_LABEL[questao.nivel] ?? questao.nivel}
             </span>
           )}
           {questao.fase != null && (

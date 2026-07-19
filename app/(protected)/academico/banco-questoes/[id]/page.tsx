@@ -7,11 +7,7 @@ import { QuestaoEditForm } from "./questao-edit-form";
 import { AlternativasEditor } from "./alternativas-editor";
 import { SolucaoEditor } from "./solucao-editor";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-
-const OLIMPIADA_LABEL: Record<string, string> = {
-  obmep_mirim: "OBMEP Mirim",
-  obmep: "OBMEP",
-};
+import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
 
 export default async function QuestaoDetalhePage({
   params,

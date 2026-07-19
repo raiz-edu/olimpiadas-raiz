@@ -31,7 +31,11 @@ function posStyle(pos: number) {
   };
 }
 
-const OLIMP_LABEL: Record<string, string> = { obmep: "OBMEP", obmep_mirim: "Mirim" };
+const OLIMP_LABEL: Record<string, string> = {
+  obmep: "OBMEP",
+  obmep_mirim: "Mirim",
+  canguru: "Canguru",
+};
 const NIVEL_SHORT: Record<string, string> = {
   nivel_1: "N1",
   nivel_2: "N2",
