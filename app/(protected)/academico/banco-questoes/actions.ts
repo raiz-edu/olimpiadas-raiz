@@ -284,6 +284,56 @@ export async function aprovarQuestao(id: string) {
   revalidatePath("/academico/banco-questoes");
 }
 
+/**
+ * Aprova (publica) EM LOTE todas as questões `aguardando_revisao` que casam com os
+ * filtros atuais da tela. Espelha exatamente os filtros de `getQuestoes` (exceto
+ * status_cadastro, que é sempre forçado para `aguardando_revisao`), então age apenas
+ * sobre o conjunto visível na lista. Apenas `raiz`.
+ */
+export async function aprovarTodas(formData: FormData) {
+  const session = await getServerSession();
+  if (!session || session.user.role !== "raiz") return;
+  const s = (k: string) => {
+    const v = formData.get(k);
+    return typeof v === "string" && v ? v : undefined;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+  let query = supabase
+    .from("questao")
+    .update({ status_cadastro: "publicado" })
+    .eq("status_cadastro", "aguardando_revisao"); // só publica pendentes, nunca rebaixa
+
+  const olimpiada = s("olimpiada");
+  const nivel = s("nivel");
+  const fase = s("fase");
+  const ano = s("ano");
+  const tipo = s("tipo");
+  const dificuldade = s("dificuldade");
+  const publico_alvo = s("publico_alvo");
+  const busca = s("busca");
+  const statusAtivo = s("status"); // "ativa" | "inativa"
+
+  if (olimpiada) query = query.eq("olimpiada", olimpiada);
+  if (nivel) query = query.eq("nivel", nivel);
+  if (fase) query = query.eq("fase", Number(fase));
+  if (ano) query = query.eq("ano", Number(ano));
+  if (tipo) query = query.eq("tipo", tipo as TipoQuestao);
+  if (dificuldade) query = query.eq("dificuldade", dificuldade);
+  if (publico_alvo) query = query.eq("publico_alvo", publico_alvo);
+  if (statusAtivo === "ativa") query = query.eq("ativo", true);
+  else if (statusAtivo === "inativa") query = query.eq("ativo", false);
+  if (busca) {
+    const termo = busca.replace(/[%_]/g, "\\$&");
+    query = query.or(
+      `enunciado.ilike.%${termo}%,topico.ilike.%${termo}%,subtopico.ilike.%${termo}%`,
+    );
+  }
+
+  await query;
+  revalidatePath("/academico/banco-questoes");
+}
+
 // ─── Validação de upload de imagem ───────────────────────────────────────────
 
 const ALLOWED_IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
