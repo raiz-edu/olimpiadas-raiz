@@ -12,6 +12,9 @@ import {
   NIVEL_LABEL,
   NIVEIS_POR_OLIMPIADA,
   NIVEIS_TODOS,
+  FASES_POR_OLIMPIADA,
+  FASES_TODAS,
+  faseLabel,
 } from "@/lib/questoes/olimpiadas";
 
 const DIFICULDADE_LABEL: Record<string, string> = {
@@ -145,8 +148,11 @@ export default async function BancoQuestoesPage({
 
           <select name="fase" defaultValue={sp.fase ?? ""} className={seletorClass}>
             <option value="">Fase</option>
-            <option value="1">1ª Fase</option>
-            <option value="2">2ª Fase</option>
+            {(FASES_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? FASES_TODAS).map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
           </select>
 
           <select name="ano" defaultValue={sp.ano ?? ""} className={seletorClass}>
@@ -260,7 +266,7 @@ export default async function BancoQuestoesPage({
                     {q.nivel ?? "—"}
                   </td>
                   <td className="px-3 py-2.5 text-xs whitespace-nowrap">
-                    {q.fase != null ? `${q.fase}ª` : "—"}
+                    {q.olimpiada === "canguru" ? "Única" : q.fase != null ? `${q.fase}ª` : "—"}
                   </td>
                   <td className="px-3 py-2.5 text-xs whitespace-nowrap">{q.ano}</td>
                   <td className="px-3 py-2.5 text-xs whitespace-nowrap">{q.numero ?? "—"}</td>
@@ -341,7 +347,7 @@ export default async function BancoQuestoesPage({
                         <form action={excluirQuestao}>
                           <input type="hidden" name="id" value={q.id} />
                           <ConfirmButton
-                            message={`Excluir questão ${q.numero ?? "?"} (${q.fase != null ? `${q.fase}ª fase` : "sem fase"} · ${q.ano})? Esta ação não pode ser desfeita.`}
+                            message={`Excluir questão ${q.numero ?? "?"} (${faseLabel(q.olimpiada, q.fase) || "sem fase"} · ${q.ano})? Esta ação não pode ser desfeita.`}
                             className="text-xs text-red-400 hover:text-red-300 transition-colors"
                           >
                             Excluir

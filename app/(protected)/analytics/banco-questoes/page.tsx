@@ -3,7 +3,13 @@ import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { can } from "@/lib/auth/roles";
-import { OLIMPIADA_LABEL, NIVEL_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
+import {
+  OLIMPIADA_LABEL,
+  NIVEL_LABEL,
+  faseLabel,
+  FASES_POR_OLIMPIADA,
+  FASES_TODAS,
+} from "@/lib/questoes/olimpiadas";
 
 export const metadata = { title: "Banco de Questões — Gestão" };
 
@@ -332,8 +338,11 @@ export default async function BancoQuestoesAnalyticsPage({
             <label className="text-xs font-medium text-muted-foreground">Fase</label>
             <select name="fase" defaultValue={sp.fase ?? ""} className={selectClass}>
               <option value="">Todas</option>
-              <option value="1">1ª Fase</option>
-              <option value="2">2ª Fase</option>
+              {(FASES_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? FASES_TODAS).map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex flex-col gap-1">
