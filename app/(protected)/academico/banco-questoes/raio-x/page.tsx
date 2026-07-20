@@ -2,7 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
+import {
+  OLIMPIADA_LABEL,
+  NIVEL_LABEL,
+  FASES_POR_OLIMPIADA,
+  FASES_TODAS,
+} from "@/lib/questoes/olimpiadas";
 
 export const metadata = { title: "Raio-X do Banco de Questões" };
 
@@ -314,8 +319,11 @@ export default async function RaioXBancoQuestoesPage({
             <label className="text-xs font-medium text-muted-foreground">Fase</label>
             <select name="fase" defaultValue={sp.fase ?? ""} className={selectClass}>
               <option value="">Todas</option>
-              <option value="1">1ª Fase</option>
-              <option value="2">2ª Fase</option>
+              {(FASES_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? FASES_TODAS).map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex flex-col gap-1">
