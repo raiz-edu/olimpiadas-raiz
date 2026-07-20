@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FormattedText } from "@/components/ui/formatted-text";
-import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 const TEAL = "rgb(91,184,193)";
 
 type Bloco = { tipo: string; conteudo?: string; url?: string; largura?: string };
@@ -34,7 +34,7 @@ export function QuestaoRender({
           {OLIMPIADA_LABEL[questao.olimpiada] ?? questao.olimpiada}
         </span>
         <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
-          {questao.fase != null ? `${questao.fase}ª Fase · ` : ""}
+          {questao.fase != null ? `${faseLabel(questao.olimpiada, questao.fase)} · ` : ""}
           {questao.ano}
         </span>
         {questao.assunto && (

@@ -16,7 +16,7 @@ import { FormattedText } from "@/components/ui/formatted-text";
 import { RespostaAbertaInput, FeedbackAberto } from "@/components/aluno/resposta-aberta-input";
 import type { FeedbackIA } from "@/lib/ai/types";
 import type { Questao, Alternativa } from "@/lib/types/database";
-import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, NIVEL_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 const TEAL = "rgb(91,184,193)";
 
 type RespostaLocal = {
@@ -420,7 +420,7 @@ export function TreinoClient({
           )}
           {questao.fase != null && (
             <span className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-bold text-violet-400">
-              {questao.fase}ª Fase
+              {faseLabel(questao.olimpiada, questao.fase)}
             </span>
           )}
           <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-0.5 text-[11px] text-muted-foreground">

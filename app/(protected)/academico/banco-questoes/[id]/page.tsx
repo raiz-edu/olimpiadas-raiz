@@ -7,7 +7,7 @@ import { QuestaoEditForm } from "./questao-edit-form";
 import { AlternativasEditor } from "./alternativas-editor";
 import { SolucaoEditor } from "./solucao-editor";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 
 export default async function QuestaoDetalhePage({
   params,
@@ -51,8 +51,8 @@ export default async function QuestaoDetalhePage({
           </Link>
           <span>/</span>
           <span className="text-foreground">
-            {OLIMPIADA_LABEL[questao.olimpiada]} · {questao.fase}ª Fase · {questao.ano} · Q
-            {questao.numero}
+            {OLIMPIADA_LABEL[questao.olimpiada]} · {faseLabel(questao.olimpiada, questao.fase)} ·{" "}
+            {questao.ano} · Q{questao.numero}
           </span>
         </div>
         <div className="flex items-center gap-2">

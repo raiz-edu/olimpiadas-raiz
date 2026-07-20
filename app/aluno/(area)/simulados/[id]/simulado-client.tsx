@@ -15,6 +15,7 @@ import {
 } from "../actions";
 import { responderQuestao } from "@/app/aluno/(area)/treino/actions";
 import { FormattedText } from "@/components/ui/formatted-text";
+import { faseLabel } from "@/lib/questoes/olimpiadas";
 import type { Questao, Alternativa } from "@/lib/types/database";
 
 const TEAL = "rgb(91,184,193)";
@@ -337,7 +338,7 @@ export function SimuladoClient({
               </span>
             )}
             <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
-              {questao.fase != null ? `${questao.fase}ª Fase · ` : ""}
+              {questao.fase != null ? `${faseLabel(questao.olimpiada, questao.fase)} · ` : ""}
               {questao.ano}
             </span>
           </div>

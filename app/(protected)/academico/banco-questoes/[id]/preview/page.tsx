@@ -5,7 +5,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { getQuestaoDetalhe } from "../../actions";
 import { QuestaoRender } from "@/components/questoes/questao-render";
-import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   publicado: {
@@ -59,8 +59,8 @@ export default async function QuestaoPreviewPage({
           </Link>
           <span>/</span>
           <Link href={editarHref} className="hover:text-foreground">
-            {OLIMPIADA_LABEL[questao.olimpiada] ?? questao.olimpiada} · {questao.fase}ª Fase ·{" "}
-            {questao.ano} · Q{questao.numero}
+            {OLIMPIADA_LABEL[questao.olimpiada] ?? questao.olimpiada} ·{" "}
+            {faseLabel(questao.olimpiada, questao.fase)} · {questao.ano} · Q{questao.numero}
           </Link>
           <span>/</span>
           <span className="text-foreground">Preview</span>

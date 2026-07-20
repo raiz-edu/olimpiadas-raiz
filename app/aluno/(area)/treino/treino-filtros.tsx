@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { NIVEL_LABEL, NIVEIS_POR_OLIMPIADA, NIVEIS_TODOS } from "@/lib/questoes/olimpiadas";
+import {
+  NIVEL_LABEL,
+  NIVEIS_POR_OLIMPIADA,
+  NIVEIS_TODOS,
+  FASES_POR_OLIMPIADA,
+  FASES_TODAS,
+} from "@/lib/questoes/olimpiadas";
 
 const cls =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground";
@@ -124,8 +130,11 @@ export function TreinoFiltros({
           <span className={labelCls}>Fase</span>
           <select name="fase" defaultValue={defaults.fase ?? ""} className={cls}>
             <option value="">Todas</option>
-            <option value="1">1ª Fase</option>
-            <option value="2">2ª Fase</option>
+            {(FASES_POR_OLIMPIADA[olimpiadaSel] ?? FASES_TODAS).map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
           </select>
         </div>
 
