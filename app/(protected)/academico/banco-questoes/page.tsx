@@ -5,7 +5,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { PageHeader } from "@/components/ui/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import { getQuestoes, excluirQuestao, toggleAtivo, aprovarQuestao } from "./actions";
+import { getQuestoes, excluirQuestao, toggleAtivo, aprovarQuestao, aprovarTodas } from "./actions";
 
 import {
   OLIMPIADA_LABEL,
@@ -206,9 +206,24 @@ export default async function BancoQuestoesPage({
         </div>
       </form>
 
-      <p className="mb-3 text-xs text-muted-foreground">
-        {questoes.length} {questoes.length !== 1 ? "questões" : "questão"}
-      </p>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          {questoes.length} {questoes.length !== 1 ? "questões" : "questão"}
+        </p>
+        {session.user.role === "raiz" && pendentes > 0 && (
+          <form action={aprovarTodas}>
+            {Object.entries(sp).map(([k, v]) =>
+              v ? <input key={k} type="hidden" name={k} value={v} /> : null,
+            )}
+            <ConfirmButton
+              message={`Publicar as ${pendentes} ${pendentes !== 1 ? "questões" : "questão"} aguardando revisão deste filtro? Ficará${pendentes !== 1 ? "o" : ""} visíve${pendentes !== 1 ? "is" : "l"} para os alunos.`}
+              className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/25"
+            >
+              Aprovar todas ({pendentes})
+            </ConfirmButton>
+          </form>
+        )}
+      </div>
 
       {questoes.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
