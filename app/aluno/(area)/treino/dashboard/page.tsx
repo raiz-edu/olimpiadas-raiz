@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { getDashboardAluno, getQuestoesRanking } from "../actions";
 import type { QuestaoRankEntry, TopicoRankEntry } from "../actions";
+import { faseLabel } from "@/lib/questoes/olimpiadas";
 
 const TEAL = "rgb(91,184,193)";
 
@@ -46,7 +47,7 @@ const NIVEL_SHORT: Record<string, string> = {
 function labelQuestao(q: QuestaoRankEntry): string {
   const olimp = OLIMP_LABEL[q.olimpiada] ?? q.olimpiada.toUpperCase();
   const nivel = q.nivel ? (NIVEL_SHORT[q.nivel] ?? q.nivel) : null;
-  const fase = q.fase ? `${q.fase}ª Fase` : null;
+  const fase = q.fase ? faseLabel(q.olimpiada, q.fase) : null;
   return [olimp, nivel, fase, q.ano, `Q${q.numero}`].filter(Boolean).join(" · ");
 }
 

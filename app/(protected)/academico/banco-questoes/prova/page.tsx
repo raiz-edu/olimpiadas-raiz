@@ -5,7 +5,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { QuestaoRender } from "@/components/questoes/questao-render";
-import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, NIVEL_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   publicado: {
@@ -49,7 +49,7 @@ export default async function ProvaPreviewPage({
 
   if (!questoes?.length) redirect(voltarHref);
 
-  const titulo = `${OLIMPIADA_LABEL[olimpiada] ?? olimpiada} · ${fase}ª Fase · ${ano} · ${
+  const titulo = `${OLIMPIADA_LABEL[olimpiada] ?? olimpiada} · ${faseLabel(olimpiada, fase)} · ${ano} · ${
     NIVEL_LABEL[nivel] ?? nivel
   }`;
   // Editar volta PARA A PROVA (na questão editada), não para a lista: o ret passado

@@ -30,6 +30,42 @@ export const NIVEIS_POR_OLIMPIADA: Record<string, string[]> = {
   canguru: ["P", "E", "B", "C", "J", "S"],
 };
 
+/**
+ * Fases oferecidas por olimpíada nos filtros. O Canguru tem FASE ÚNICA
+ * (armazenada como fase=1 no banco), então rotula como "Fase Única" em vez de
+ * "1ª Fase". OBMEP tem 1ª e 2ª fases.
+ */
+export const FASES_POR_OLIMPIADA: Record<string, { value: string; label: string }[]> = {
+  obmep: [
+    { value: "1", label: "1ª Fase" },
+    { value: "2", label: "2ª Fase" },
+  ],
+  obmep_mirim: [
+    { value: "1", label: "1ª Fase" },
+    { value: "2", label: "2ª Fase" },
+  ],
+  canguru: [{ value: "1", label: "Fase Única" }],
+};
+
+/** Fases quando a origem não está selecionada (filtro "Todas as origens"). */
+export const FASES_TODAS: { value: string; label: string }[] = [
+  { value: "1", label: "1ª Fase" },
+  { value: "2", label: "2ª Fase" },
+];
+
+/**
+ * Rótulo da fase de UMA questão, ciente da olimpíada: "Fase Única" para o
+ * Canguru, "Nª Fase" para as demais. Retorna "" quando fase é nula.
+ */
+export function faseLabel(
+  olimpiada: string | null | undefined,
+  fase: number | string | null | undefined,
+): string {
+  if (fase == null || fase === "") return "";
+  if (olimpiada === "canguru") return "Fase Única";
+  return `${fase}ª Fase`;
+}
+
 /** Todos os níveis conhecidos, na ordem de exibição dos filtros. */
 export const NIVEIS_TODOS: string[] = [
   "nivel_1",
