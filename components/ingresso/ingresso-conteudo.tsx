@@ -128,7 +128,9 @@ export function IngressoConteudo({ linksClicaveis }: { linksClicaveis: boolean }
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Ingresso via Olimpíadas</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Ingresso em Universidades via Olimpíadas Científicas
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Regras de ingresso em universidades públicas e privadas, no Brasil e no mundo, a partir do
           resultado em olimpíadas científicas.
