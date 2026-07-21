@@ -1,13 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  OLIMPIADA_LABEL,
-  NIVEL_LABEL,
-  FASES_POR_OLIMPIADA,
-  FASES_TODAS,
-} from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
+import { RaioXFiltros } from "@/components/academico/raio-x-filtros";
 
 export const metadata = { title: "Raio-X do Banco de Questões" };
 
@@ -137,9 +132,6 @@ type SP = {
   ano?: string;
   status_cadastro?: string;
 };
-
-const selectClass =
-  "rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-ring focus:outline-none";
 
 // ─── Página ──────────────────────────────────────────────────────────────────
 
@@ -300,88 +292,16 @@ export default async function RaioXBancoQuestoesPage({
         </p>
       </div>
 
-      {/* Filtros */}
-      <form
-        method="GET"
+      {/* Filtros — reativos à origem (componente cliente) */}
+      <RaioXFiltros
         key={`${sp.olimpiada}-${sp.nivel}-${sp.fase}-${sp.ano}-${sp.status_cadastro}`}
-        className="rounded-xl border border-border bg-card p-4"
-      >
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Origem</label>
-            <select name="olimpiada" defaultValue={sp.olimpiada ?? ""} className={selectClass}>
-              <option value="">Todas</option>
-              {olimpiadasDisp.map((o) => (
-                <option key={o} value={o}>
-                  {olimpiadaLabel(o)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Nível/Categoria</label>
-            <select name="nivel" defaultValue={sp.nivel ?? ""} className={selectClass}>
-              <option value="">Todos</option>
-              {niveisDisp.map((n) => (
-                <option key={n} value={n}>
-                  {nivelLabel(n)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Fase</label>
-            <select name="fase" defaultValue={sp.fase ?? ""} className={selectClass}>
-              <option value="">Todas</option>
-              {(FASES_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? FASES_TODAS).map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Ano</label>
-            <select name="ano" defaultValue={sp.ano ?? ""} className={selectClass}>
-              <option value="">Todos</option>
-              {anosDisp.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Status de revisão</label>
-            <select
-              name="status_cadastro"
-              defaultValue={sp.status_cadastro ?? ""}
-              className={selectClass}
-            >
-              <option value="">Todos</option>
-              <option value="publicado">Publicado</option>
-              <option value="aguardando_revisao">Aguardando revisão</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Filtrar
-            </button>
-            <Link
-              href="/academico/banco-questoes/raio-x"
-              className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
-            >
-              Limpar
-            </Link>
-          </div>
-        </div>
-        <p className="mt-3 text-[11px] text-muted-foreground">
-          Recorte: <span className="font-semibold text-foreground">{recorteLabel}</span>
-        </p>
-      </form>
+        sp={sp}
+        olimpiadas={olimpiadasDisp}
+        niveisTodos={niveisDisp}
+        anos={anosDisp}
+        recorteLabel={recorteLabel}
+        basePath="/academico/banco-questoes/raio-x"
+      />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
