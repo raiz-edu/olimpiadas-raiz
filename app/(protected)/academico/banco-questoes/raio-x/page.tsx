@@ -118,6 +118,7 @@ type QuestaoRow = {
   subtopico: string | null;
   assunto: string | null;
   dificuldade: string | null;
+  dificuldade_absoluta: string | null;
   publico_alvo: string | null;
   tipo: string;
   status_cadastro: string;
@@ -150,7 +151,7 @@ export default async function RaioXBancoQuestoesPage({
     .from("questao")
     .select(
       "id, olimpiada, nivel, fase, ano, topico, subtopico, assunto, " +
-        "dificuldade, publico_alvo, tipo, status_cadastro, " +
+        "dificuldade, dificuldade_absoluta, publico_alvo, tipo, status_cadastro, " +
         "tem_resolucao_video, tem_resolucao_texto, ativo",
     )
     .eq("ativo", true);
@@ -201,20 +202,20 @@ export default async function RaioXBancoQuestoesPage({
         .map(([sub, n]) => ({ sub, n })),
     }));
 
-  const difCount: Record<string, number> = {};
-  for (const q of questoes) {
-    const d =
-      q.dificuldade && DIFICULDADE_LABEL[q.dificuldade] ? q.dificuldade : "nao_classificada";
-    difCount[d] = (difCount[d] ?? 0) + 1;
+  function distribuicaoDificuldade(campo: "dificuldade" | "dificuldade_absoluta") {
+    const count: Record<string, number> = {};
+    for (const q of questoes) {
+      const v = q[campo];
+      const d = v && DIFICULDADE_LABEL[v] ? v : "nao_classificada";
+      count[d] = (count[d] ?? 0) + 1;
+    }
+    return [
+      ...DIFICULDADE_ORDER.map((d) => ({ key: d, label: DIFICULDADE_LABEL[d]!, n: count[d] ?? 0 })),
+      { key: "nao_classificada", label: "Não classificada", n: count["nao_classificada"] ?? 0 },
+    ].filter((d) => d.n > 0 || d.key !== "nao_classificada");
   }
-  const difList = [
-    ...DIFICULDADE_ORDER.map((d) => ({
-      key: d,
-      label: DIFICULDADE_LABEL[d]!,
-      n: difCount[d] ?? 0,
-    })),
-    { key: "nao_classificada", label: "Não classificada", n: difCount["nao_classificada"] ?? 0 },
-  ].filter((d) => d.n > 0 || d.key !== "nao_classificada");
+  const difList = distribuicaoDificuldade("dificuldade");
+  const difAbsList = distribuicaoDificuldade("dificuldade_absoluta");
 
   const statusCount: Record<string, number> = {};
   for (const q of questoes)
@@ -373,19 +374,49 @@ export default async function RaioXBancoQuestoesPage({
         )}
       </SectionCard>
 
-      {/* 2 — Dificuldade */}
+      {/* 2 — Dificuldade (contextual na prova × absoluta intrínseca) */}
       <Divider label="Dificuldade" />
-      <SectionCard title="Distribuição por nível de dificuldade">
-        {total === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma questão para este recorte.</p>
-        ) : (
-          <div className="space-y-3">
-            {difList.map((d) => (
-              <BarRow key={d.key} label={d.label} value={d.n} total={total} />
-            ))}
-          </div>
-        )}
-      </SectionCard>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SectionCard title="Dificuldade na prova (contextual)">
+          {total === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma questão para este recorte.</p>
+          ) : (
+            <>
+              <p className="mb-3 text-[11px] text-muted-foreground">
+                Relativa à prova e ao nível — posição/pontuação da questão dentro da própria prova.
+              </p>
+              <div className="space-y-3">
+                {difList.map((d) => (
+                  <BarRow key={d.key} label={d.label} value={d.n} total={total} />
+                ))}
+              </div>
+            </>
+          )}
+        </SectionCard>
+        <SectionCard title="Dificuldade absoluta (intrínseca)">
+          {total === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma questão para este recorte.</p>
+          ) : (
+            <>
+              <p className="mb-3 text-[11px] text-muted-foreground">
+                Régua universal, independente da prova — combina o público do nível com a
+                dificuldade na prova (v1 determinística).
+              </p>
+              <div className="space-y-3">
+                {difAbsList.map((d) => (
+                  <BarRow
+                    key={d.key}
+                    label={d.label}
+                    value={d.n}
+                    total={total}
+                    color="rgb(168,132,214)"
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </SectionCard>
+      </div>
 
       {/* Pipeline de conteúdo */}
       <Divider label="Pipeline de conteúdo" />
