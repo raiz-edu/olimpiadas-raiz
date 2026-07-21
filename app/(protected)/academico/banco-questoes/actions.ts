@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import type { TipoQuestao } from "@/lib/types/database";
+import { topicoDeSubtopico } from "@/lib/questoes/taxonomia";
 
 export type QuestaoState = { error: string } | { ok: true; id?: string } | null;
 
@@ -147,8 +148,10 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   const numero = numeroRaw ? Number(numeroRaw) : null;
   const enunciado = ((formData.get("enunciado") as string) ?? "").trim();
   const enunciado_blocos = parseBlocos((formData.get("enunciado_blocos") as string) ?? "");
-  const topico = ((formData.get("topico") as string) ?? "").trim() || null;
   const subtopico = ((formData.get("subtopico") as string) ?? "").trim() || null;
+  // Blindagem: subtópico preenchido nunca fica sem tópico (deriva da taxonomia 1:1).
+  const topico =
+    (((formData.get("topico") as string) ?? "").trim() || null) ?? topicoDeSubtopico(subtopico);
   const tipo = (formData.get("tipo") as TipoQuestao) || "multipla_escolha";
   const dificuldade = (formData.get("dificuldade") as string) || null;
   const publico_alvo = (formData.get("publico_alvo") as string) || null;
@@ -238,6 +241,12 @@ export async function atualizarQuestao(
   const statusUpdate =
     session.user.role === "raiz" ? {} : { status_cadastro: "aguardando_revisao" };
 
+  // Blindagem contra perda de classificação: subtópico preenchido nunca fica sem
+  // tópico (deriva da taxonomia 1:1). Evita o estado inválido subtópico∧¬tópico.
+  const subtopicoUpd = ((formData.get("subtopico") as string) ?? "").trim() || null;
+  const topicoUpd =
+    (((formData.get("topico") as string) ?? "").trim() || null) ?? topicoDeSubtopico(subtopicoUpd);
+
   const { error } = await supabase
     .from("questao")
     .update({
@@ -249,8 +258,8 @@ export async function atualizarQuestao(
       enunciado: ((formData.get("enunciado") as string) ?? "").trim(),
       enunciado_blocos,
       imagem_url: null,
-      topico: ((formData.get("topico") as string) ?? "").trim() || null,
-      subtopico: ((formData.get("subtopico") as string) ?? "").trim() || null,
+      topico: topicoUpd,
+      subtopico: subtopicoUpd,
       tipo: formData.get("tipo"),
       dificuldade: (formData.get("dificuldade") as string) || null,
       publico_alvo: (formData.get("publico_alvo") as string) || null,
