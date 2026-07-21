@@ -46,3 +46,16 @@ export const TAXONOMIA_QUESTOES: Record<string, string[]> = {
 };
 
 export const TOPICOS_QUESTOES = Object.keys(TAXONOMIA_QUESTOES);
+
+/**
+ * Tópico canônico que contém o subtópico dado (mapa reverso — o par é 1:1 na
+ * taxonomia). Retorna null se o subtópico não pertence a nenhum tópico conhecido.
+ * Usado para blindar o salvamento: subtópico preenchido nunca deve ficar sem tópico.
+ */
+export function topicoDeSubtopico(subtopico: string | null | undefined): string | null {
+  if (!subtopico) return null;
+  for (const [topico, subs] of Object.entries(TAXONOMIA_QUESTOES)) {
+    if (subs.includes(subtopico)) return topico;
+  }
+  return null;
+}
