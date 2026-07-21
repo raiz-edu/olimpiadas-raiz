@@ -279,6 +279,20 @@ export default async function BancoQuestoesAnalyticsPage({
     .sort((a, b) => b.ano - a.ano);
   const maxAno = Math.max(1, ...anoList.map((a) => a.n));
 
+  // F — Origem × contagem + pendentes (onde estão as questões de cada olimpíada e o que falta revisar)
+  const origemAgg: Record<string, { total: number; pend: number; anos: Set<number> }> = {};
+  for (const q of questoes) {
+    const o = q.olimpiada ?? "—";
+    if (!origemAgg[o]) origemAgg[o] = { total: 0, pend: 0, anos: new Set() };
+    origemAgg[o].total += 1;
+    origemAgg[o].anos.add(q.ano);
+    if (q.status_cadastro === "aguardando_revisao") origemAgg[o].pend += 1;
+  }
+  const origemList = Object.entries(origemAgg)
+    .map(([olimpiada, v]) => ({ olimpiada, total: v.total, pend: v.pend, anos: v.anos.size }))
+    .sort((a, b) => b.total - a.total);
+  const maxOrigem = Math.max(1, ...origemList.map((o) => o.total));
+
   // KPIs
   const topicosDistintos = topicoList.length;
   const pctComResolucao = pct(comAlgumaResolucao, total);
@@ -500,8 +514,70 @@ export default async function BancoQuestoesAnalyticsPage({
         )}
       </SectionCard>
 
-      {/* D/E — Segmentação */}
+      {/* D/E/F — Segmentação */}
       <Divider label="Segmentação" />
+      <SectionCard title="Questões por origem">
+        {total === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma questão para este recorte.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-background">
+                  <th className="px-3 py-2 text-left text-[11px] font-medium text-muted-foreground">
+                    Origem
+                  </th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-muted-foreground">
+                    Questões
+                  </th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-muted-foreground">
+                    Anos
+                  </th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-muted-foreground">
+                    Aguardando revisão
+                  </th>
+                  <th className="px-3 py-2 text-left text-[11px] font-medium text-muted-foreground">
+                    Proporção
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {origemList.map((o) => (
+                  <tr key={o.olimpiada} className="bg-card hover:bg-background/50">
+                    <td className="px-3 py-2 font-semibold text-foreground">
+                      {olimpiadaLabel(o.olimpiada)}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-foreground">
+                      {fmt(o.total)}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                      {fmt(o.anos)}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums">
+                      {o.pend > 0 ? (
+                        <span className="font-semibold text-amber-400">{fmt(o.pend)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="h-2 overflow-hidden rounded bg-background">
+                        <div
+                          className="h-full rounded"
+                          style={{
+                            width: `${pct(o.total, maxOrigem)}%`,
+                            backgroundColor: "rgb(91,184,193)",
+                          }}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard title="Público-alvo">
           {total === 0 ? (
