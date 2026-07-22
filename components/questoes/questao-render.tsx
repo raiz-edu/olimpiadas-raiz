@@ -122,7 +122,7 @@ export function QuestaoRender({
                             grande: "360px",
                             completa: "100%",
                           } as Record<string, string>
-                        )[(alt as any).imagem_largura ?? "media"] ?? "220px",
+                        )[(alt as any).imagem_largura ?? "pequena"] ?? "120px",
                       maxWidth: "100%",
                     }}
                   />
