@@ -60,7 +60,7 @@ function AlternativaRow({
 }) {
   const [, action, isPending] = useActionState(salvarAlternativa, null);
   const [imagemUrl, setImagemUrl] = useState<string | null>(alternativa?.imagem_url ?? null);
-  const [largura, setLargura] = useState<string>(alternativa?.imagem_largura ?? "media");
+  const [largura, setLargura] = useState<string>(alternativa?.imagem_largura ?? "pequena");
   const [isUploading, startUploadTransition] = useTransition();
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
