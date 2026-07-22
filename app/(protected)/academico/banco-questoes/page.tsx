@@ -7,15 +7,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { getQuestoes, excluirQuestao, toggleAtivo, aprovarQuestao, aprovarTodas } from "./actions";
 
-import {
-  OLIMPIADA_LABEL,
-  NIVEL_LABEL,
-  NIVEIS_POR_OLIMPIADA,
-  NIVEIS_TODOS,
-  FASES_POR_OLIMPIADA,
-  FASES_TODAS,
-  faseLabel,
-} from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
+import { FiltrosOrigem } from "./filtros-origem";
 
 const DIFICULDADE_LABEL: Record<string, string> = {
   elementar: "Elementar",
@@ -127,33 +120,12 @@ export default async function BancoQuestoesPage({
         </div>
         {/* Linha 2: dropdowns */}
         <div className="flex flex-wrap gap-2">
-          <select name="olimpiada" defaultValue={sp.olimpiada ?? ""} className={seletorClass}>
-            <option value="">Origem</option>
-            <option value="obmep">OBMEP</option>
-            <option value="obmep_mirim">OBMEP Mirim</option>
-            <option value="canguru">Canguru</option>
-            <option value="obm">OBM</option>
-            <option value="obf">OBF</option>
-            <option value="obi">OBI</option>
-          </select>
-
-          <select name="nivel" defaultValue={sp.nivel ?? ""} className={seletorClass}>
-            <option value="">Nível</option>
-            {(NIVEIS_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? NIVEIS_TODOS).map((n) => (
-              <option key={n} value={n}>
-                {NIVEL_LABEL[n] ?? n}
-              </option>
-            ))}
-          </select>
-
-          <select name="fase" defaultValue={sp.fase ?? ""} className={seletorClass}>
-            <option value="">Fase</option>
-            {(FASES_POR_OLIMPIADA[sp.olimpiada ?? ""] ?? FASES_TODAS).map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
+          <FiltrosOrigem
+            olimpiada={sp.olimpiada ?? ""}
+            nivel={sp.nivel ?? ""}
+            fase={sp.fase ?? ""}
+            className={seletorClass}
+          />
 
           <select name="ano" defaultValue={sp.ano ?? ""} className={seletorClass}>
             <option value="">Ano</option>
