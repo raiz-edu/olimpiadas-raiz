@@ -147,16 +147,28 @@ export default async function RaioXBancoQuestoesPage({
   const sp = await searchParams;
 
   const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("questao")
-    .select(
-      "id, olimpiada, nivel, fase, ano, topico, subtopico, assunto, " +
-        "dificuldade, dificuldade_absoluta, publico_alvo, tipo, status_cadastro, " +
-        "tem_resolucao_video, tem_resolucao_texto, ativo",
-    )
-    .eq("ativo", true);
+  const COLS =
+    "id, olimpiada, nivel, fase, ano, topico, subtopico, assunto, " +
+    "dificuldade, dificuldade_absoluta, publico_alvo, tipo, status_cadastro, " +
+    "tem_resolucao_video, tem_resolucao_texto, ativo";
 
-  const acervo = (data ?? []) as unknown as QuestaoRow[];
+  // O PostgREST devolve no máximo 1000 linhas por resposta. Sem paginar, o acervo
+  // era truncado em 1000 e TODAS as agregações (total, aguardando revisão, tópicos,
+  // origem, ano…) saíam capadas. Paginar em blocos de 1000 até esgotar.
+  const PAGE = 1000;
+  const acervo: QuestaoRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("questao")
+      .select(COLS)
+      .eq("ativo", true)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) break;
+    const batch = (data ?? []) as unknown as QuestaoRow[];
+    acervo.push(...batch);
+    if (batch.length < PAGE) break;
+  }
 
   const olimpiadasDisp = [...new Set(acervo.map((q) => q.olimpiada))].sort();
   const niveisDisp = [...new Set(acervo.map((q) => q.nivel ?? "mirim"))].sort();
