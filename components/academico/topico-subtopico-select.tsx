@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { selectClass } from "@/components/ui/form-field";
-import { TAXONOMIA_QUESTOES, TOPICOS_QUESTOES } from "@/lib/questoes/taxonomia";
+import { TAXONOMIA_QUESTOES, TOPICOS_QUESTOES, topicoDeSubtopico } from "@/lib/questoes/taxonomia";
 
 /**
  * Par de selects dependentes (tópico → subtópico) preso à taxonomia canônica.
@@ -17,11 +17,25 @@ export function TopicoSubtopicoSelect({
   defaultSubtopico?: string | null;
   labelClass?: string;
 }) {
-  // Valor legado fora da taxonomia: preserva como opção extra até ser trocado
-  const topicoInicial = defaultTopico ?? "";
-  const [topico, setTopico] = useState(topicoInicial);
+  // Tópico efetivo: o salvo ou — se vier vazio — derivado do subtópico (a taxonomia é
+  // 1:1). Espelha a blindagem do server action (atualizarQuestao) e garante que o select
+  // pré-selecione o valor certo mesmo quando só o subtópico chega preenchido.
+  const topicoEfetivo = (defaultTopico ?? "").trim() || (topicoDeSubtopico(defaultSubtopico) ?? "");
+
+  const [topico, setTopico] = useState(topicoEfetivo);
+  // Re-sincroniza o estado quando os dados salvos mudam (ex.: revalidate após salvar),
+  // evitando que o select fique preso num valor stale e "perca" o tópico na tela.
+  const [topicoBase, setTopicoBase] = useState(topicoEfetivo);
+  if (topicoEfetivo !== topicoBase) {
+    setTopicoBase(topicoEfetivo);
+    setTopico(topicoEfetivo);
+  }
+
   const subtopicos = TAXONOMIA_QUESTOES[topico] ?? [];
   const subtopicoInicial = defaultSubtopico ?? "";
+  // Valor atual fora da taxonomia (legado): sempre renderiza uma option para ele, senão o
+  // select controlado não acha correspondência e cai no primeiro item ("Não definido").
+  const topicoForaDaLista = topico !== "" && !TOPICOS_QUESTOES.includes(topico);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -39,9 +53,7 @@ export function TopicoSubtopicoSelect({
               {t}
             </option>
           ))}
-          {topicoInicial && !TOPICOS_QUESTOES.includes(topicoInicial) && (
-            <option value={topicoInicial}>{topicoInicial} (legado)</option>
-          )}
+          {topicoForaDaLista && <option value={topico}>{topico} (legado)</option>}
         </select>
       </div>
       <div className="space-y-1.5">
