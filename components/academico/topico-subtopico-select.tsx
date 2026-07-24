@@ -17,25 +17,26 @@ export function TopicoSubtopicoSelect({
   defaultSubtopico?: string | null;
   labelClass?: string;
 }) {
-  // Tópico efetivo: o salvo ou — se vier vazio — derivado do subtópico (a taxonomia é
-  // 1:1). Espelha a blindagem do server action (atualizarQuestao) e garante que o select
-  // pré-selecione o valor certo mesmo quando só o subtópico chega preenchido.
+  // Tópico efetivo: o salvo ou — se vier vazio — derivado do subtópico (a taxonomia é 1:1).
+  // Espelha a blindagem do server action e garante o pré-preenchimento.
   const topicoEfetivo = (defaultTopico ?? "").trim() || (topicoDeSubtopico(defaultSubtopico) ?? "");
 
-  const [topico, setTopico] = useState(topicoEfetivo);
-  // Re-sincroniza o estado quando os dados salvos mudam (ex.: revalidate após salvar),
-  // evitando que o select fique preso num valor stale e "perca" o tópico na tela.
+  // Estado APENAS para filtrar os subtópicos conforme o tópico escolhido. NÃO controla o
+  // `value` do select de tópico: ele é NÃO-CONTROLADO (defaultValue), como os selects de
+  // Dificuldade/Público. Isso é essencial porque o React 19 RESETA o form automaticamente
+  // após um Server Action — um select *controlado* voltava para o 1º item ("Não definido")
+  // e "perdia" o tópico na tela; `defaultValue` sobrevive ao reset (volta ao valor salvo).
+  const [topicoSel, setTopicoSel] = useState(topicoEfetivo);
+  // Re-sincroniza com o dado salvo quando ele muda (revalidate após salvar), preservando a
+  // troca manual do usuário — mantém as opções de subtópico coerentes com o tópico atual.
   const [topicoBase, setTopicoBase] = useState(topicoEfetivo);
   if (topicoEfetivo !== topicoBase) {
     setTopicoBase(topicoEfetivo);
-    setTopico(topicoEfetivo);
+    setTopicoSel(topicoEfetivo);
   }
-
-  const subtopicos = TAXONOMIA_QUESTOES[topico] ?? [];
+  const subtopicos = TAXONOMIA_QUESTOES[topicoSel] ?? [];
   const subtopicoInicial = defaultSubtopico ?? "";
-  // Valor atual fora da taxonomia (legado): sempre renderiza uma option para ele, senão o
-  // select controlado não acha correspondência e cai no primeiro item ("Não definido").
-  const topicoForaDaLista = topico !== "" && !TOPICOS_QUESTOES.includes(topico);
+  const topicoForaDaLista = topicoEfetivo !== "" && !TOPICOS_QUESTOES.includes(topicoEfetivo);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -43,8 +44,8 @@ export function TopicoSubtopicoSelect({
         <label className={labelClass}>Tópico</label>
         <select
           name="topico"
-          value={topico}
-          onChange={(e) => setTopico(e.target.value)}
+          defaultValue={topicoEfetivo}
+          onChange={(e) => setTopicoSel(e.target.value)}
           className={selectClass}
         >
           <option value="">Não definido</option>
@@ -53,14 +54,14 @@ export function TopicoSubtopicoSelect({
               {t}
             </option>
           ))}
-          {topicoForaDaLista && <option value={topico}>{topico} (legado)</option>}
+          {topicoForaDaLista && <option value={topicoEfetivo}>{topicoEfetivo} (legado)</option>}
         </select>
       </div>
       <div className="space-y-1.5">
         <label className={labelClass}>Subtópico</label>
         <select
           name="subtopico"
-          key={topico}
+          key={topicoSel}
           defaultValue={subtopicos.includes(subtopicoInicial) ? subtopicoInicial : ""}
           className={selectClass}
           disabled={subtopicos.length === 0 && !subtopicoInicial}
