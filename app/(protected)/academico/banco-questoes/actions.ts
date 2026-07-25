@@ -40,38 +40,51 @@ export async function getQuestoes(filtros?: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
 
-  let query = supabase
-    .from("questao")
-    .select(
-      "id, olimpiada, nivel, fase, ano, numero, assunto, topico, subtopico, tipo, " +
-        "dificuldade, publico_alvo, tem_resolucao_video, tem_resolucao_texto, status_cadastro, ativo, criado_em",
-    )
-    .order("olimpiada")
-    .order("fase")
-    .order("ano")
-    .order("numero");
+  const construir = () => {
+    let query = supabase
+      .from("questao")
+      .select(
+        "id, olimpiada, nivel, fase, ano, numero, assunto, topico, subtopico, tipo, " +
+          "dificuldade, publico_alvo, tem_resolucao_video, tem_resolucao_texto, status_cadastro, ativo, criado_em",
+      )
+      .order("olimpiada")
+      .order("fase")
+      .order("ano")
+      .order("numero");
 
-  if (filtros?.olimpiada) query = query.eq("olimpiada", filtros.olimpiada);
-  if (filtros?.fase) query = query.eq("fase", filtros.fase);
-  if (filtros?.ano) query = query.eq("ano", filtros.ano);
-  if (filtros?.assunto) query = query.ilike("assunto", `%${filtros.assunto}%`);
-  if (filtros?.ativo !== undefined) query = query.eq("ativo", filtros.ativo);
-  if (filtros?.nivel) query = query.eq("nivel", filtros.nivel);
-  if (filtros?.tipo) query = query.eq("tipo", filtros.tipo as TipoQuestao);
-  if (filtros?.dificuldade) query = query.eq("dificuldade", filtros.dificuldade);
-  if (filtros?.publico_alvo) query = query.eq("publico_alvo", filtros.publico_alvo);
-  if (filtros?.topico) query = query.ilike("topico", `%${filtros.topico}%`);
-  if (filtros?.status_cadastro) query = query.eq("status_cadastro", filtros.status_cadastro);
-  if (filtros?.busca) {
-    const termo = filtros.busca.replace(/[%_]/g, "\\$&");
-    query = query.or(
-      `enunciado.ilike.%${termo}%,topico.ilike.%${termo}%,subtopico.ilike.%${termo}%`,
-    );
+    if (filtros?.olimpiada) query = query.eq("olimpiada", filtros.olimpiada);
+    if (filtros?.fase) query = query.eq("fase", filtros.fase);
+    if (filtros?.ano) query = query.eq("ano", filtros.ano);
+    if (filtros?.assunto) query = query.ilike("assunto", `%${filtros.assunto}%`);
+    if (filtros?.ativo !== undefined) query = query.eq("ativo", filtros.ativo);
+    if (filtros?.nivel) query = query.eq("nivel", filtros.nivel);
+    if (filtros?.tipo) query = query.eq("tipo", filtros.tipo as TipoQuestao);
+    if (filtros?.dificuldade) query = query.eq("dificuldade", filtros.dificuldade);
+    if (filtros?.publico_alvo) query = query.eq("publico_alvo", filtros.publico_alvo);
+    if (filtros?.topico) query = query.ilike("topico", `%${filtros.topico}%`);
+    if (filtros?.status_cadastro) query = query.eq("status_cadastro", filtros.status_cadastro);
+    if (filtros?.busca) {
+      const termo = filtros.busca.replace(/[%_]/g, "\\$&");
+      query = query.or(
+        `enunciado.ilike.%${termo}%,topico.ilike.%${termo}%,subtopico.ilike.%${termo}%`,
+      );
+    }
+    return query;
+  };
+
+  // O PostgREST devolve no máximo 1000 linhas por resposta. Sem paginar, a lista sem filtro
+  // (>1000 questões) era truncada — questões somem e a contagem cravava em "1000". Paginar.
+  const PAGINA = 1000;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const todas: any[] = [];
+  for (let de = 0; ; de += PAGINA) {
+    const { data, error } = await construir().range(de, de + PAGINA - 1);
+    if (error) throw error;
+    const lote = data ?? [];
+    todas.push(...lote);
+    if (lote.length < PAGINA) break;
   }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
+  return todas;
 }
 
 export async function getQuestaoDetalhe(id: string) {

@@ -39,6 +39,17 @@ export function FiltrosOrigem({
   const [nivel, setNivel] = useState(nivelInicial);
   const [fase, setFase] = useState(faseInicial);
 
+  // Re-sincroniza com os props (que vêm da URL) quando eles mudam — ex.: "Limpar" navega
+  // para a base e zera os filtros. Sem isso, estes selects controlados ficavam presos no
+  // último valor escolhido (o "Limpar" limpava a URL/dados mas não os dropdowns).
+  const [ant, setAnt] = useState({ o: olimpiadaInicial, n: nivelInicial, f: faseInicial });
+  if (ant.o !== olimpiadaInicial || ant.n !== nivelInicial || ant.f !== faseInicial) {
+    setAnt({ o: olimpiadaInicial, n: nivelInicial, f: faseInicial });
+    setOlimpiada(olimpiadaInicial);
+    setNivel(nivelInicial);
+    setFase(faseInicial);
+  }
+
   const niveis = NIVEIS_POR_OLIMPIADA[olimpiada] ?? NIVEIS_TODOS;
   const fases = FASES_POR_OLIMPIADA[olimpiada] ?? FASES_TODAS;
 
