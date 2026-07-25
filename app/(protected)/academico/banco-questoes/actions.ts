@@ -87,6 +87,28 @@ export async function getQuestoes(filtros?: {
   return todas;
 }
 
+/** Olimpíadas (origens) que realmente têm questões no banco — para o filtro só listar o que existe. */
+export async function getOlimpiadasDisponiveis(): Promise<string[]> {
+  await requireAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+  const PAGINA = 1000;
+  const origens = new Set<string>();
+  for (let de = 0; ; de += PAGINA) {
+    const { data, error } = await supabase
+      .from("questao")
+      .select("olimpiada")
+      .order("olimpiada")
+      .range(de, de + PAGINA - 1);
+    if (error) throw error;
+    const lote = data ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const r of lote as any[]) if (r.olimpiada) origens.add(r.olimpiada);
+    if (lote.length < PAGINA) break;
+  }
+  return [...origens].sort();
+}
+
 export async function getQuestaoDetalhe(id: string) {
   await requireAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
