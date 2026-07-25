@@ -5,7 +5,14 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { PageHeader } from "@/components/ui/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import { getQuestoes, excluirQuestao, toggleAtivo, aprovarQuestao, aprovarTodas } from "./actions";
+import {
+  getQuestoes,
+  getOlimpiadasDisponiveis,
+  excluirQuestao,
+  toggleAtivo,
+  aprovarQuestao,
+  aprovarTodas,
+} from "./actions";
 
 import { OLIMPIADA_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 import { FiltrosOrigem } from "./filtros-origem";
@@ -65,6 +72,9 @@ export default async function BancoQuestoesPage({
     busca: sp.busca || undefined,
   });
 
+  // Origens do filtro = só as olimpíadas que existem no banco (não uma lista fixa).
+  const origensDisponiveis = await getOlimpiadasDisponiveis();
+
   const pendentes = questoes.filter((q: any) => q.status_cadastro === "aguardando_revisao").length;
 
   const filtrosAtivos = Object.entries(sp).filter(([, v]) => v);
@@ -121,6 +131,7 @@ export default async function BancoQuestoesPage({
         {/* Linha 2: dropdowns */}
         <div className="flex flex-wrap gap-2">
           <FiltrosOrigem
+            olimpiadas={origensDisponiveis}
             olimpiada={sp.olimpiada ?? ""}
             nivel={sp.nivel ?? ""}
             fase={sp.fase ?? ""}

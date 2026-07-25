@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  OLIMPIADA_LABEL,
   NIVEL_LABEL,
   NIVEIS_POR_OLIMPIADA,
   NIVEIS_TODOS,
@@ -9,27 +10,21 @@ import {
   FASES_TODAS,
 } from "@/lib/questoes/olimpiadas";
 
-const OLIMPIADAS: { value: string; label: string }[] = [
-  { value: "obmep", label: "OBMEP" },
-  { value: "obmep_mirim", label: "OBMEP Mirim" },
-  { value: "canguru", label: "Canguru" },
-  { value: "obm", label: "OBM" },
-  { value: "obf", label: "OBF" },
-  { value: "obi", label: "OBI" },
-];
-
 /**
  * Selects acoplados Origem → Nível → Fase. Ao trocar a origem, as opções de nível
  * e fase se reajustam na hora (Canguru mostra P/E/B/C/J/S + "Fase Única"; OBMEP mostra
  * Nível 1/2/3 + 1ª/2ª). Um nível/fase selecionado que não pertence à nova origem é
  * resetado. Mantém os `name` para o form GET continuar submetendo os filtros.
+ * `olimpiadas` = só as origens que EXISTEM no banco (não uma lista fixa).
  */
 export function FiltrosOrigem({
+  olimpiadas,
   olimpiada: olimpiadaInicial,
   nivel: nivelInicial,
   fase: faseInicial,
   className,
 }: {
+  olimpiadas: string[];
   olimpiada: string;
   nivel: string;
   fase: string;
@@ -70,9 +65,9 @@ export function FiltrosOrigem({
         className={className}
       >
         <option value="">Origem</option>
-        {OLIMPIADAS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
+        {olimpiadas.map((o) => (
+          <option key={o} value={o}>
+            {OLIMPIADA_LABEL[o] ?? o}
           </option>
         ))}
       </select>
