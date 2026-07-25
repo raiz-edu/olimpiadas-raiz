@@ -5,6 +5,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { QuestaoRender } from "@/components/questoes/questao-render";
+import { ScrollToTopButton } from "@/components/ui/scroll-to-top";
 import { OLIMPIADA_LABEL, NIVEL_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -144,6 +145,8 @@ export default async function ProvaPreviewPage({
           );
         })}
       </div>
+
+      <ScrollToTopButton />
     </div>
   );
 }
