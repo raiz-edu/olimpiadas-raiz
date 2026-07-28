@@ -188,6 +188,18 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   const topico =
     (((formData.get("topico") as string) ?? "").trim() || null) ?? topicoDeSubtopico(subtopico);
   const tipo = (formData.get("tipo") as TipoQuestao) || "multipla_escolha";
+  // Gabarito numérico só existe no tipo resposta_numerica — nos demais grava NULL
+  // (o CHECK questao_resposta_numerica_obrigatoria exige o par tipo↔gabarito).
+  const resposta_numerica =
+    tipo === "resposta_numerica"
+      ? ((formData.get("resposta_numerica") as string) ?? "").trim() || null
+      : null;
+  if (tipo === "resposta_numerica" && !resposta_numerica) {
+    return { error: "Questão de resposta numérica exige o gabarito (0000 a 9999)." };
+  }
+  if (resposta_numerica && !/^[0-9]{1,4}$/.test(resposta_numerica)) {
+    return { error: "O gabarito numérico deve ser um inteiro entre 0000 e 9999." };
+  }
   const dificuldade = (formData.get("dificuldade") as string) || null;
   const publico_alvo = (formData.get("publico_alvo") as string) || null;
   const tem_resolucao_video = (formData.get("tem_resolucao_video") as string) || "nao";
@@ -236,6 +248,7 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
       topico,
       subtopico,
       tipo,
+      resposta_numerica,
       dificuldade,
       publico_alvo,
       tem_resolucao_video,
@@ -282,6 +295,20 @@ export async function atualizarQuestao(
   const topicoUpd =
     (((formData.get("topico") as string) ?? "").trim() || null) ?? topicoDeSubtopico(subtopicoUpd);
 
+  // Gabarito numérico segue o tipo: trocar para outro tipo limpa o campo, senão o
+  // CHECK questao_resposta_numerica_obrigatoria barra o update.
+  const tipoUpd = formData.get("tipo") as TipoQuestao;
+  const respostaNumericaUpd =
+    tipoUpd === "resposta_numerica"
+      ? ((formData.get("resposta_numerica") as string) ?? "").trim() || null
+      : null;
+  if (tipoUpd === "resposta_numerica" && !respostaNumericaUpd) {
+    return { error: "Questão de resposta numérica exige o gabarito (0000 a 9999)." };
+  }
+  if (respostaNumericaUpd && !/^[0-9]{1,4}$/.test(respostaNumericaUpd)) {
+    return { error: "O gabarito numérico deve ser um inteiro entre 0000 e 9999." };
+  }
+
   const { error } = await supabase
     .from("questao")
     .update({
@@ -295,7 +322,8 @@ export async function atualizarQuestao(
       imagem_url: null,
       topico: topicoUpd,
       subtopico: subtopicoUpd,
-      tipo: formData.get("tipo"),
+      tipo: tipoUpd,
+      resposta_numerica: respostaNumericaUpd,
       dificuldade: (formData.get("dificuldade") as string) || null,
       publico_alvo: (formData.get("publico_alvo") as string) || null,
       tem_resolucao_video: (formData.get("tem_resolucao_video") as string) || "nao",

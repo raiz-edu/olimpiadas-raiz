@@ -90,6 +90,23 @@ export function QuestaoRender({
         </>
       )}
 
+      {/* Resposta numérica — não tem alternativas: mostra o gabarito */}
+      {questao.tipo === "resposta_numerica" && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border-2 border-emerald-500 bg-emerald-500/8 p-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+            Resposta numérica
+          </span>
+          <span className="font-mono text-lg font-bold tracking-[0.3em] text-foreground">
+            {questao.resposta_numerica ?? "—"}
+          </span>
+          {resposta?.alternativa_id == null && resposta?.correta != null && (
+            <span className={`text-xs ${resposta.correta ? "text-emerald-400" : "text-red-400"}`}>
+              {resposta.correta ? "✓ o aluno acertou" : "✗ o aluno errou"}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Alternativas (read-only com gabarito) */}
       <div className="space-y-2">
         {alternativas.map((alt: any) => {

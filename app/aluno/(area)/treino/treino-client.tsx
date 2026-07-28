@@ -9,11 +9,16 @@ import {
   getSolucaoQuestao,
   getAlternativasQuestao,
   responderQuestaoAberta,
+  responderQuestaoNumerica,
   toggleFavorito,
 } from "./actions";
-import type { RespostaAbertaState } from "./actions";
+import type { RespostaAbertaState, RespostaNumericaState } from "./actions";
 import { FormattedText } from "@/components/ui/formatted-text";
 import { RespostaAbertaInput, FeedbackAberto } from "@/components/aluno/resposta-aberta-input";
+import {
+  RespostaNumericaInput,
+  FeedbackNumerico,
+} from "@/components/aluno/resposta-numerica-input";
 import type { FeedbackIA } from "@/lib/ai/types";
 import type { Questao, Alternativa } from "@/lib/types/database";
 import { OLIMPIADA_LABEL, NIVEL_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
@@ -28,6 +33,11 @@ type RespostaLocal = {
 type RespostaAbertaLocal = {
   correta: boolean;
   feedback: FeedbackIA | null;
+};
+
+type RespostaNumericaLocal = {
+  correta: boolean;
+  gabarito: string;
 };
 
 type BlocoRes =
@@ -71,6 +81,9 @@ export function TreinoClient({
   /* ── Respostas da sessão (persistem ao navegar) ───────────────────────────── */
   const [respostas, setRespostas] = useState<Record<string, RespostaLocal>>({});
   const [respostasAbertas, setRespostasAbertas] = useState<Record<string, RespostaAbertaLocal>>({});
+  const [respostasNumericas, setRespostasNumericas] = useState<
+    Record<string, RespostaNumericaLocal>
+  >({});
   // Ref que captura qual alternativa o aluno clicou antes da resposta do servidor
   const altSelecionadaRef = useRef<Record<string, string>>({});
 
@@ -107,6 +120,10 @@ export function TreinoClient({
     RespostaAbertaState,
     FormData
   >(responderQuestaoAberta, null);
+  const [estadoNumerica, actionNumerica, isPendingNumerica] = useActionState<
+    RespostaNumericaState,
+    FormData
+  >(responderQuestaoNumerica, null);
 
   // Quando chega nova resposta do servidor, persiste no mapa local
   useEffect(() => {
@@ -147,6 +164,14 @@ export function TreinoClient({
     }
   }, [estadoAberta]);
 
+  // Captura resposta numérica corrigida
+  useEffect(() => {
+    if (estadoNumerica && !("error" in estadoNumerica) && "questao_id" in estadoNumerica) {
+      const { questao_id: qid, correta: ok, gabarito } = estadoNumerica;
+      setRespostasNumericas((prev) => ({ ...prev, [qid]: { correta: ok, gabarito } }));
+    }
+  }, [estadoNumerica]);
+
   // Fecha gabarito ao trocar de questão
   useEffect(() => {
     setMostrarGabarito(false);
@@ -169,7 +194,18 @@ export function TreinoClient({
     ? respostasAbertas[questao.id]
     : undefined;
   const respondidoAberto = !!respostaAbertaAtual;
-  const respondidoQuestao = questao?.tipo === "aberta" ? respondidoAberto : respondido;
+
+  const respostaNumericaAtual: RespostaNumericaLocal | undefined = questao
+    ? respostasNumericas[questao.id]
+    : undefined;
+  const respondidoNumerica = !!respostaNumericaAtual;
+
+  const respondidoQuestao =
+    questao?.tipo === "aberta"
+      ? respondidoAberto
+      : questao?.tipo === "resposta_numerica"
+        ? respondidoNumerica
+        : respondido;
 
   async function handleGabarito() {
     if (!questao) return;
@@ -185,22 +221,25 @@ export function TreinoClient({
   }
 
   /* ── Tela de conclusão ───────────────────────────────────────────────────── */
-  const respondidas = Object.keys(respostas).length;
+  // Questões com correção objetiva (múltipla escolha + resposta numérica). As
+  // abertas ficam de fora do placar porque a avaliação é qualitativa.
+  const corrigidas: Record<string, { correta: boolean }> = { ...respostas, ...respostasNumericas };
+  const respondidas = Object.keys(corrigidas).length;
 
   if (finalizado || idx >= total) {
     // ── Desempenho inline da sessão da aula ──────────────────────────────────
     if (completionUrl && mostrarDesempenhoAula) {
-      const acertosTotal = Object.values(respostas).filter((r) => r.correta).length;
+      const acertosTotal = Object.values(corrigidas).filter((r) => r.correta).length;
       const pctGeral = respondidas > 0 ? Math.round((acertosTotal / respondidas) * 100) : 0;
 
       // Agrupar por tópico
       const porTopico: Record<string, { total: number; acertos: number }> = {};
       questoes.forEach((q) => {
-        if (respostas[q.id]) {
+        if (corrigidas[q.id]) {
           const t = (q as any).topico ?? "Sem tópico";
           if (!porTopico[t]) porTopico[t] = { total: 0, acertos: 0 };
           porTopico[t]!.total++;
-          if (respostas[q.id]!.correta) porTopico[t]!.acertos++;
+          if (corrigidas[q.id]!.correta) porTopico[t]!.acertos++;
         }
       });
 
@@ -513,6 +552,24 @@ export function TreinoClient({
           </>
         )}
 
+        {/* Input — questão de resposta numérica */}
+        {questao.tipo === "resposta_numerica" && !respondidoNumerica && (
+          <>
+            {estadoNumerica && "error" in estadoNumerica && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/8 px-4 py-3 text-sm text-amber-400 mb-3">
+                {estadoNumerica.error}
+              </div>
+            )}
+            <RespostaNumericaInput
+              questaoId={questao.id}
+              contexto={contexto}
+              aulaId={aulaId}
+              action={actionNumerica}
+              isPending={isPendingNumerica}
+            />
+          </>
+        )}
+
         {/* Alternativas */}
         {questao.tipo === "multipla_escolha" && (
           <div className="space-y-2.5 mb-5">
@@ -593,8 +650,16 @@ export function TreinoClient({
           </div>
         )}
 
+        {/* Feedback — resposta numérica */}
+        {questao.tipo === "resposta_numerica" && respostaNumericaAtual && (
+          <FeedbackNumerico
+            correta={respostaNumericaAtual.correta}
+            gabarito={respostaNumericaAtual.gabarito}
+          />
+        )}
+
         {/* Feedback — múltipla escolha */}
-        {respondido && questao.tipo !== "aberta" && (
+        {respondido && questao.tipo === "multipla_escolha" && (
           <div
             className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold mb-4 ${correta ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-red-500/30 bg-red-500/10 text-red-400"}`}
           >

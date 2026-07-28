@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { atualizarQuestao } from "../actions";
 import { inputClass, selectClass } from "@/components/ui/form-field";
 import { TopicoSubtopicoSelect } from "@/components/academico/topico-subtopico-select";
@@ -30,6 +30,7 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 export function QuestaoEditForm({ questao }: { questao: Questao }) {
   const action = atualizarQuestao.bind(null, questao.id);
   const [state, formAction, isPending] = useActionState(action, null);
+  const [tipo, setTipo] = useState<string>(questao.tipo);
 
   const statusInfo = STATUS_LABELS[questao.status_cadastro] ?? {
     label: "Publicado",
@@ -63,6 +64,7 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
         <option value="obmep" />
         <option value="obmep_mirim" />
         <option value="canguru" />
+        <option value="jacob_palis" />
         <option value="obm" />
         <option value="obf" />
         <option value="obi" />
@@ -151,13 +153,37 @@ export function QuestaoEditForm({ questao }: { questao: Questao }) {
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Tipo
           </label>
-          <select name="tipo" defaultValue={questao.tipo} className={selectClass}>
+          <select
+            name="tipo"
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            className={selectClass}
+          >
             <option value="multipla_escolha">M. Escolha</option>
             <option value="aberta">Aberta</option>
-            <option value="verdadeiro_ou_falso">V ou F</option>
+            <option value="resposta_numerica">Resposta numérica</option>
           </select>
         </div>
       </div>
+
+      {/* Gabarito das questões de resposta numérica */}
+      {tipo === "resposta_numerica" && (
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Gabarito (número)
+          </label>
+          <input
+            name="resposta_numerica"
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
+            defaultValue={questao.resposta_numerica ?? ""}
+            placeholder="0000"
+            className={`${inputClass} w-32 text-center font-mono tracking-[0.3em]`}
+          />
+          <p className="text-xs text-muted-foreground">Inteiro de 0000 a 9999.</p>
+        </div>
+      )}
 
       {/* Linha 3: Tópico + Subtópico (taxonomia canônica) */}
       <TopicoSubtopicoSelect

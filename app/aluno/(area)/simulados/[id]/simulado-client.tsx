@@ -452,6 +452,15 @@ export function SimuladoClient({
             </div>
           )}
 
+          {/* Tipos que o simulado ainda não corrige (aberta, resposta numérica):
+              avisa em vez de deixar a questão sem nenhum campo de resposta. */}
+          {questao.tipo !== "multipla_escolha" && (
+            <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+              Esta questão não é de múltipla escolha e ainda não pode ser respondida dentro do
+              simulado. Use o treino para respondê-la.
+            </div>
+          )}
+
           {/* Feedback */}
           {respondido && (
             <div

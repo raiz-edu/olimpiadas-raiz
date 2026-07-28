@@ -1,5 +1,6 @@
 // Fonte única de verdade para labels e níveis das olimpíadas do banco de questões.
-// Valores do enum Postgres `olimpiada_questao`: obmep_mirim | obmep | canguru.
+// A coluna `questao.olimpiada` é text livre desde a migration 017 — origens em uso:
+// obmep_mirim | obmep | canguru | jacob_palis.
 // A coluna `questao.nivel` é text livre — os arrays abaixo documentam os valores
 // canônicos usados por cada origem.
 
@@ -7,6 +8,7 @@ export const OLIMPIADA_LABEL: Record<string, string> = {
   obmep_mirim: "OBMEP Mirim",
   obmep: "OBMEP",
   canguru: "Canguru",
+  jacob_palis: "Jacob Palis",
 };
 
 export const NIVEL_LABEL: Record<string, string> = {
@@ -28,12 +30,18 @@ export const NIVEIS_POR_OLIMPIADA: Record<string, string[]> = {
   obmep: ["nivel_1", "nivel_2", "nivel_3"],
   obmep_mirim: ["mirim"],
   canguru: ["P", "E", "B", "C", "J", "S"],
+  jacob_palis: ["nivel_1", "nivel_2", "nivel_3"],
 };
 
 /**
- * Fases oferecidas por olimpíada nos filtros. O Canguru tem FASE ÚNICA
- * (armazenada como fase=1 no banco), então rotula como "Fase Única" em vez de
- * "1ª Fase". OBMEP tem 1ª e 2ª fases.
+ * Olimpíadas de FASE ÚNICA — a fase é armazenada como fase=1 no banco, mas
+ * rotulada "Fase Única" em vez de "1ª Fase" (não existe uma 2ª).
+ */
+export const OLIMPIADAS_FASE_UNICA: readonly string[] = ["canguru", "jacob_palis"];
+
+/**
+ * Fases oferecidas por olimpíada nos filtros. OBMEP tem 1ª e 2ª fases;
+ * Canguru e Jacob Palis têm fase única.
  */
 export const FASES_POR_OLIMPIADA: Record<string, { value: string; label: string }[]> = {
   obmep: [
@@ -45,6 +53,7 @@ export const FASES_POR_OLIMPIADA: Record<string, { value: string; label: string 
     { value: "2", label: "2ª Fase" },
   ],
   canguru: [{ value: "1", label: "Fase Única" }],
+  jacob_palis: [{ value: "1", label: "Fase Única" }],
 };
 
 /** Fases quando a origem não está selecionada (filtro "Todas as origens"). */
@@ -54,15 +63,16 @@ export const FASES_TODAS: { value: string; label: string }[] = [
 ];
 
 /**
- * Rótulo da fase de UMA questão, ciente da olimpíada: "Fase Única" para o
- * Canguru, "Nª Fase" para as demais. Retorna "" quando fase é nula.
+ * Rótulo da fase de UMA questão, ciente da olimpíada: "Fase Única" para as
+ * olimpíadas de fase única, "Nª Fase" para as demais. Retorna "" quando fase
+ * é nula.
  */
 export function faseLabel(
   olimpiada: string | null | undefined,
   fase: number | string | null | undefined,
 ): string {
   if (fase == null || fase === "") return "";
-  if (olimpiada === "canguru") return "Fase Única";
+  if (olimpiada && OLIMPIADAS_FASE_UNICA.includes(olimpiada)) return "Fase Única";
   return `${fase}ª Fase`;
 }
 

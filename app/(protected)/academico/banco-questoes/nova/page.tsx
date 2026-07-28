@@ -66,6 +66,7 @@ function RadioGroup({
 export default function NovaBancoQuestaoPage() {
   const [state, action, isPending] = useActionState(criarQuestao, null);
   const [similares, setSimilares] = useState<SimilaresResult | null>(null);
+  const [tipo, setTipo] = useState("multipla_escolha");
   const [isChecking, startCheck] = useTransition();
   const confirmedRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -173,6 +174,7 @@ export default function NovaBancoQuestaoPage() {
           <option value="obmep" />
           <option value="obmep_mirim" />
           <option value="canguru" />
+          <option value="jacob_palis" />
           <option value="obm" />
           <option value="obf" />
           <option value="obi" />
@@ -247,10 +249,15 @@ export default function NovaBancoQuestaoPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">Tipo</label>
-            <select name="tipo" className={selectClass}>
+            <select
+              name="tipo"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+              className={selectClass}
+            >
               <option value="multipla_escolha">Múltipla escolha</option>
               <option value="aberta">Aberta (dissertativa)</option>
-              <option value="verdadeiro_ou_falso">Verdadeiro ou Falso</option>
+              <option value="resposta_numerica">Resposta numérica (0000–9999)</option>
             </select>
           </div>
           <div className="space-y-1.5">
@@ -265,6 +272,25 @@ export default function NovaBancoQuestaoPage() {
             </select>
           </div>
         </div>
+
+        {/* Gabarito das questões de resposta numérica */}
+        {tipo === "resposta_numerica" && (
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">Gabarito (número)</label>
+            <input
+              name="resposta_numerica"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="0000"
+              className={`${inputClass} w-32 text-center font-mono tracking-[0.3em]`}
+            />
+            <p className="text-xs text-muted-foreground">
+              Inteiro de 0000 a 9999. Pode manter os zeros à esquerda como na prova — a correção
+              compara o valor.
+            </p>
+          </div>
+        )}
 
         {/* Linha 4: Tópico + Subtópico (taxonomia canônica) */}
         <TopicoSubtopicoSelect />

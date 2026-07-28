@@ -25,7 +25,12 @@ import {
 type ValidacaoQuestaoResposta =
   | {
       ok: true;
-      questao: { id: string; enunciado: string | null; tipo: string | null };
+      questao: {
+        id: string;
+        enunciado: string | null;
+        tipo: string | null;
+        resposta_numerica: string | null;
+      };
       contexto: ContextoResposta;
       aula_id: string | null;
     }
@@ -47,7 +52,7 @@ async function validarQuestaoParaResposta(
 
   const { data: questao } = await admin
     .from("questao")
-    .select("id, enunciado, tipo")
+    .select("id, enunciado, tipo, resposta_numerica")
     .eq("id", questaoId)
     .eq("ativo", true)
     .eq("status_cadastro", "publicado")
@@ -607,6 +612,65 @@ export async function getUltimasErradas(limit = 10) {
   });
 
   return deduped.slice(0, limit);
+}
+
+// ─── Responder questão de resposta numérica ──────────────────────────────────
+
+export type RespostaNumericaState =
+  | { correta: boolean; gabarito: string; resposta: string; questao_id: string }
+  | { error: string }
+  | null;
+
+/** Aceita 1 a 4 algarismos — "9" e "0009" são a mesma resposta. */
+const RX_RESPOSTA_NUMERICA = /^[0-9]{1,4}$/;
+
+/**
+ * Correção por igualdade exata de valor: sem IA, sem custo por resposta.
+ * Zeros à esquerda são irrelevantes na comparação ("0009" === "9"), porque o
+ * cartão oficial pede 4 algarismos mas o aluno pode digitar o número puro.
+ */
+export async function responderQuestaoNumerica(
+  _prev: RespostaNumericaState,
+  formData: FormData,
+): Promise<RespostaNumericaState> {
+  const session = await getStudentSession();
+  if (!session) return { error: "Não autenticado" };
+
+  const questao_id = normalizeOptionalId(formData.get("questao_id"));
+  const resposta = ((formData.get("resposta_numerica") as string) ?? "").trim();
+
+  if (!questao_id || !resposta) {
+    return { error: "Informe sua resposta antes de enviar." };
+  }
+  if (!RX_RESPOSTA_NUMERICA.test(resposta)) {
+    return { error: "A resposta deve ser um número inteiro entre 0000 e 9999." };
+  }
+
+  const admin = createAdminClient() as any;
+  const validacao = await validarQuestaoParaResposta(
+    admin,
+    questao_id,
+    formData.get("contexto"),
+    formData.get("aula_id"),
+  );
+  if (!validacao.ok) return { error: validacao.error };
+  if (validacao.questao.tipo !== "resposta_numerica") return { error: "Dados inválidos." };
+
+  const gabarito = (validacao.questao.resposta_numerica ?? "").trim();
+  if (!gabarito) return { error: "Questão sem gabarito cadastrado." };
+
+  const correta = Number(resposta) === Number(gabarito);
+
+  await admin.from("resposta_aluno").insert({
+    aluno_id: session.aluno.id,
+    questao_id,
+    resposta_texto: resposta,
+    correta,
+    contexto: validacao.contexto,
+    aula_id: validacao.aula_id,
+  });
+
+  return { correta, gabarito, resposta, questao_id };
 }
 
 // ─── Responder questão aberta ────────────────────────────────────────────────

@@ -34,6 +34,7 @@ const RESOLUCAO_ICON: Record<string, string> = {
 const TIPO_LABEL: Record<string, string> = {
   multipla_escolha: "M. Escolha",
   aberta: "Aberta",
+  resposta_numerica: "R. Numérica",
   verdadeiro_ou_falso: "V. ou Falso",
 };
 
@@ -151,7 +152,7 @@ export default async function BancoQuestoesPage({
             <option value="">Tipo</option>
             <option value="multipla_escolha">M. Escolha</option>
             <option value="aberta">Aberta</option>
-            <option value="verdadeiro_ou_falso">V. ou Falso</option>
+            <option value="resposta_numerica">R. Numérica</option>
           </select>
 
           <select name="dificuldade" defaultValue={sp.dificuldade ?? ""} className={seletorClass}>
