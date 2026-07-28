@@ -16,7 +16,14 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type ClassificacaoOlimpiada = "obrigatoria" | "facultativa";
 export type OlimpiadaQuestao = string; // campo livre desde migration 017
-export type TipoQuestao = "multipla_escolha" | "aberta" | "verdadeiro_ou_falso";
+// Enum Postgres `tipo_questao`: multipla_escolha | aberta | resposta_numerica.
+// ATENÇÃO: "verdadeiro_ou_falso" NÃO existe no enum do banco — é oferecido nos
+// formulários de cadastro/edição mas falha ao salvar. Bug pré-existente.
+export type TipoQuestao =
+  | "multipla_escolha"
+  | "aberta"
+  | "resposta_numerica"
+  | "verdadeiro_ou_falso";
 export type TipoDificuldade = "elementar" | "facil" | "medio" | "dificil" | "muito_dificil";
 export type TipoPublicoAlvo = "EFAI" | "EFAF" | "EM" | "Todos";
 export type TipoResolucaoStatus = "sim" | "nao" | "em_producao";
@@ -730,6 +737,7 @@ export type Database = {
           subtopico: string | null;
           categoria: string | null;
           tipo: TipoQuestao;
+          resposta_numerica: string | null;
           dificuldade: string | null;
           publico_alvo: string | null;
           tem_resolucao_video: string;
@@ -754,6 +762,7 @@ export type Database = {
           subtopico?: string | null;
           categoria?: string | null;
           tipo?: TipoQuestao;
+          resposta_numerica?: string | null;
           dificuldade?: string | null;
           publico_alvo?: string | null;
           tem_resolucao_video?: string;
@@ -778,6 +787,7 @@ export type Database = {
           subtopico?: string | null;
           categoria?: string | null;
           tipo?: TipoQuestao;
+          resposta_numerica?: string | null;
           dificuldade?: string | null;
           publico_alvo?: string | null;
           tem_resolucao_video?: string;

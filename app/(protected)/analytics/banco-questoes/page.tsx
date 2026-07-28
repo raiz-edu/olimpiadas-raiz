@@ -96,6 +96,7 @@ const DIFICULDADE_LABEL: Record<string, string> = {
 const TIPO_LABEL: Record<string, string> = {
   multipla_escolha: "Múltipla escolha",
   aberta: "Aberta",
+  resposta_numerica: "Resposta numérica",
   verdadeiro_ou_falso: "V ou F",
 };
 
