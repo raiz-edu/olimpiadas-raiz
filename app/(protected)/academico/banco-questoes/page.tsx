@@ -141,11 +141,13 @@ export default async function BancoQuestoesPage({
 
           <select name="ano" defaultValue={sp.ano ?? ""} className={seletorClass}>
             <option value="">Ano</option>
-            {Array.from({ length: 11 }, (_, i) => 2015 + i).map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
+            {Array.from({ length: new Date().getFullYear() - 2014 }, (_, i) => 2015 + i).map(
+              (a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ),
+            )}
           </select>
 
           <select name="tipo" defaultValue={sp.tipo ?? ""} className={seletorClass}>

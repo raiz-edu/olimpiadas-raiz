@@ -142,11 +142,13 @@ export function TreinoFiltros({
           <span className={labelCls}>Ano</span>
           <select name="ano" defaultValue={defaults.ano ?? ""} className={cls}>
             <option value="">Todos</option>
-            {Array.from({ length: 11 }, (_, i) => 2015 + i).map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
+            {Array.from({ length: new Date().getFullYear() - 2014 }, (_, i) => 2015 + i).map(
+              (a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ),
+            )}
           </select>
         </div>
 
