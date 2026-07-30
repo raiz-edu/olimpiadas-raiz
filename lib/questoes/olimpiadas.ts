@@ -1,6 +1,6 @@
 // Fonte única de verdade para labels e níveis das olimpíadas do banco de questões.
 // A coluna `questao.olimpiada` é text livre desde a migration 017 — origens em uso:
-// obmep_mirim | obmep | canguru | jacob_palis.
+// obmep_mirim | obmep | canguru | jacob_palis | omerj.
 // A coluna `questao.nivel` é text livre — os arrays abaixo documentam os valores
 // canônicos usados por cada origem.
 
@@ -9,6 +9,7 @@ export const OLIMPIADA_LABEL: Record<string, string> = {
   obmep: "OBMEP",
   canguru: "Canguru",
   jacob_palis: "Jacob Palis",
+  omerj: "OMERJ",
 };
 
 export const NIVEL_LABEL: Record<string, string> = {
@@ -17,6 +18,9 @@ export const NIVEL_LABEL: Record<string, string> = {
   nivel_2: "Nível 2",
   nivel_3: "Nível 3",
   mirim: "Mirim",
+  // OMERJ — fase única, prova discursiva; Jr = 5º ano, 4 = 3ª série EM
+  junior: "Júnior (5º ano)",
+  nivel_4: "Nível 4 (3ª série EM)",
   // Canguru — fase única, nível = categoria por série
   P: "P (3º-4º ano)",
   E: "E (5º-6º ano)",
@@ -31,13 +35,14 @@ export const NIVEIS_POR_OLIMPIADA: Record<string, string[]> = {
   obmep_mirim: ["mirim"],
   canguru: ["P", "E", "B", "C", "J", "S"],
   jacob_palis: ["nivel_1", "nivel_2", "nivel_3"],
+  omerj: ["junior", "nivel_1", "nivel_2", "nivel_3", "nivel_4"],
 };
 
 /**
  * Olimpíadas de FASE ÚNICA — a fase é armazenada como fase=1 no banco, mas
  * rotulada "Fase Única" em vez de "1ª Fase" (não existe uma 2ª).
  */
-export const OLIMPIADAS_FASE_UNICA: readonly string[] = ["canguru", "jacob_palis"];
+export const OLIMPIADAS_FASE_UNICA: readonly string[] = ["canguru", "jacob_palis", "omerj"];
 
 /**
  * Fases oferecidas por olimpíada nos filtros. OBMEP tem 1ª e 2ª fases;
@@ -54,6 +59,7 @@ export const FASES_POR_OLIMPIADA: Record<string, { value: string; label: string 
   ],
   canguru: [{ value: "1", label: "Fase Única" }],
   jacob_palis: [{ value: "1", label: "Fase Única" }],
+  omerj: [{ value: "1", label: "Fase Única" }],
 };
 
 /** Fases quando a origem não está selecionada (filtro "Todas as origens"). */
@@ -81,7 +87,9 @@ export const NIVEIS_TODOS: string[] = [
   "nivel_1",
   "nivel_2",
   "nivel_3",
+  "nivel_4",
   "mirim",
+  "junior",
   "P",
   "E",
   "B",
