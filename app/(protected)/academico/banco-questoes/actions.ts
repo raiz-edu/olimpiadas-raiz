@@ -170,6 +170,20 @@ function parseBlocos(raw: string): unknown | null {
   }
 }
 
+// Solução só existe com conteúdo real: bloco de texto preenchido ou imagem com URL.
+// Bloco único vazio (estado inicial do editor) NÃO conta — gravar isso criava linhas
+// lixo na tabela `solucao` que poluíam as contagens do Raio-X.
+function solucaoTemConteudo(blocos: unknown | null, texto: string | null): boolean {
+  if (blocos) {
+    return (blocos as { tipo: string; conteudo?: string; url?: string }[]).some(
+      (b) =>
+        (b.tipo === "texto" && (b.conteudo ?? "").trim() !== "") ||
+        (b.tipo === "imagem" && Boolean(b.url)),
+    );
+  }
+  return texto !== null;
+}
+
 export async function criarQuestao(_prev: QuestaoState, formData: FormData): Promise<QuestaoState> {
   const session = await getServerSession();
   if (!session || !can(session.user.role, "questao:create")) return { error: "Não autorizado" };
@@ -203,7 +217,6 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
   const dificuldade = (formData.get("dificuldade") as string) || null;
   const publico_alvo = (formData.get("publico_alvo") as string) || null;
   const tem_resolucao_video = (formData.get("tem_resolucao_video") as string) || "nao";
-  const tem_resolucao_texto = (formData.get("tem_resolucao_texto") as string) || "nao";
   const video_url = ((formData.get("video_url") as string) ?? "").trim() || null;
   const solucao_blocos = parseBlocos((formData.get("solucao_blocos") as string) ?? "");
   const solucao_texto = solucao_blocos
@@ -212,6 +225,12 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
         .map((b) => b.conteudo ?? "")
         .join("\n\n") || null
     : null;
+  // Flag de texto deriva do conteúdo (blindagem, mesmo espírito do topicoDeSubtopico):
+  // com conteúdo nunca 'nao', sem conteúdo nunca 'sim'; o form só decide 'em_producao'.
+  const solucaoPreenchida = solucaoTemConteudo(solucao_blocos, solucao_texto);
+  const flagTextoForm = (formData.get("tem_resolucao_texto") as string) || "nao";
+  const tem_resolucao_texto =
+    flagTextoForm === "em_producao" ? "em_producao" : solucaoPreenchida ? "sim" : "nao";
 
   // Só o raiz publica direto; demais (gestor de conteúdo) entram na fila de aprovação
   const status_cadastro = session.user.role === "raiz" ? "publicado" : "aguardando_revisao";
@@ -261,7 +280,7 @@ export async function criarQuestao(_prev: QuestaoState, formData: FormData): Pro
 
   if (error) return { error: error.message };
 
-  if (solucao_blocos || solucao_texto) {
+  if (solucaoPreenchida) {
     await supabase
       .from("solucao")
       .insert({ questao_id: data.id, blocos: solucao_blocos, texto: solucao_texto });
@@ -326,8 +345,14 @@ export async function atualizarQuestao(
       resposta_numerica: respostaNumericaUpd,
       dificuldade: (formData.get("dificuldade") as string) || null,
       publico_alvo: (formData.get("publico_alvo") as string) || null,
-      tem_resolucao_video: (formData.get("tem_resolucao_video") as string) || "nao",
-      tem_resolucao_texto: (formData.get("tem_resolucao_texto") as string) || "nao",
+      // Flags de resolução só entram no update se o form as enviou. O form de edição
+      // não tem esses campos, e `get() || "nao"` wipava as duas flags a cada save.
+      ...(formData.get("tem_resolucao_video") !== null
+        ? { tem_resolucao_video: (formData.get("tem_resolucao_video") as string) || "nao" }
+        : {}),
+      ...(formData.get("tem_resolucao_texto") !== null
+        ? { tem_resolucao_texto: (formData.get("tem_resolucao_texto") as string) || "nao" }
+        : {}),
       ...statusUpdate,
     })
     .eq("id", id);
@@ -529,7 +554,6 @@ export async function salvarSolucao(
   const questao_id = formData.get("questao_id") as string;
   const video_url = ((formData.get("video_url") as string) ?? "").trim() || null;
   const tem_resolucao_video = (formData.get("tem_resolucao_video") as string) || "nao";
-  const tem_resolucao_texto = (formData.get("tem_resolucao_texto") as string) || "nao";
   const blocos = parseBlocos((formData.get("solucao_blocos") as string) ?? "");
   const texto = blocos
     ? (blocos as { tipo: string; conteudo?: string }[])
@@ -537,6 +561,14 @@ export async function salvarSolucao(
         .map((b) => b.conteudo ?? "")
         .join("\n\n") || null
     : ((formData.get("solucao_texto") as string) ?? "").trim() || null;
+
+  // Blindagem (mesmo espírito do topicoDeSubtopico do #111): a flag de texto deriva
+  // do CONTEÚDO salvo, não do select — solução com conteúdo nunca fica 'nao', e sem
+  // conteúdo nunca fica 'sim'. 'em_producao' é o único estado que o select decide.
+  const temConteudo = solucaoTemConteudo(blocos, texto);
+  const flagForm = (formData.get("tem_resolucao_texto") as string) || "nao";
+  const tem_resolucao_texto =
+    flagForm === "em_producao" ? "em_producao" : temConteudo ? "sim" : "nao";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
@@ -546,9 +578,13 @@ export async function salvarSolucao(
     .update({ video_url, tem_resolucao_video, tem_resolucao_texto })
     .eq("id", questao_id);
 
-  const { error } = await supabase
-    .from("solucao")
-    .upsert({ questao_id, blocos, texto }, { onConflict: "questao_id" });
+  // Sem conteúdo não existe linha de solução: remover em vez de gravar linha vazia
+  // (linhas com bloco único vazio poluíam as contagens do Raio-X).
+  const { error } = temConteudo
+    ? await supabase
+        .from("solucao")
+        .upsert({ questao_id, blocos, texto }, { onConflict: "questao_id" })
+    : await supabase.from("solucao").delete().eq("questao_id", questao_id);
 
   if (error) return { error: error.message };
   revalidatePath(`/academico/banco-questoes/${questao_id}`);
