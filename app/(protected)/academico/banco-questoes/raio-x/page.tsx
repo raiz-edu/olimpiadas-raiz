@@ -245,6 +245,24 @@ export default async function RaioXBancoQuestoesPage({
   }
   const resVideo = resolucaoDist("tem_resolucao_video");
   const resTexto = resolucaoDist("tem_resolucao_texto");
+
+  // Resolução em texto por origem — a pendência é estrutural: concentra nas origens
+  // sem resolução oficial publicada (ex.: Canguru só publica gabarito). O recorte por
+  // origem transforma "43% pendente" em lotes acionáveis de produção de conteúdo.
+  const resTextoOrigemMap: Record<
+    string,
+    { sim: number; em_producao: number; nao: number; total: number }
+  > = {};
+  for (const q of questoes) {
+    const o = q.olimpiada ?? "—";
+    if (!resTextoOrigemMap[o]) resTextoOrigemMap[o] = { sim: 0, em_producao: 0, nao: 0, total: 0 };
+    resTextoOrigemMap[o]!.total++;
+    const k = q.tem_resolucao_texto;
+    if (k === "sim" || k === "em_producao" || k === "nao") resTextoOrigemMap[o]![k]++;
+  }
+  const resTextoOrigemList = Object.entries(resTextoOrigemMap)
+    .map(([olimpiada, v]) => ({ olimpiada, ...v }))
+    .sort((a, b) => b.nao - a.nao || b.total - a.total);
   const comAlgumaResolucao = questoes.filter(
     (q) => q.tem_resolucao_video === "sim" || q.tem_resolucao_texto === "sim",
   ).length;
@@ -485,6 +503,89 @@ export default async function RaioXBancoQuestoesPage({
               {resTexto.map((r) => (
                 <BarRow key={r.key} label={r.label} value={r.n} total={total} />
               ))}
+            </div>
+          </div>
+        )}
+        {resTextoOrigemList.length > 1 && (
+          <div className="mt-6 border-t border-border pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Resolução em texto por origem
+            </p>
+            <p className="mt-1 mb-3 text-[11px] text-muted-foreground">
+              A pendência concentra nas origens sem resolução oficial publicada — cada barra é o
+              acervo da origem.
+            </p>
+            <div className="space-y-3">
+              {resTextoOrigemList.map((o) => (
+                <div key={o.olimpiada}>
+                  <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-medium text-foreground">
+                      {olimpiadaLabel(o.olimpiada)}
+                    </span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {o.nao > 0 ? (
+                        <>
+                          <span className="font-semibold text-amber-400">{fmt(o.nao)}</span>
+                          <span className="ml-1.5 text-[11px]">
+                            pendentes de {fmt(o.total)} ({pct(o.nao, o.total)}%)
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[11px]">
+                          <span className="font-semibold text-emerald-400">completa</span>
+                          <span className="ml-1.5">· {fmt(o.total)} questões</span>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex h-2 overflow-hidden rounded bg-background">
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${pct(o.sim, o.total)}%`,
+                        backgroundColor: "rgb(16,185,129)",
+                      }}
+                    />
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${pct(o.em_producao, o.total)}%`,
+                        backgroundColor: "rgb(91,184,193)",
+                      }}
+                    />
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${pct(o.nao, o.total)}%`,
+                        backgroundColor: "rgb(245,158,11)",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="h-2 w-2 rounded-sm"
+                  style={{ backgroundColor: "rgb(16,185,129)" }}
+                />
+                Pronta
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="h-2 w-2 rounded-sm"
+                  style={{ backgroundColor: "rgb(91,184,193)" }}
+                />
+                Em produção
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="h-2 w-2 rounded-sm"
+                  style={{ backgroundColor: "rgb(245,158,11)" }}
+                />
+                Pendente
+              </span>
             </div>
           </div>
         )}
