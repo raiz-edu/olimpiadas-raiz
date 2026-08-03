@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { OLIMPIADA_LABEL, NIVEL_LABEL } from "@/lib/questoes/olimpiadas";
+import { OLIMPIADA_LABEL, NIVEL_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 import { RaioXFiltros } from "@/components/academico/raio-x-filtros";
 
 export const metadata = { title: "Raio-X do Banco de Questões" };
@@ -189,7 +189,7 @@ export default async function RaioXBancoQuestoesPage({
   const recorteParts: string[] = [];
   if (sp.olimpiada) recorteParts.push(olimpiadaLabel(sp.olimpiada));
   if (sp.nivel) recorteParts.push(nivelLabel(sp.nivel));
-  if (sp.fase) recorteParts.push(`${sp.fase}ª Fase`);
+  if (sp.fase) recorteParts.push(faseLabel(sp.olimpiada, sp.fase));
   if (sp.ano) recorteParts.push(sp.ano);
   if (sp.status_cadastro) recorteParts.push(STATUS_LABEL[sp.status_cadastro] ?? sp.status_cadastro);
   const recorteLabel = recorteParts.length > 0 ? recorteParts.join(" · ") : "Todo o acervo ativo";
