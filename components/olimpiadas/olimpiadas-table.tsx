@@ -13,6 +13,7 @@ export type OlimpiadaStats = {
   prata: number;
   bronze: number;
   mencao: number;
+  classificados: number;
 };
 
 type Totals = {
@@ -22,6 +23,7 @@ type Totals = {
   prata: number;
   bronze: number;
   mencao: number;
+  classificados: number;
 };
 
 type Props = {
@@ -37,7 +39,8 @@ type ColKey =
   | "ouro"
   | "prata"
   | "bronze"
-  | "mencao";
+  | "mencao"
+  | "classificados";
 
 const COLUMNS: { key: ColKey; label: string }[] = [
   { key: "inscritos", label: "Inscritos" },
@@ -47,6 +50,7 @@ const COLUMNS: { key: ColKey; label: string }[] = [
   { key: "prata", label: "Prata" },
   { key: "bronze", label: "Bronze" },
   { key: "mencao", label: "Menção Honrosa" },
+  { key: "classificados", label: "Classificados" },
 ];
 
 const ACTIVE_STYLE: Record<ColKey, string> = {
@@ -57,6 +61,7 @@ const ACTIVE_STYLE: Record<ColKey, string> = {
   prata: "bg-slate-300/10 text-slate-300 ring-1 ring-slate-300/40",
   bronze: "bg-amber-600/10 text-amber-600 ring-1 ring-amber-600/40",
   mencao: "bg-[rgb(91,184,193)]/10 text-[rgb(91,184,193)] ring-1 ring-[rgb(91,184,193)]/40",
+  classificados: "bg-emerald-400/10 text-emerald-400 ring-1 ring-emerald-400/40",
 };
 
 const COL_COLOR: Record<ColKey, string> = {
@@ -67,6 +72,7 @@ const COL_COLOR: Record<ColKey, string> = {
   prata: "rgb(203,213,225)",
   bronze: "rgb(217,119,6)",
   mencao: "rgb(91,184,193)",
+  classificados: "rgb(52,211,153)",
 };
 
 // Cores fixas por ano — garantem que 2025 é sempre laranja, 2026 sempre roxo,
@@ -289,6 +295,7 @@ export function OlimpiadasTable({ statsRows, totals, filterSlot }: Props) {
     prata: true,
     bronze: true,
     mencao: true,
+    classificados: true,
   });
   const [tableOpen, setTableOpen] = useState(false);
 
@@ -431,6 +438,11 @@ export function OlimpiadasTable({ statsRows, totals, filterSlot }: Props) {
                         Menção
                       </th>
                     )}
+                    {visible.classificados && (
+                      <th className="px-4 py-3 text-right font-medium text-emerald-400">
+                        Classificados
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -471,6 +483,11 @@ export function OlimpiadasTable({ statsRows, totals, filterSlot }: Props) {
                           {fmt(r.mencao)}
                         </td>
                       )}
+                      {visible.classificados && (
+                        <td className="px-4 py-3 text-right text-emerald-400">
+                          {fmt(r.classificados)}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -505,6 +522,11 @@ export function OlimpiadasTable({ statsRows, totals, filterSlot }: Props) {
                     )}
                     {visible.mencao && (
                       <td className="px-4 py-3 text-right text-foreground">{fmt(totals.mencao)}</td>
+                    )}
+                    {visible.classificados && (
+                      <td className="px-4 py-3 text-right text-emerald-400">
+                        {fmt(totals.classificados)}
+                      </td>
                     )}
                   </tr>
                 </tfoot>
