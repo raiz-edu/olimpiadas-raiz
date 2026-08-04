@@ -77,8 +77,8 @@ export default async function AnalyticsPage() {
     supabase.from("v_dashboard_inscricoes").select("*").eq("ano_letivo", ano),
     supabase
       .from("olimpiada")
-      .select("id, nome, area_conhecimento, classificacao, ativo")
-      .eq("ano_letivo", ano),
+      .select("id, nome, area_conhecimento, classificacao, ativo, ano_letivo")
+      .in("ano_letivo", anosComparacao),
     supabase.from("resultado").select("tipo, inscricao_id"),
     supabase
       .from("v_dashboard_inscricoes")
@@ -98,7 +98,7 @@ export default async function AnalyticsPage() {
     supabase
       .from("olimpiada_stats_marca")
       .select(
-        "marca_id, ano_letivo, inscritos, participantes, ouro, prata, bronze, mencao_honrosa, classificacao",
+        "marca_id, ano_letivo, olimpiada_sigla, inscritos, participantes, ouro, prata, bronze, mencao_honrosa, classificacao",
       )
       .in("ano_letivo", anosComparacao),
   ]);
@@ -176,7 +176,24 @@ export default async function AnalyticsPage() {
     if (a?.inscritos) porMarca[marca] = (porMarca[marca] ?? 0) + a.inscritos;
   }
 
-  const olympiadasAtivas = (olimpiadas ?? []).filter((o) => o.ativo).length;
+  const olympiadasAtivas = (olimpiadas ?? []).filter((o) => o.ativo && o.ano_letivo === ano).length;
+
+  // Quais olimpíadas são obrigatórias sai da coluna `classificacao` — a mesma
+  // que filtra a seção abaixo. Antes era uma lista fixa no rótulo, que ficou
+  // desatualizada em relação ao banco.
+  const siglasObrigatorias = new Set<string>();
+  for (const o of olimpiadas ?? []) {
+    if (o.classificacao !== "obrigatoria") continue;
+    const sigla = (o.nome.split(/\s|—/)[0] ?? "").toUpperCase();
+    if (sigla) siglasObrigatorias.add(sigla);
+  }
+  for (const s of statsAgregado ?? []) {
+    if (s.classificacao === "obrigatoria") siglasObrigatorias.add(s.olimpiada_sigla.toUpperCase());
+  }
+  const labelObrigatorias =
+    siglasObrigatorias.size > 0
+      ? `Obrigatórias: ${[...siglasObrigatorias].sort((a, b) => a.localeCompare(b, "pt-BR")).join(" · ")}`
+      : "Obrigatórias — nenhuma classificada no período";
 
   // ─── Sprint 1 — Funil multi-ano ──────────────────────────────────────────
 
@@ -842,7 +859,7 @@ export default async function AnalyticsPage() {
       </SectionCard>
 
       {/* ── SPRINT 2 ──────────────────────────────────────────────────────── */}
-      <Divider label="Obrigatórias: OBMEP · OBMEP MIRIM · OP · OBA · ONC · CANGURU" />
+      <Divider label={labelObrigatorias} />
 
       {/* Olimpíadas obrigatórias — inscritos, participantes e premiações por marca × ano */}
       <SectionCard
