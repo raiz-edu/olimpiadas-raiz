@@ -131,6 +131,7 @@ export default async function OlimpiadasPage({
       prata: Number(row.prata),
       bronze: Number(row.bronze),
       mencao: Number(row.mencao),
+      classificados: Number(row.classificados),
     }))
     .sort((a, b) => {
       const marcaCmp = a.marca.localeCompare(b.marca, "pt-BR");
@@ -148,8 +149,17 @@ export default async function OlimpiadasPage({
       prata: acc.prata + r.prata,
       bronze: acc.bronze + r.bronze,
       mencao: acc.mencao + r.mencao,
+      classificados: acc.classificados + r.classificados,
     }),
-    { inscritos: 0, participantes: 0, ouro: 0, prata: 0, bronze: 0, mencao: 0 },
+    {
+      inscritos: 0,
+      participantes: 0,
+      ouro: 0,
+      prata: 0,
+      bronze: 0,
+      mencao: 0,
+      classificados: 0,
+    },
   );
 
   const labelClass = "shrink-0 text-xs font-semibold uppercase tracking-wider";

@@ -1020,6 +1020,7 @@ export type Database = {
           prata: number;
           bronze: number;
           mencao: number;
+          classificados: number;
         }[];
       };
     };
