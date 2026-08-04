@@ -72,6 +72,7 @@ export default async function AnalyticsPage() {
     { data: marcasData },
     { data: metasData },
     { data: alunosAtividade },
+    { data: statsAgregado },
   ] = await Promise.all([
     supabase.from("v_dashboard_inscricoes").select("*").eq("ano_letivo", ano),
     supabase
@@ -93,9 +94,69 @@ export default async function AnalyticsPage() {
       .select("id, nome, marca_id, last_login_at, login_count")
       .eq("ativo", true)
       .not("last_login_at", "is", null),
+    // Camada de agregados: histórico sem granularidade de aluno (migration 044)
+    supabase
+      .from("olimpiada_stats_marca")
+      .select(
+        "marca_id, ano_letivo, inscritos, participantes, ouro, prata, bronze, mencao_honrosa, classificacao",
+      )
+      .in("ano_letivo", anosComparacao),
   ]);
 
-  const total = inscricoes?.length ?? 0;
+  // ─── Camada de agregados ──────────────────────────────────────────────────
+  // A origem histórica só traz contagens por marca × olimpíada × ano. Estas
+  // somas entram nos mesmos indicadores que o detalhe linha-a-linha alimenta.
+
+  type AggMarcaAno = {
+    inscritos: number;
+    participantes: number;
+    ouro: number;
+    prata: number;
+    bronze: number;
+    mencao: number;
+    obrigInscritos: number;
+    obrigParticipantes: number;
+    obrigPremiados: number;
+  };
+  const zeroAgg = (): AggMarcaAno => ({
+    inscritos: 0,
+    participantes: 0,
+    ouro: 0,
+    prata: 0,
+    bronze: 0,
+    mencao: 0,
+    obrigInscritos: 0,
+    obrigParticipantes: 0,
+    obrigPremiados: 0,
+  });
+
+  const marcaNomePorId = new Map((marcasData ?? []).map((m) => [m.id, m.nome]));
+  const agg: Record<string, Record<number, AggMarcaAno>> = {};
+  for (const s of statsAgregado ?? []) {
+    const marca = marcaNomePorId.get(s.marca_id) ?? "—";
+    agg[marca] ??= {};
+    agg[marca]![s.ano_letivo] ??= zeroAgg();
+    const a = agg[marca]![s.ano_letivo]!;
+    const premiados = s.ouro + s.prata + s.bronze + s.mencao_honrosa;
+    a.inscritos += s.inscritos;
+    a.participantes += s.participantes;
+    a.ouro += s.ouro;
+    a.prata += s.prata;
+    a.bronze += s.bronze;
+    a.mencao += s.mencao_honrosa;
+    if (s.classificacao === "obrigatoria") {
+      a.obrigInscritos += s.inscritos;
+      a.obrigParticipantes += s.participantes;
+      a.obrigPremiados += premiados;
+    }
+  }
+  const aggMarcas = Object.keys(agg);
+  const aggDe = (marca: string, a: number) => agg[marca]?.[a];
+  function aggTotal(a: number, campo: keyof AggMarcaAno) {
+    return aggMarcas.reduce((s, marca) => s + (aggDe(marca, a)?.[campo] ?? 0), 0);
+  }
+
+  const total = (inscricoes?.length ?? 0) + aggTotal(ano, "inscritos");
 
   // ─── Agregações base ──────────────────────────────────────────────────────
 
@@ -110,6 +171,10 @@ export default async function AnalyticsPage() {
 
   const porStatus = groupBy("status");
   const porMarca = groupBy("marca_nome");
+  for (const marca of aggMarcas) {
+    const a = aggDe(marca, ano);
+    if (a?.inscritos) porMarca[marca] = (porMarca[marca] ?? 0) + a.inscritos;
+  }
 
   const olympiadasAtivas = (olimpiadas ?? []).filter((o) => o.ativo).length;
 
@@ -117,14 +182,19 @@ export default async function AnalyticsPage() {
 
   const inscricaoIds = new Set((inscricoes ?? []).map((i) => i.inscricao_id));
   const resultadosAno = (resultados ?? []).filter((r) => inscricaoIds.has(r.inscricao_id));
-  const confirmadosAno = porStatus["confirmada"] ?? 0;
+  const confirmadosAno = (porStatus["confirmada"] ?? 0) + aggTotal(ano, "participantes");
   // comResultadoAno mantido para o KPI "Resultados"
   void resultadosAno.length; // used implicitly via resultadosAno filter below
 
   // Premiados por inscrição (todos os anos) — para cruzar com multiAnoData
   const premiadosTipos = new Set(["ouro", "prata", "bronze", "mencao_honrosa"]);
   // Premiados do ano corrente (para KPI)
-  const premiadosAnoAtual = resultadosAno.filter((r) => premiadosTipos.has(r.tipo)).length;
+  const premiadosAnoAtual =
+    resultadosAno.filter((r) => premiadosTipos.has(r.tipo)).length +
+    aggTotal(ano, "ouro") +
+    aggTotal(ano, "prata") +
+    aggTotal(ano, "bronze") +
+    aggTotal(ano, "mencao");
   const premiadosIds = new Set(
     (resultados ?? []).filter((r) => premiadosTipos.has(r.tipo)).map((r) => r.inscricao_id),
   );
@@ -142,9 +212,14 @@ export default async function AnalyticsPage() {
   }
   const funnelMultiAno = anosComparacao.map((a) => ({
     ano: a,
-    inscritos: funnelMap[a]?.inscritos ?? 0,
-    confirmados: funnelMap[a]?.confirmados ?? 0,
-    premiados: funnelMap[a]?.premiados ?? 0,
+    inscritos: (funnelMap[a]?.inscritos ?? 0) + aggTotal(a, "inscritos"),
+    confirmados: (funnelMap[a]?.confirmados ?? 0) + aggTotal(a, "participantes"),
+    premiados:
+      (funnelMap[a]?.premiados ?? 0) +
+      aggTotal(a, "ouro") +
+      aggTotal(a, "prata") +
+      aggTotal(a, "bronze") +
+      aggTotal(a, "mencao"),
   }));
 
   // ─── Sprint 1 — Premiação por marca (multi-ano) ───────────────────────────
@@ -175,6 +250,20 @@ export default async function AnalyticsPage() {
     p.total++;
   }
 
+  for (const marca of aggMarcas) {
+    const a = aggDe(marca, ano);
+    if (!a) continue;
+    const somaPremios = a.ouro + a.prata + a.bronze + a.mencao;
+    if (somaPremios === 0) continue;
+    premiacaoMap[marca] ??= { ouro: 0, prata: 0, bronze: 0, mencao: 0, total: 0 };
+    const p = premiacaoMap[marca]!;
+    p.ouro += a.ouro;
+    p.prata += a.prata;
+    p.bronze += a.bronze;
+    p.mencao += a.mencao;
+    p.total += somaPremios;
+  }
+
   // Multi-ano: usa multiAnoData para mapear inscricao_id → {marca, ano}
   const inscricaoMultiInfo = new Map(
     (multiAnoData ?? []).map((row) => [
@@ -198,6 +287,23 @@ export default async function AnalyticsPage() {
     else p.mencao++;
     p.total++;
   }
+  for (const marca of aggMarcas) {
+    for (const anoR of anosComparacao) {
+      const a = aggDe(marca, anoR);
+      if (!a) continue;
+      const somaPremios = a.ouro + a.prata + a.bronze + a.mencao;
+      if (somaPremios === 0) continue;
+      premiacaoMultiMap[marca] ??= {};
+      premiacaoMultiMap[marca]![anoR] ??= { ouro: 0, prata: 0, bronze: 0, mencao: 0, total: 0 };
+      const p = premiacaoMultiMap[marca]![anoR]!;
+      p.ouro += a.ouro;
+      p.prata += a.prata;
+      p.bronze += a.bronze;
+      p.mencao += a.mencao;
+      p.total += somaPremios;
+    }
+  }
+
   const premiacaoMultiList = Object.entries(premiacaoMultiMap).sort((a, b) => {
     const totA = anosComparacao.reduce((s, yr) => s + (a[1][yr]?.total ?? 0), 0);
     const totB = anosComparacao.reduce((s, yr) => s + (b[1][yr]?.total ?? 0), 0);
@@ -237,6 +343,25 @@ export default async function AnalyticsPage() {
     if (!info) continue;
     if (!obrigsPrem[info.marca]) obrigsPrem[info.marca] = {};
     obrigsPrem[info.marca]![info.a] = (obrigsPrem[info.marca]![info.a] ?? 0) + 1;
+  }
+
+  for (const marca of aggMarcas) {
+    for (const anoR of anosComparacao) {
+      const a = aggDe(marca, anoR);
+      if (!a) continue;
+      if (a.obrigInscritos > 0) {
+        obrigsInsc[marca] ??= {};
+        obrigsInsc[marca]![anoR] = (obrigsInsc[marca]![anoR] ?? 0) + a.obrigInscritos;
+      }
+      if (a.obrigParticipantes > 0) {
+        obrigsPart[marca] ??= {};
+        obrigsPart[marca]![anoR] = (obrigsPart[marca]![anoR] ?? 0) + a.obrigParticipantes;
+      }
+      if (a.obrigPremiados > 0) {
+        obrigsPrem[marca] ??= {};
+        obrigsPrem[marca]![anoR] = (obrigsPrem[marca]![anoR] ?? 0) + a.obrigPremiados;
+      }
+    }
   }
 
   const obrigsMarcasList = [
@@ -281,6 +406,12 @@ export default async function AnalyticsPage() {
       acc[k] = (acc[k] ?? 0) + 1;
       return acc;
     }, {});
+  for (const marca of aggMarcas) {
+    const a = aggDe(marca, ano);
+    if (a?.participantes) {
+      participantesPorMarca[marca] = (participantesPorMarca[marca] ?? 0) + a.participantes;
+    }
+  }
 
   // Constrói lista de marcas com dados reais + metas
   const metasComparacao = (marcasData ?? [])

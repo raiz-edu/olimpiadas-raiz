@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { OLIMPIADAS_NACIONAIS, type OlimpiadaNacional } from "@/lib/olimpiadas/nacionais";
+import { OLIMPIADAS_NACIONAIS } from "@/lib/olimpiadas/nacionais";
 
-type Olimpiada = OlimpiadaNacional;
+// Estrutural (e não o literal de OLIMPIADAS_NACIONAIS) porque a lista exibida
+// é montada a partir das siglas que têm dados — inclusive as que não constam
+// do catálogo fixo.
+type Olimpiada = { sigla: string; nome: string; nivel?: string };
 
 function OlimpiadaSelectInner({ olimpiadas }: { olimpiadas: readonly Olimpiada[] | Olimpiada[] }) {
   const [open, setOpen] = useState(false);

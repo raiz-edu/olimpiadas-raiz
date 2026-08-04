@@ -47,7 +47,10 @@ export default async function OlimpiadasPage({
     .sort((a, b) => a - b);
 
   // Passo 1: olimpíadas disponíveis (query leve, necessária para o redirect padrão)
-  const { data: olimpiadasDb } = await supabase.from("olimpiada").select("nome").eq("ativo", true);
+  const [{ data: olimpiadasDb }, { data: siglasAgregadas }] = await Promise.all([
+    supabase.from("olimpiada").select("nome").eq("ativo", true),
+    supabase.from("olimpiada_stats_marca").select("olimpiada_sigla, olimpiada_nome"),
+  ]);
 
   const siglasComDados = new Set<string>();
   for (const o of olimpiadasDb ?? []) {
@@ -65,7 +68,24 @@ export default async function OlimpiadasPage({
       }
     }
   }
-  const olimpiadasDisponiveis = OLIMPIADAS_NACIONAIS.filter((o) => siglasComDados.has(o.sigla));
+
+  type OlimpiadaOpcao = { sigla: string; nome: string; nivel?: string };
+  const opcoes = new Map<string, OlimpiadaOpcao>();
+  for (const o of OLIMPIADAS_NACIONAIS) {
+    if (siglasComDados.has(o.sigla)) opcoes.set(o.sigla.toUpperCase(), { ...o });
+  }
+  // Siglas que só existem na camada de agregados (histórico importado) também
+  // precisam ser selecionáveis — senão o dado carregado fica inalcançável.
+  for (const s of siglasAgregadas ?? []) {
+    const chave = s.olimpiada_sigla.toUpperCase();
+    if (opcoes.has(chave)) continue;
+    // "SIGLA ANO — Nome" → "Nome"
+    const nome = s.olimpiada_nome.split("—").slice(1).join("—").trim() || s.olimpiada_nome;
+    opcoes.set(chave, { sigla: s.olimpiada_sigla, nome });
+  }
+  const olimpiadasDisponiveis = [...opcoes.values()].sort((a, b) =>
+    a.sigla.localeCompare(b.sigla, "pt-BR"),
+  );
 
   // Redirect para a primeira olimpíada quando nenhuma (ou múltiplas) estiver selecionada
   const isNoSelection = olimpiadaParam === "todas" || olimpiadaParam.includes(",");

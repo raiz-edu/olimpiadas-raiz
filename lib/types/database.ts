@@ -385,6 +385,65 @@ export type Database = {
         Update: { olimpiada_id?: string; marca_id?: string };
         Relationships: [];
       };
+      // Participação/premiação agregadas por marca × olimpíada × ano.
+      // Origem sem granularidade de aluno — ver migration 044.
+      olimpiada_stats_marca: {
+        Row: {
+          id: string;
+          marca_id: string;
+          olimpiada_sigla: string;
+          olimpiada_nome: string;
+          ano_letivo: number;
+          inscritos: number;
+          participantes: number;
+          ouro: number;
+          prata: number;
+          bronze: number;
+          mencao_honrosa: number;
+          classificado: number;
+          area_conhecimento: string | null;
+          classificacao: ClassificacaoOlimpiada | null;
+          fonte: string;
+          sincronizado_em: string;
+        };
+        Insert: {
+          id?: string;
+          marca_id: string;
+          olimpiada_sigla: string;
+          olimpiada_nome: string;
+          ano_letivo: number;
+          inscritos?: number;
+          participantes?: number;
+          ouro?: number;
+          prata?: number;
+          bronze?: number;
+          mencao_honrosa?: number;
+          classificado?: number;
+          area_conhecimento?: string | null;
+          classificacao?: ClassificacaoOlimpiada | null;
+          fonte?: string;
+          sincronizado_em?: string;
+        };
+        Update: {
+          id?: string;
+          marca_id?: string;
+          olimpiada_sigla?: string;
+          olimpiada_nome?: string;
+          ano_letivo?: number;
+          inscritos?: number;
+          participantes?: number;
+          ouro?: number;
+          prata?: number;
+          bronze?: number;
+          mencao_honrosa?: number;
+          classificado?: number;
+          area_conhecimento?: string | null;
+          classificacao?: ClassificacaoOlimpiada | null;
+          fonte?: string;
+          sincronizado_em?: string;
+        };
+        Relationships: [];
+      };
       olimpiada_fase: {
         Row: {
           id: string;
