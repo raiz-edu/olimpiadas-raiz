@@ -780,6 +780,99 @@ export type Database = {
         };
         Relationships: [];
       };
+      configuracao_sistema: {
+        Row: { chave: string; valor: string; atualizado_em: string };
+        Insert: { chave: string; valor?: string; atualizado_em?: string };
+        Update: { chave?: string; valor?: string; atualizado_em?: string };
+        Relationships: [];
+      };
+      apostila_receita: {
+        Row: {
+          id: string;
+          nome: string;
+          titulo: string;
+          subtitulo: string | null;
+          config: Json;
+          criado_por: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          titulo: string;
+          subtitulo?: string | null;
+          config: Json;
+          criado_por?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          titulo?: string;
+          subtitulo?: string | null;
+          config?: Json;
+          criado_por?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+        };
+        Relationships: [];
+      };
+      apostila_geracao: {
+        Row: {
+          id: string;
+          receita_id: string;
+          seed: number;
+          total_questoes: number;
+          balanco: Json;
+          versoes: Json;
+          gerado_por: string | null;
+          gerado_em: string;
+        };
+        Insert: {
+          id?: string;
+          receita_id: string;
+          seed: number;
+          total_questoes: number;
+          balanco: Json;
+          versoes: Json;
+          gerado_por?: string | null;
+          gerado_em?: string;
+        };
+        Update: {
+          id?: string;
+          receita_id?: string;
+          seed?: number;
+          total_questoes?: number;
+          balanco?: Json;
+          versoes?: Json;
+          gerado_por?: string | null;
+          gerado_em?: string;
+        };
+        Relationships: [];
+      };
+      apostila_questao: {
+        Row: {
+          geracao_id: string;
+          questao_id: string;
+          secao: string;
+          numero_apostila: number;
+        };
+        Insert: {
+          geracao_id: string;
+          questao_id: string;
+          secao: string;
+          numero_apostila: number;
+        };
+        Update: {
+          geracao_id?: string;
+          questao_id?: string;
+          secao?: string;
+          numero_apostila?: number;
+        };
+        Relationships: [];
+      };
       questao: {
         Row: {
           id: string;
