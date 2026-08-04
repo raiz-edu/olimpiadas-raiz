@@ -178,16 +178,26 @@ const { data: olimpiadas, error: errOlimp } = await destino
   .select("nome, area_conhecimento, classificacao, ano_letivo");
 if (errOlimp) throw new Error(`destino/olimpiada: ${errOlimp.message}`);
 
+// A sigla sai do padrão "SIGLA ANO — Nome" via regex, e não de split por
+// espaço: "OBMEP MIRIM 2026 — ..." tem de virar "OBMEP MIRIM", senão colide com
+// "OBMEP" e herda a classificação errada (a Mirim não é obrigatória).
+// Indexado por sigla+ano, porque a classificação pode mudar de um ano para o
+// outro; o fallback por sigla cobre o ano que não existir em `olimpiada`.
+const metaPorSiglaAno = new Map();
 const metaPorSigla = new Map();
 for (const o of olimpiadas ?? []) {
-  const sigla = (o.nome.split(/\s|—/)[0] ?? "").toUpperCase();
-  if (sigla && !metaPorSigla.has(sigla)) {
-    metaPorSigla.set(sigla, {
-      area_conhecimento: o.area_conhecimento,
-      classificacao: o.classificacao,
-    });
-  }
+  const m = o.nome.match(/^(.+?)\s+(\d{4})\s*—/);
+  if (!m) continue;
+  const sigla = m[1].toUpperCase();
+  const meta = { area_conhecimento: o.area_conhecimento, classificacao: o.classificacao };
+  metaPorSiglaAno.set(`${sigla}|${m[2]}`, meta);
+  if (!metaPorSigla.has(sigla)) metaPorSigla.set(sigla, meta);
 }
+
+// Siglas que a origem escreve diferente do cadastro deste sistema.
+const ALIAS_SIGLA = {
+  OBMEP_MIR: "OBMEP MIRIM",
+};
 
 const registros = [];
 const semMarca = new Map();
@@ -199,7 +209,9 @@ for (const l of linhas) {
     semMarca.set(l.marca_nome, (semMarca.get(l.marca_nome) ?? 0) + Number(l.inscritos));
     continue;
   }
-  const meta = metaPorSigla.get(String(l.sigla).toUpperCase()) ?? {};
+  const siglaBusca = (ALIAS_SIGLA[l.sigla] ?? String(l.sigla)).toUpperCase();
+  const meta =
+    metaPorSiglaAno.get(`${siglaBusca}|${l.ano_letivo}`) ?? metaPorSigla.get(siglaBusca) ?? {};
   registros.push({
     marca_id: marcaId,
     olimpiada_sigla: l.sigla,
