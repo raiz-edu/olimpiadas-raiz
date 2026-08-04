@@ -1,4 +1,5 @@
 import type { RoleUsuario } from "@/lib/types/database";
+import { APOSTILA_AUTORES } from "@/lib/auth/domains";
 
 export type Resource =
   | "marca"
@@ -13,7 +14,8 @@ export type Resource =
   | "usuario"
   | "questao"
   | "simulado"
-  | "projeto";
+  | "projeto"
+  | "apostila";
 
 export type Action = "create" | "read" | "update" | "delete" | "export";
 
@@ -41,6 +43,7 @@ const LEITURA_GERAL = perms(
   "questao:read",
   "simulado:read",
   "projeto:read",
+  "apostila:read",
   // usuario:read e convite:read NÃO estão aqui — seção Usuários só para raiz e diretor_marca
 );
 
@@ -49,6 +52,10 @@ const LEITURA_GERAL = perms(
 export const ROLE_PERMISSIONS: RolePermissions = {
   // Flag interno dos 2 admins do sistema (Helio e Hugo) — acesso total
   raiz: perms(
+    "apostila:create",
+    "apostila:read",
+    "apostila:update",
+    "apostila:delete",
     "questao:create",
     "questao:read",
     "questao:update",
@@ -151,6 +158,15 @@ export function canAll(role: RoleUsuario, permissions: Permission[]): boolean {
 
 export function canAny(role: RoleUsuario, permissions: Permission[]): boolean {
   return permissions.some((p) => can(role, p));
+}
+
+/**
+ * Gate de escrita do módulo Apostilas (issue #136): exige a permissão
+ * apostila:create E o e-mail na allowlist APOSTILA_AUTORES — a role raiz tem
+ * outros admins que podem LER o módulo mas não gerir receitas.
+ */
+export function podeGerirApostilas(role: RoleUsuario, email: string | null | undefined): boolean {
+  return can(role, "apostila:create") && !!email && APOSTILA_AUTORES.has(email.toLowerCase());
 }
 
 // ─── Labels e descrições ──────────────────────────────────────────────────────

@@ -24,6 +24,14 @@ export const ALLOWED_STUDENT_EMAILS = new Set([
   "bernardo.castro@raizeducacao.com.br",
 ]);
 
+// Únicos e-mails que podem CRIAR/EDITAR/EXCLUIR receitas de apostila (issue #136,
+// decisão de 2026-08-04: "apenas o Helio, por enquanto"). A role raiz tem outros
+// admins, por isso o gate é por e-mail além da permissão apostila:create.
+export const APOSTILA_AUTORES = new Set([
+  "helio.barbosa@matrizeducacao.com.br",
+  "helio.barbosa@raizeducacao.com.br",
+]);
+
 export const DOMAIN_TO_MARCA_SLUG: Record<string, string | null> = {
   "colegioapogeu.com.br": "apogeu",
   "matrizeducacao.com.br": "matriz-educacao",
