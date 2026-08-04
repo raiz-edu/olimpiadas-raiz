@@ -98,7 +98,7 @@ export default async function AnalyticsPage() {
     supabase
       .from("olimpiada_stats_marca")
       .select(
-        "marca_id, ano_letivo, olimpiada_sigla, inscritos, participantes, ouro, prata, bronze, mencao_honrosa, classificacao",
+        "marca_id, ano_letivo, olimpiada_sigla, inscritos, participantes, ouro, prata, bronze, mencao_honrosa, classificado, classificacao",
       )
       .in("ano_letivo", anosComparacao),
   ]);
@@ -117,6 +117,7 @@ export default async function AnalyticsPage() {
     obrigInscritos: number;
     obrigParticipantes: number;
     obrigPremiados: number;
+    obrigClassificados: number;
   };
   const zeroAgg = (): AggMarcaAno => ({
     inscritos: 0,
@@ -128,6 +129,7 @@ export default async function AnalyticsPage() {
     obrigInscritos: 0,
     obrigParticipantes: 0,
     obrigPremiados: 0,
+    obrigClassificados: 0,
   });
 
   const marcaNomePorId = new Map((marcasData ?? []).map((m) => [m.id, m.nome]));
@@ -148,6 +150,7 @@ export default async function AnalyticsPage() {
       a.obrigInscritos += s.inscritos;
       a.obrigParticipantes += s.participantes;
       a.obrigPremiados += premiados;
+      a.obrigClassificados += s.classificado;
     }
   }
   const aggMarcas = Object.keys(agg);
@@ -354,12 +357,19 @@ export default async function AnalyticsPage() {
       ]),
   );
   const obrigsPrem: Record<string, Record<number, number>> = {};
+  // Classificado = avançou de fase sem medalha. No detalhe é resultado.tipo
+  // 'aprovado'; no agregado é a coluna `classificado`.
+  const obrigsClass: Record<string, Record<number, number>> = {};
   for (const r of resultados ?? []) {
-    if (!["ouro", "prata", "bronze", "mencao_honrosa"].includes(r.tipo)) continue;
     const info = obrigsInscMap.get(r.inscricao_id);
     if (!info) continue;
-    if (!obrigsPrem[info.marca]) obrigsPrem[info.marca] = {};
-    obrigsPrem[info.marca]![info.a] = (obrigsPrem[info.marca]![info.a] ?? 0) + 1;
+    if (["ouro", "prata", "bronze", "mencao_honrosa"].includes(r.tipo)) {
+      if (!obrigsPrem[info.marca]) obrigsPrem[info.marca] = {};
+      obrigsPrem[info.marca]![info.a] = (obrigsPrem[info.marca]![info.a] ?? 0) + 1;
+    } else if (r.tipo === "aprovado") {
+      if (!obrigsClass[info.marca]) obrigsClass[info.marca] = {};
+      obrigsClass[info.marca]![info.a] = (obrigsClass[info.marca]![info.a] ?? 0) + 1;
+    }
   }
 
   for (const marca of aggMarcas) {
@@ -378,6 +388,10 @@ export default async function AnalyticsPage() {
         obrigsPrem[marca] ??= {};
         obrigsPrem[marca]![anoR] = (obrigsPrem[marca]![anoR] ?? 0) + a.obrigPremiados;
       }
+      if (a.obrigClassificados > 0) {
+        obrigsClass[marca] ??= {};
+        obrigsClass[marca]![anoR] = (obrigsClass[marca]![anoR] ?? 0) + a.obrigClassificados;
+      }
     }
   }
 
@@ -386,6 +400,7 @@ export default async function AnalyticsPage() {
       ...Object.keys(obrigsInsc),
       ...Object.keys(obrigsPart),
       ...Object.keys(obrigsPrem),
+      ...Object.keys(obrigsClass),
     ]),
   ]
     .map((marca) => ({
@@ -395,6 +410,7 @@ export default async function AnalyticsPage() {
         inscritos: obrigsInsc[marca]?.[a] ?? 0,
         participantes: obrigsPart[marca]?.[a] ?? 0,
         premiados: obrigsPrem[marca]?.[a] ?? 0,
+        classificados: obrigsClass[marca]?.[a] ?? 0,
       })),
     }))
     .sort((a, b) => {
@@ -863,7 +879,7 @@ export default async function AnalyticsPage() {
 
       {/* Olimpíadas obrigatórias — inscritos, participantes e premiações por marca × ano */}
       <SectionCard
-        title={`Olimpíadas obrigatórias — inscritos, participantes e premiações por marca — ${anosComparacao.join(" · ")}`}
+        title={`Olimpíadas obrigatórias — inscritos, participantes, classificados e premiações por marca — ${anosComparacao.join(" · ")}`}
       >
         {obrigsMarcasList.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -890,6 +906,9 @@ export default async function AnalyticsPage() {
                         <th className="px-3 py-2 text-right text-[11px] font-medium text-muted-foreground">
                           % Part.
                         </th>
+                        <th className="px-3 py-2 text-right text-[11px] font-medium text-emerald-400">
+                          Classificados
+                        </th>
                         <th className="px-3 py-2 text-right text-[11px] font-medium text-yellow-400">
                           Premiações
                         </th>
@@ -912,6 +931,9 @@ export default async function AnalyticsPage() {
                           </td>
                           <td className="px-3 py-2 text-right text-[11px] text-muted-foreground">
                             {d.inscritos > 0 ? `${pct(d.participantes, d.inscritos)}%` : "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right text-emerald-400">
+                            {d.classificados || "—"}
                           </td>
                           <td className="px-3 py-2 text-right text-yellow-400">
                             {d.premiados || "—"}
