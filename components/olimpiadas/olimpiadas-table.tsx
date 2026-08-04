@@ -295,7 +295,10 @@ export function OlimpiadasTable({ statsRows, totals, filterSlot }: Props) {
     prata: true,
     bronze: true,
     mencao: true,
-    classificados: true,
+    // Desligada por padrão: hoje só 3 das 10 marcas reportam classificados na
+    // origem, então ligada por padrão a coluna sugere comparação entre marcas
+    // que o dado não sustenta. Fica disponível para quem for investigar.
+    classificados: false,
   });
   const [tableOpen, setTableOpen] = useState(false);
 
