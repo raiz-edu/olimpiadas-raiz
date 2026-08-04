@@ -50,9 +50,7 @@ export default async function ResultadosPainelPage({
     // Camada de agregados: histórico sem granularidade de aluno (migration 044)
     supabase
       .from("olimpiada_stats_marca")
-      .select(
-        "marca_id, inscritos, participantes, ouro, prata, bronze, mencao_honrosa, classificado",
-      )
+      .select("marca_id, inscritos, participantes, ouro, prata, bronze, mencao_honrosa")
       .in("ano_letivo", selectedYears),
   ]);
 
@@ -65,7 +63,6 @@ export default async function ResultadosPainelPage({
     prata: number;
     bronze: number;
     mencao_honrosa: number;
-    classificado: number;
   };
   const statsPorMarca = new Map<string, StatsAcc>();
   for (const s of statsData ?? []) {
@@ -76,7 +73,6 @@ export default async function ResultadosPainelPage({
       prata: 0,
       bronze: 0,
       mencao_honrosa: 0,
-      classificado: 0,
     };
     acc.inscritos += s.inscritos;
     acc.participantes += s.participantes;
@@ -84,7 +80,6 @@ export default async function ResultadosPainelPage({
     acc.prata += s.prata;
     acc.bronze += s.bronze;
     acc.mencao_honrosa += s.mencao_honrosa;
-    acc.classificado += s.classificado;
     statsPorMarca.set(s.marca_id, acc);
   }
 
@@ -104,13 +99,10 @@ export default async function ResultadosPainelPage({
       bronze: agregado?.bronze ?? 0,
       mencao_honrosa: agregado?.mencao_honrosa ?? 0,
     };
-    // Classificado = avançou de fase sem medalha. Categoria disjunta das
-    // medalhas na origem, então fica fora do total de medalhas.
-    let classificados = agregado?.classificado ?? 0;
     for (const r of resultadosData ?? []) {
-      if (inscricaoMarcaMap.get(r.inscricao_id) !== m.nome) continue;
-      if (r.tipo in tipos) tipos[r.tipo as keyof typeof tipos]++;
-      else if (r.tipo === "aprovado") classificados++;
+      if (inscricaoMarcaMap.get(r.inscricao_id) === m.nome && r.tipo in tipos) {
+        tipos[r.tipo as keyof typeof tipos]++;
+      }
     }
     const totalResultadoM = tipos.ouro + tipos.prata + tipos.bronze + tipos.mencao_honrosa;
 
@@ -120,7 +112,6 @@ export default async function ResultadosPainelPage({
       numInscritos,
       numParticipantes,
       totalResultado: totalResultadoM,
-      classificados,
       ...tipos,
     };
   });
@@ -158,7 +149,6 @@ export default async function ResultadosPainelPage({
   const totalBronze = brandRows.reduce((s, b) => s + b.bronze, 0);
   const totalMencao = brandRows.reduce((s, b) => s + b.mencao_honrosa, 0);
   const totalResultados = brandRows.reduce((s, b) => s + b.totalResultado, 0);
-  const totalClassificados = brandRows.reduce((s, b) => s + b.classificados, 0);
 
   return (
     <div className="space-y-8">
@@ -201,14 +191,13 @@ export default async function ResultadosPainelPage({
           >
             Resultados
           </p>
-          <div className="grid grid-cols-6 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             {[
               { label: "Ouro", value: totalOuro },
               { label: "Prata", value: totalPrata },
               { label: "Bronze", value: totalBronze },
               { label: "Menção Honrosa", value: totalMencao },
-              { label: "Total medalhas", value: totalResultados },
-              { label: "Classificados", value: totalClassificados },
+              { label: "Total", value: totalResultados },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-xl border border-border bg-card px-5 py-4">
                 <p className="text-xs font-medium text-muted-foreground">{label}</p>
@@ -224,17 +213,16 @@ export default async function ResultadosPainelPage({
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <table className="w-full table-fixed text-sm">
           <colgroup>
-            <col className="w-[4%]" />
+            <col className="w-[5%]" />
+            <col className="w-[13%]" />
+            <col className="w-[9%]" />
+            <col className="w-[9%]" />
+            <col className="w-[9%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[9%]" />
             <col className="w-[14%]" />
-            <col className="w-[8%]" />
-            <col className="w-[9%]" />
-            <col className="w-[9%]" />
-            <col className="w-[6%]" />
-            <col className="w-[6%]" />
-            <col className="w-[6%]" />
-            <col className="w-[10%]" />
-            <col className="w-[19%]" />
-            <col className="w-[9%]" />
           </colgroup>
           <thead>
             <tr className="border-b border-border/50 bg-background">
@@ -262,7 +250,7 @@ export default async function ResultadosPainelPage({
               <th
                 className="px-4 py-3 text-center font-medium"
                 style={{ color: "rgb(91,184,193)" }}
-                colSpan={6}
+                colSpan={5}
               >
                 Resultados
               </th>
@@ -276,8 +264,7 @@ export default async function ResultadosPainelPage({
                 "Prata",
                 "Bronze",
                 "Menção Honrosa",
-                "Total medalhas",
-                "Classificados",
+                "Total",
               ].map((h) => (
                 <th
                   key={h}
@@ -330,9 +317,6 @@ export default async function ResultadosPainelPage({
                       />
                     </div>
                   </div>
-                </td>
-                <td className="px-4 py-3 text-center text-muted-foreground">
-                  {b.classificados || "—"}
                 </td>
               </tr>
             ))}
