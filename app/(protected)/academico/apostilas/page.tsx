@@ -34,9 +34,9 @@ export default async function ApostilasPage() {
       {gestor && (
         <form
           action={salvarNomeModulo}
-          className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3"
+          className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3"
         >
-          <label htmlFor="nome_modulo" className="text-xs font-medium text-gray-500">
+          <label htmlFor="nome_modulo" className="text-xs font-medium text-muted-foreground">
             Nome do módulo (menu e título):
           </label>
           <input
@@ -47,7 +47,7 @@ export default async function ApostilasPage() {
           />
           <button
             type="submit"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
           >
             Salvar nome
           </button>
@@ -61,10 +61,10 @@ export default async function ApostilasPage() {
           action={gestor ? { label: "Nova receita", href: "/academico/apostilas/nova" } : undefined}
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="w-full min-w-[720px] text-sm">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full min-w-[720px] text-sm text-foreground">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
+              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="px-4 py-3">Receita</th>
                 <th className="px-4 py-3 hidden sm:table-cell">Título</th>
                 <th className="px-4 py-3">Última geração</th>
@@ -76,14 +76,16 @@ export default async function ApostilasPage() {
               {receitas.map((r) => {
                 const deficit = r.ultima?.balanco?.reduce((s, l) => s + (l.deficit ?? 0), 0) ?? 0;
                 return (
-                  <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={r.id} className="border-b border-border/60 hover:bg-muted/40">
                     <td className="px-4 py-3 font-medium">
                       <Link href={`/academico/apostilas/${r.id}`} className="hover:underline">
                         {r.nome}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-gray-600">{r.titulo}</td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">
+                      {r.titulo}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
                       {r.ultima ? fmtData(r.ultima.gerado_em) : "nunca gerada"}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
@@ -92,9 +94,9 @@ export default async function ApostilasPage() {
                     <td className="px-4 py-3 hidden md:table-cell">
                       {r.ultima ? (
                         deficit > 0 ? (
-                          <span className="font-semibold text-red-600">{deficit}</span>
+                          <span className="font-semibold text-red-400">{deficit}</span>
                         ) : (
-                          <span className="text-emerald-600">0</span>
+                          <span className="text-emerald-400">0</span>
                         )
                       ) : (
                         "-"
