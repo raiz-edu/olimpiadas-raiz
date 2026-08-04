@@ -70,22 +70,32 @@ export default async function OlimpiadasPage({
   }
 
   type OlimpiadaOpcao = { sigla: string; nome: string; nivel?: string };
-  const opcoes = new Map<string, OlimpiadaOpcao>();
-  for (const o of OLIMPIADAS_NACIONAIS) {
-    if (siglasComDados.has(o.sigla)) opcoes.set(o.sigla.toUpperCase(), { ...o });
-  }
+
+  const siglasAgregadasUpper = new Set(
+    (siglasAgregadas ?? []).map((s) => s.olimpiada_sigla.toUpperCase()),
+  );
+
+  // O catálogo vem primeiro e na ordem dele — é o que mantém OBMEP como padrão
+  // ao abrir a tela. Ordenar tudo por sigla jogaria "Bebras" para a frente.
+  const doCatalogo: OlimpiadaOpcao[] = OLIMPIADAS_NACIONAIS.filter(
+    (o) => siglasComDados.has(o.sigla) || siglasAgregadasUpper.has(o.sigla.toUpperCase()),
+  ).map((o) => ({ sigla: o.sigla, nome: o.nome, nivel: o.nivel }));
+
   // Siglas que só existem na camada de agregados (histórico importado) também
   // precisam ser selecionáveis — senão o dado carregado fica inalcançável.
+  const jaListadas = new Set(doCatalogo.map((o) => o.sigla.toUpperCase()));
+  const extras: OlimpiadaOpcao[] = [];
   for (const s of siglasAgregadas ?? []) {
     const chave = s.olimpiada_sigla.toUpperCase();
-    if (opcoes.has(chave)) continue;
+    if (jaListadas.has(chave)) continue;
+    jaListadas.add(chave);
     // "SIGLA ANO — Nome" → "Nome"
     const nome = s.olimpiada_nome.split("—").slice(1).join("—").trim() || s.olimpiada_nome;
-    opcoes.set(chave, { sigla: s.olimpiada_sigla, nome });
+    extras.push({ sigla: s.olimpiada_sigla, nome });
   }
-  const olimpiadasDisponiveis = [...opcoes.values()].sort((a, b) =>
-    a.sigla.localeCompare(b.sigla, "pt-BR"),
-  );
+  extras.sort((a, b) => a.sigla.localeCompare(b.sigla, "pt-BR"));
+
+  const olimpiadasDisponiveis = [...doCatalogo, ...extras];
 
   // Redirect para a primeira olimpíada quando nenhuma (ou múltiplas) estiver selecionada
   const isNoSelection = olimpiadaParam === "todas" || olimpiadaParam.includes(",");
