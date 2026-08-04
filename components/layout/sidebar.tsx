@@ -120,12 +120,13 @@ const PERSIST_BASES = [
   "/academico/banco-questoes/raio-x",
 ] as const;
 
-function SidebarContent() {
+function SidebarContent({ apostilasLabel = "Apostilas" }: { apostilasLabel?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const canConvite = useCan("convite:create");
   const canAudit = useCan("audit_log:read");
+  const canApostilas = useCan("apostila:read");
 
   const isInResultados = pathname.startsWith("/resultados/painel");
   const [resultadosOpen, setResultadosOpen] = useState(isInResultados);
@@ -217,6 +218,14 @@ function SidebarContent() {
           >
             Simulados
           </SubItem>
+          {canApostilas && (
+            <SubItem
+              active={pathname.startsWith("/academico/apostilas")}
+              onClick={() => go("/academico/apostilas")}
+            >
+              {apostilasLabel}
+            </SubItem>
+          )}
           <SubItem
             active={pathname.startsWith("/academico/calendario")}
             onClick={() => go("/academico/calendario")}
@@ -295,10 +304,10 @@ function SidebarContent() {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ apostilasLabel }: { apostilasLabel?: string }) {
   return (
     <Suspense fallback={null}>
-      <SidebarContent />
+      <SidebarContent apostilasLabel={apostilasLabel} />
     </Suspense>
   );
 }

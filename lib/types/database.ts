@@ -780,6 +780,12 @@ export type Database = {
         };
         Relationships: [];
       };
+      configuracao_sistema: {
+        Row: { chave: string; valor: string; atualizado_em: string };
+        Insert: { chave: string; valor?: string; atualizado_em?: string };
+        Update: { chave?: string; valor?: string; atualizado_em?: string };
+        Relationships: [];
+      };
       apostila_receita: {
         Row: {
           id: string;

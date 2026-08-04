@@ -131,9 +131,13 @@ describe("can() — roles de leitura (professor/coordenador/diretor)", () => {
   it("roles de leitura NÃO veem Gestão nem Usuários", () => {
     for (const role of LEITURA_ROLES) {
       expect(can(role, "audit_log:read")).toBe(false);
-      expect(can(role, "convite:create")).toBe(false);
       expect(can(role, "usuario:create")).toBe(false);
     }
+    // professor e coordenador não convidam; diretor PODE convidar roles de
+    // leitura da sua marca (decisão do permissionamento — ver comentário na matriz)
+    expect(can("professor", "convite:create")).toBe(false);
+    expect(can("coordenador", "convite:create")).toBe(false);
+    expect(can("diretor", "convite:create")).toBe(true);
   });
 });
 
@@ -193,9 +197,10 @@ describe("ROLE_PERMISSIONS — invariantes críticos", () => {
     }
   });
 
-  it("professor, coordenador e diretor têm o mesmo conjunto de permissões", () => {
-    const sizes = LEITURA_ROLES.map((r) => ROLE_PERMISSIONS[r]!.size);
-    expect(new Set(sizes).size).toBe(1);
+  it("professor e coordenador têm o mesmo conjunto; diretor = leitura + convites", () => {
+    expect(ROLE_PERMISSIONS.professor!.size).toBe(ROLE_PERMISSIONS.coordenador!.size);
+    // diretor: leitura geral + usuario:read, convite:read, convite:create
+    expect(ROLE_PERMISSIONS.diretor!.size).toBe(ROLE_PERMISSIONS.professor!.size + 3);
   });
 
   it("nenhuma role tem a permissão inexistente convite:export", () => {

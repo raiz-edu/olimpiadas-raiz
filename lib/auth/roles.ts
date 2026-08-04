@@ -172,6 +172,7 @@ export function podeGerirApostilas(role: RoleUsuario, email: string | null | und
 // ─── Labels e descrições ──────────────────────────────────────────────────────
 
 export const ROLE_LABELS: Partial<Record<RoleUsuario, string>> = {
+  raiz: "Administração Raiz",
   diretor_marca: "Diretor de Marca",
   gestor_conteudo: "Gestor de Conteúdo",
   professor: "Professor",

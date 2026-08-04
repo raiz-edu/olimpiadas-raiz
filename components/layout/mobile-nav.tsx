@@ -4,15 +4,17 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 
-export function MobileNav() {
+export function MobileNav({ apostilasLabel }: { apostilasLabel?: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // Fecha ao navegar
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
+  // Fecha ao navegar: ajuste de estado durante o render (padrão recomendado
+  // pelo React para reagir a mudança de valor, sem setState dentro de effect)
+  const [ultimaRota, setUltimaRota] = useState(pathname);
+  if (ultimaRota !== pathname) {
+    setUltimaRota(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Trava o scroll do body enquanto o drawer está aberto
   useEffect(() => {
@@ -88,7 +90,7 @@ export function MobileNav() {
 
             {/* Conteúdo da sidebar */}
             <div className="flex-1 overflow-y-auto">
-              <Sidebar />
+              <Sidebar apostilasLabel={apostilasLabel} />
             </div>
           </div>
         </>
