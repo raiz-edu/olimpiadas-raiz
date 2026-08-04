@@ -21,7 +21,7 @@ export function Chip({
       className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
         ativo
           ? "border-primary bg-primary/10 text-primary"
-          : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
+          : "border-border bg-background text-muted-foreground hover:border-ring hover:text-foreground"
       }`}
     >
       {children}
@@ -40,7 +40,7 @@ export function MixEditor({
   return (
     <div className="flex flex-wrap items-end gap-3">
       {DIFICULDADES_MIX.map((d) => (
-        <label key={d} className="flex flex-col gap-1 text-xs text-gray-600">
+        <label key={d} className="flex flex-col gap-1 text-xs text-muted-foreground">
           {DIFICULDADE_LABEL[d]} (%)
           <input
             type="number"
@@ -60,7 +60,7 @@ export function MixEditor({
       ))}
       {mix && (
         <span
-          className={`pb-2 text-xs font-semibold ${soma === 100 ? "text-emerald-600" : "text-red-600"}`}
+          className={`pb-2 text-xs font-semibold ${soma === 100 ? "text-emerald-400" : "text-red-400"}`}
         >
           soma: {soma}%
         </span>
@@ -86,7 +86,7 @@ export function SecaoCard({
   const ativa = value !== null;
   return (
     <div
-      className={`rounded-xl border p-4 ${ativa ? "border-primary/40 bg-primary/[0.03]" : "border-gray-200"}`}
+      className={`rounded-xl border p-4 ${ativa ? "border-primary/40 bg-primary/10" : "border-border"}`}
     >
       <label className="flex cursor-pointer items-center gap-2">
         <input
@@ -94,12 +94,12 @@ export function SecaoCard({
           checked={ativa}
           onChange={(e) => onChange(e.target.checked ? { topico } : null)}
         />
-        <span className="text-sm font-semibold">{topico}</span>
+        <span className="text-sm font-semibold text-foreground">{topico}</span>
       </label>
 
       {ativa && (
         <div className="mt-3 space-y-3">
-          <label className="flex items-center gap-2 text-xs text-gray-600">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Quantidade de questões
             <input
               type="number"
@@ -114,7 +114,7 @@ export function SecaoCard({
               }
               className={`${inputClass} w-28`}
             />
-            <span className="text-gray-400">(vazio = todas que casarem)</span>
+            <span className="text-muted-foreground/70">(vazio = todas que casarem)</span>
           </label>
 
           <div className="flex flex-wrap gap-1.5">
@@ -137,10 +137,12 @@ export function SecaoCard({
               );
             })}
           </div>
-          <p className="text-[11px] text-gray-400">Nenhum subtópico marcado = o tópico inteiro.</p>
+          <p className="text-[11px] text-muted-foreground">
+            Nenhum subtópico marcado = o tópico inteiro.
+          </p>
 
           <details open={!!value.mix_dificuldade}>
-            <summary className="cursor-pointer text-xs font-medium text-gray-600">
+            <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
               Mix de dificuldade próprio desta seção (opcional)
             </summary>
             <div className="mt-2">

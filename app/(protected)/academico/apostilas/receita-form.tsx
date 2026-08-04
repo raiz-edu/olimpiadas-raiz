@@ -11,7 +11,7 @@ import { contarAcervo, salvarReceita, type ReceitaState } from "./actions";
 import type { ContagemSecao } from "@/lib/apostilas/queries";
 import { Chip, MixEditor, SecaoCard } from "./secao-card";
 
-const CARD = "rounded-xl border border-gray-200 bg-white p-6 space-y-4";
+const CARD = "rounded-xl border border-border bg-card p-6 space-y-4";
 
 function alvoBucket(sec: SecaoReceita, global: ReceitaConfig["mix_dificuldade"], b: string) {
   const mix = sec.mix_dificuldade ?? global;
@@ -69,13 +69,15 @@ export function ReceitaForm({
       <input type="hidden" name="config" value={JSON.stringify(config)} />
 
       <div className={CARD}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">Identificação</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Identificação
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="text-sm">
+          <label className="text-sm text-foreground">
             Nome interno da receita*
             <input value={nome} onChange={(e) => setNome(e.target.value)} className={inputClass} />
           </label>
-          <label className="text-sm">
+          <label className="text-sm text-foreground">
             Título da apostila*
             <input
               value={config.titulo}
@@ -83,7 +85,7 @@ export function ReceitaForm({
               className={inputClass}
             />
           </label>
-          <label className="text-sm">
+          <label className="text-sm text-foreground">
             Subtítulo
             <input
               value={config.subtitulo ?? ""}
@@ -92,7 +94,7 @@ export function ReceitaForm({
               placeholder="ex.: 8º ano"
             />
           </label>
-          <label className="text-sm">
+          <label className="text-sm text-foreground">
             Marca (rede/escola na capa)
             <input
               value={config.marca ?? ""}
@@ -105,11 +107,11 @@ export function ReceitaForm({
       </div>
 
       <div className={CARD}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
           Público e origem
         </h2>
         <div>
-          <p className="mb-1.5 text-xs text-gray-500">Séries</p>
+          <p className="mb-1.5 text-xs text-muted-foreground">Séries</p>
           <div className="flex flex-wrap gap-1.5">
             {SERIES_ORDEM.map((s) => (
               <Chip
@@ -123,7 +125,7 @@ export function ReceitaForm({
           </div>
         </div>
         <div>
-          <p className="mb-1.5 text-xs text-gray-500">Origens (nenhuma marcada = todas)</p>
+          <p className="mb-1.5 text-xs text-muted-foreground">Origens (nenhuma marcada = todas)</p>
           <div className="flex flex-wrap gap-1.5">
             {Object.entries(OLIMPIADA_LABEL).map(([valor, rotulo]) => (
               <Chip
@@ -136,7 +138,7 @@ export function ReceitaForm({
             ))}
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex flex-wrap gap-4 text-sm text-foreground">
           <label>
             Ano mínimo
             <input
@@ -182,20 +184,20 @@ export function ReceitaForm({
       </div>
 
       <div className={CARD}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
           Mix de dificuldade global
         </h2>
         <MixEditor
           mix={config.mix_dificuldade}
           onChange={(mix) => patch({ mix_dificuldade: mix })}
         />
-        <p className="text-[11px] text-gray-400">
+        <p className="text-[11px] text-muted-foreground">
           Vazio = sem mix (dificuldade crescente natural). Seções podem sobrescrever.
         </p>
       </div>
 
       <div className={CARD}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
           Seções (tópicos e subtópicos)
         </h2>
         <div className="grid gap-3">
@@ -203,14 +205,14 @@ export function ReceitaForm({
             <SecaoCard key={t} topico={t} value={secaoDe(t)} onChange={(s) => setSecao(t, s)} />
           ))}
         </div>
-        <p className="text-[11px] text-gray-400">
+        <p className="text-[11px] text-muted-foreground">
           Nenhuma seção marcada = apostila inteira do filtro.
         </p>
       </div>
 
       <div className={CARD}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">Estilo</h2>
-        <div className="flex flex-wrap gap-4 text-sm">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Estilo</h2>
+        <div className="flex flex-wrap gap-4 text-sm text-foreground">
           <label>
             Colunas
             <select
@@ -280,7 +282,7 @@ export function ReceitaForm({
 
       <div className={CARD}>
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
             Acervo disponível
           </h2>
           <button
@@ -294,9 +296,9 @@ export function ReceitaForm({
         </div>
         {contagem && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[560px] text-sm text-foreground">
               <thead>
-                <tr className="text-left text-xs text-gray-500">
+                <tr className="text-left text-xs text-muted-foreground">
                   <th className="py-1.5">Seção</th>
                   <th>Fácil</th>
                   <th>Médio</th>
@@ -309,13 +311,13 @@ export function ReceitaForm({
                 {contagem.map((c) => {
                   const sec = config.secoes?.find((s) => (s.nome || s.topico) === c.secao);
                   return (
-                    <tr key={c.secao} className="border-t border-gray-100">
-                      <td className="py-1.5 font-medium">{c.secao}</td>
+                    <tr key={c.secao} className="border-t border-border/60">
+                      <td className="py-1.5 font-medium text-foreground">{c.secao}</td>
                       {(["facil", "medio", "dificil"] as const).map((b) => {
                         const alvo = sec ? alvoBucket(sec, config.mix_dificuldade, b) : null;
                         const deficit = alvo !== null && alvo > c.porDificuldade[b];
                         return (
-                          <td key={b} className={deficit ? "font-semibold text-red-600" : ""}>
+                          <td key={b} className={deficit ? "font-semibold text-red-400" : ""}>
                             {c.porDificuldade[b]}
                             {alvo !== null && ` / ${alvo} pedidas`}
                           </td>
@@ -328,7 +330,7 @@ export function ReceitaForm({
                 })}
               </tbody>
             </table>
-            <p className="mt-1 text-[11px] text-gray-400">
+            <p className="mt-1 text-[11px] text-muted-foreground">
               Vermelho = pedido maior que o acervo (a skill completa da dificuldade vizinha e
               reporta no balanço).
             </p>
@@ -342,7 +344,7 @@ export function ReceitaForm({
         </p>
       )}
       {config.mix_dificuldade && somaMix(config.mix_dificuldade) !== 100 && (
-        <p className="text-sm text-red-600">Mix global precisa somar 100% para salvar.</p>
+        <p className="text-sm text-red-400">Mix global precisa somar 100% para salvar.</p>
       )}
 
       <button

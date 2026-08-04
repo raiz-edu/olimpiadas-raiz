@@ -107,37 +107,39 @@ export default async function ReceitaDetalhePage({ params }: { params: Promise<{
         }
       />
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">Receita</h2>
-        <dl className="grid gap-2 text-sm">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Receita
+        </h2>
+        <dl className="grid gap-2 text-sm text-foreground">
           {resumoConfig(receita.config).map((l) => (
             <div key={l.rotulo} className="grid grid-cols-[160px_1fr] gap-2">
-              <dt className="font-medium text-gray-500">{l.rotulo}</dt>
+              <dt className="font-medium text-muted-foreground">{l.rotulo}</dt>
               <dd>{l.valor}</dd>
             </div>
           ))}
         </dl>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
           Gerações ({receita.geracoes.length})
         </h2>
         {receita.geracoes.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Nenhuma geração ainda. A skill gerar-apostila registra aqui ao rodar com --receita-id{" "}
             {receita.id}.
           </p>
         ) : (
           <div className="space-y-4">
             {receita.geracoes.map((g, i) => (
-              <div key={g.id} className="rounded-lg border border-gray-100 p-4">
-                <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div key={g.id} className="rounded-lg border border-border/60 p-4">
+                <div className="flex flex-wrap items-center gap-3 text-sm text-foreground">
                   <span className="font-semibold">
                     {new Date(g.gerado_em).toLocaleString("pt-BR")}
                   </span>
-                  <span className="text-gray-500">{g.total_questoes} questões</span>
-                  <span className="text-gray-400">seed {g.seed}</span>
+                  <span className="text-muted-foreground">{g.total_questoes} questões</span>
+                  <span className="text-muted-foreground/70">seed {g.seed}</span>
                   {(downloads[i] ?? []).map((d) => (
                     <Link
                       key={d.rotulo}
@@ -150,9 +152,9 @@ export default async function ReceitaDetalhePage({ params }: { params: Promise<{
                 </div>
                 {g.balanco?.length > 0 && (
                   <div className="mt-3 overflow-x-auto">
-                    <table className="w-full min-w-[520px] text-xs">
+                    <table className="w-full min-w-[520px] text-xs text-foreground">
                       <thead>
-                        <tr className="text-left text-gray-500">
+                        <tr className="text-left text-muted-foreground">
                           <th className="py-1">Seção</th>
                           <th>Dificuldade</th>
                           <th>Pedido</th>
@@ -163,13 +165,13 @@ export default async function ReceitaDetalhePage({ params }: { params: Promise<{
                       </thead>
                       <tbody>
                         {g.balanco.map((l, j) => (
-                          <tr key={j} className="border-t border-gray-100">
+                          <tr key={j} className="border-t border-border/60">
                             <td className="py-1">{l.secao}</td>
                             <td>{DIFICULDADE_LABEL[l.dificuldade] ?? l.dificuldade}</td>
                             <td>{l.pedido}</td>
                             <td>{l.entregue}</td>
                             <td>{l.substituidas}</td>
-                            <td className={l.deficit > 0 ? "font-semibold text-red-600" : ""}>
+                            <td className={l.deficit > 0 ? "font-semibold text-red-400" : ""}>
                               {l.deficit}
                             </td>
                           </tr>
@@ -189,7 +191,7 @@ export default async function ReceitaDetalhePage({ params }: { params: Promise<{
           <input type="hidden" name="id" value={receita.id} />
           <ConfirmButton
             message={`Excluir a receita "${receita.nome}"? O histórico de gerações vai junto (os PDFs no Storage permanecem).`}
-            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="rounded-lg border border-red-500/40 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10"
           >
             Excluir receita
           </ConfirmButton>
