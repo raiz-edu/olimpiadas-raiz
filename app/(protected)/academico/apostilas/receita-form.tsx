@@ -5,10 +5,15 @@ import { inputClass, selectClass } from "@/components/ui/form-field";
 import { TOPICOS_QUESTOES } from "@/lib/questoes/taxonomia";
 import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
 import { SERIES_ORDEM, SERIE_LABEL } from "@/lib/questoes/series";
-import type { MixDificuldade, ReceitaConfig, SecaoReceita } from "@/lib/apostilas/receita";
+import type {
+  ExcluirAplicadas,
+  MixDificuldade,
+  ReceitaConfig,
+  SecaoReceita,
+} from "@/lib/apostilas/receita";
 import { DIFICULDADES_MIX, DIFICULDADE_LABEL, somaMix } from "@/lib/apostilas/receita";
 import { contarAcervo, salvarReceita, type ReceitaState } from "./actions";
-import type { ContagemSecao, NivelDificuldade } from "@/lib/apostilas/queries";
+import type { ContagemSecao, NivelDificuldade, OpcoesAplicacao } from "@/lib/apostilas/queries";
 import { Chip, MixEditor, SecaoCard } from "./secao-card";
 
 const CARD = "rounded-xl border border-border bg-card p-6 space-y-4";
@@ -37,10 +42,12 @@ export function ReceitaForm({
   receitaId,
   nomeInicial,
   configInicial,
+  opcoes,
 }: {
   receitaId?: string;
   nomeInicial?: string;
   configInicial?: ReceitaConfig;
+  opcoes: OpcoesAplicacao;
 }) {
   const [nome, setNome] = useState(nomeInicial ?? "");
   const [config, setConfig] = useState<ReceitaConfig>(
@@ -54,6 +61,12 @@ export function ReceitaForm({
   );
 
   const patch = (p: Partial<ReceitaConfig>) => setConfig((c) => ({ ...c, ...p }));
+  const patchExcluir = (p: Partial<ExcluirAplicadas>) =>
+    setConfig((c) => {
+      const novo = { ...(c.excluir_aplicadas ?? {}), ...p };
+      const limpo = Object.fromEntries(Object.entries(novo).filter(([, v]) => v && v.length));
+      return { ...c, excluir_aplicadas: Object.keys(limpo).length ? limpo : undefined };
+    });
   const secaoDe = (topico: string) => config.secoes?.find((s) => s.topico === topico) ?? null;
   const setSecao = (topico: string, sec: SecaoReceita | null) =>
     setConfig((c) => {
@@ -289,6 +302,80 @@ export function ReceitaForm({
               }
               className={`${inputClass} w-24`}
             />
+          </label>
+        </div>
+      </div>
+
+      <div className={CARD}>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Não repetir questões já aplicadas
+        </h2>
+        <p className="text-[11px] text-muted-foreground">
+          Questões que os alvos abaixo já receberam (aplicações registradas no histórico) ficam FORA
+          desta apostila. O Conferir acervo já desconta.
+        </p>
+        <div>
+          <p className="mb-1.5 text-xs text-muted-foreground">Marcas</p>
+          <div className="flex flex-wrap gap-1.5">
+            {opcoes.marcas.map((m) => {
+              const marcado = config.excluir_aplicadas?.marcas?.includes(m.id) ?? false;
+              return (
+                <Chip
+                  key={m.id}
+                  ativo={marcado}
+                  onClick={() => {
+                    const atual = new Set(config.excluir_aplicadas?.marcas ?? []);
+                    if (marcado) atual.delete(m.id);
+                    else atual.add(m.id);
+                    patchExcluir({ marcas: [...atual] });
+                  }}
+                >
+                  {m.nome}
+                </Chip>
+              );
+            })}
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-xs text-muted-foreground">
+            Unidades (Ctrl+clique para várias)
+            <select
+              multiple
+              size={5}
+              value={config.excluir_aplicadas?.unidades ?? []}
+              onChange={(e) =>
+                patchExcluir({
+                  unidades: [...e.target.selectedOptions].map((o) => o.value),
+                })
+              }
+              className={`${selectClass} mt-1 h-auto`}
+            >
+              {opcoes.unidades.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.rotulo}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs text-muted-foreground">
+            Turmas (Ctrl+clique para várias)
+            <select
+              multiple
+              size={5}
+              value={config.excluir_aplicadas?.turmas ?? []}
+              onChange={(e) =>
+                patchExcluir({
+                  turmas: [...e.target.selectedOptions].map((o) => o.value),
+                })
+              }
+              className={`${selectClass} mt-1 h-auto`}
+            >
+              {opcoes.turmas.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.rotulo}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
       </div>

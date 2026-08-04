@@ -3,7 +3,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PageHeader } from "@/components/ui/page-header";
 import { getServerSession } from "@/lib/auth/session";
 import { podeGerirApostilas } from "@/lib/auth/roles";
-import { getNomeModulo, getReceita } from "@/lib/apostilas/queries";
+import { getNomeModulo, getOpcoesAplicacao, getReceita } from "@/lib/apostilas/queries";
 import { ReceitaForm } from "../../receita-form";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,11 @@ export default async function EditarReceitaPage({ params }: { params: Promise<{ 
     redirect("/academico/apostilas");
   }
   const { id } = await params;
-  const [nomeModulo, receita] = await Promise.all([getNomeModulo(), getReceita(id)]);
+  const [nomeModulo, receita, opcoes] = await Promise.all([
+    getNomeModulo(),
+    getReceita(id),
+    getOpcoesAplicacao(),
+  ]);
   if (!receita) notFound();
 
   return (
@@ -31,6 +35,7 @@ export default async function EditarReceitaPage({ params }: { params: Promise<{ 
         receitaId={receita.id}
         nomeInicial={receita.nome}
         configInicial={receita.config}
+        opcoes={opcoes}
       />
     </div>
   );

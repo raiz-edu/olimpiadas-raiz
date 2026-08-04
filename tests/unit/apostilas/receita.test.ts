@@ -19,6 +19,15 @@ describe("validarReceita", () => {
     expect(erros.some((e) => e.includes("somar 100"))).toBe(true);
   });
 
+  it("aceita excluir_aplicadas (Fase 2) sem afetar a validação", () => {
+    const erros = validarReceita({
+      ...base,
+      excluir_aplicadas: { turmas: ["t1", "t2"], marcas: ["m1"] },
+      secoes: [{ topico: "Geometria", quantidade: 10 }],
+    });
+    expect(erros).toEqual([]);
+  });
+
   it("aceita mix com os 5 níveis somando 100", () => {
     const erros = validarReceita({
       ...base,
