@@ -19,6 +19,15 @@ describe("validarReceita", () => {
     expect(erros.some((e) => e.includes("somar 100"))).toBe(true);
   });
 
+  it("aceita mix com os 5 níveis somando 100", () => {
+    const erros = validarReceita({
+      ...base,
+      mix_dificuldade: { elementar: 10, facil: 30, medio: 30, dificil: 20, muito_dificil: 10 },
+      secoes: [{ topico: "Geometria", quantidade: 20 }],
+    });
+    expect(erros).toEqual([]);
+  });
+
   it("aceita mix global 40/40/20 com seções quantificadas", () => {
     const erros = validarReceita({
       ...base,

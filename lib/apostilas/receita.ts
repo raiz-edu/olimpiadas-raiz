@@ -41,7 +41,16 @@ export type ReceitaConfig = {
   compacto?: boolean;
 };
 
-export const DIFICULDADES_MIX = ["facil", "medio", "dificil"] as const;
+// Os 5 níveis do banco, na ordem pedagógica (decisão do Helio 2026-08-04: o mix
+// trabalha com os 5, no global e por seção). A skill dobra elementar->fácil e
+// muito_dificil->difícil apenas quando o mix NÃO cita esses níveis.
+export const DIFICULDADES_MIX = [
+  "elementar",
+  "facil",
+  "medio",
+  "dificil",
+  "muito_dificil",
+] as const;
 
 export const DIFICULDADE_LABEL: Record<string, string> = {
   elementar: "Elementar",
