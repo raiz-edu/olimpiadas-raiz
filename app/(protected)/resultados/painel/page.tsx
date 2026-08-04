@@ -35,26 +35,70 @@ export default async function ResultadosPainelPage({
           .filter((n) => !isNaN(n) && anosDisponiveis.includes(n))
       : [anoCorrente];
 
-  const [{ data: inscricoes }, { data: marcasListData }, { data: resultadosData }] =
-    await Promise.all([
-      supabase
-        .from("v_dashboard_inscricoes")
-        .select("inscricao_id, status, marca_nome, olimpiada_nome")
-        .in("ano_letivo", selectedYears),
-      supabase.from("marca").select("id, nome").order("nome"),
-      supabase.from("resultado").select("inscricao_id, tipo"),
-    ]);
+  const [
+    { data: inscricoes },
+    { data: marcasListData },
+    { data: resultadosData },
+    { data: statsData },
+  ] = await Promise.all([
+    supabase
+      .from("v_dashboard_inscricoes")
+      .select("inscricao_id, status, marca_nome, olimpiada_nome")
+      .in("ano_letivo", selectedYears),
+    supabase.from("marca").select("id, nome").order("nome"),
+    supabase.from("resultado").select("inscricao_id, tipo"),
+    // Camada de agregados: histórico sem granularidade de aluno (migration 044)
+    supabase
+      .from("olimpiada_stats_marca")
+      .select("marca_id, inscritos, participantes, ouro, prata, bronze, mencao_honrosa")
+      .in("ano_letivo", selectedYears),
+  ]);
 
   const inscricaoMarcaMap = new Map((inscricoes ?? []).map((i) => [i.inscricao_id, i.marca_nome]));
 
+  type StatsAcc = {
+    inscritos: number;
+    participantes: number;
+    ouro: number;
+    prata: number;
+    bronze: number;
+    mencao_honrosa: number;
+  };
+  const statsPorMarca = new Map<string, StatsAcc>();
+  for (const s of statsData ?? []) {
+    const acc = statsPorMarca.get(s.marca_id) ?? {
+      inscritos: 0,
+      participantes: 0,
+      ouro: 0,
+      prata: 0,
+      bronze: 0,
+      mencao_honrosa: 0,
+    };
+    acc.inscritos += s.inscritos;
+    acc.participantes += s.participantes;
+    acc.ouro += s.ouro;
+    acc.prata += s.prata;
+    acc.bronze += s.bronze;
+    acc.mencao_honrosa += s.mencao_honrosa;
+    statsPorMarca.set(s.marca_id, acc);
+  }
+
   const brandRows = (marcasListData ?? []).map((m) => {
     const inscricoesM = (inscricoes ?? []).filter((i) => i.marca_nome === m.nome);
-    // Inscritos = total de inscrições (qualquer status)
-    const numInscritos = inscricoesM.length;
-    // Participantes = inscrições confirmadas (subconjunto dos inscritos)
-    const numParticipantes = inscricoesM.filter((i) => i.status === "confirmada").length;
+    const agregado = statsPorMarca.get(m.id);
 
-    const tipos = { ouro: 0, prata: 0, bronze: 0, mencao_honrosa: 0 };
+    // Inscritos = total de inscrições (qualquer status) + agregado histórico
+    const numInscritos = inscricoesM.length + (agregado?.inscritos ?? 0);
+    // Participantes = inscrições confirmadas (subconjunto dos inscritos)
+    const numParticipantes =
+      inscricoesM.filter((i) => i.status === "confirmada").length + (agregado?.participantes ?? 0);
+
+    const tipos = {
+      ouro: agregado?.ouro ?? 0,
+      prata: agregado?.prata ?? 0,
+      bronze: agregado?.bronze ?? 0,
+      mencao_honrosa: agregado?.mencao_honrosa ?? 0,
+    };
     for (const r of resultadosData ?? []) {
       if (inscricaoMarcaMap.get(r.inscricao_id) === m.nome && r.tipo in tipos) {
         tipos[r.tipo as keyof typeof tipos]++;
