@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
 import { canUser, ROLE_LABELS, ROLES_ATRIBUIVEIS_NAO_RAIZ } from "@/lib/auth/roles";
 import { ALLOWED_DOMAINS, getEmailDomain } from "@/lib/auth/domains";
+import { normalizarDadosUsuario, validarEdicaoUsuario } from "@/lib/usuarios/validacao";
 import type { RoleUsuario } from "@/lib/types/database";
 import { getResend, FROM_EMAIL, APP_URL } from "@/lib/email/resend";
 import { conviteEmailHtml, conviteEmailText } from "@/lib/email/templates/convite";
@@ -17,7 +18,38 @@ export type UsuarioState =
   | { ok: true; link?: string; warning?: string; tempPassword?: string; email?: string }
   | null;
 
-// ─── Atualizar usuário (role, ativo) ─────────────────────────────────────────
+// ─── Atualizar usuário (nome, e-mail, role, ativo) ───────────────────────────
+
+/**
+ * Atualiza o e-mail/nome no Supabase Auth (fonte do login). Sem isto, mudar o
+ * e-mail só na tabela `usuario` faria a tela mostrar um endereço com o qual a
+ * pessoa não consegue entrar.
+ */
+async function atualizarAuthUser(
+  id: string,
+  campos: { email?: string; nome?: string },
+): Promise<string | null> {
+  const body: Record<string, unknown> = {};
+  if (campos.email) {
+    body.email = campos.email;
+    body.email_confirm = true; // e-mail institucional trocado por admin, sem reconfirmação
+  }
+  if (campos.nome) body.user_metadata = { nome: campos.nome };
+  if (!Object.keys(body).length) return null;
+
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    },
+    body: JSON.stringify(body),
+  });
+  if (resp.ok) return null;
+  const err = (await resp.json().catch(() => ({}))) as { msg?: string; message?: string };
+  return err.msg ?? err.message ?? `Falha ao atualizar o login (HTTP ${resp.status})`;
+}
 
 export async function atualizarUsuario(
   _prev: UsuarioState,
@@ -30,6 +62,8 @@ export async function atualizarUsuario(
   const id = formData.get("id") as string;
   const role = formData.get("role") as RoleUsuario | null;
   const ativo = formData.get("ativo") === "true";
+  const nomeBruto = (formData.get("nome") as string) ?? "";
+  const emailBruto = (formData.get("email") as string) ?? "";
 
   if (!id) return { error: "ID obrigatório" };
 
@@ -37,24 +71,60 @@ export async function atualizarUsuario(
   const supabase = createAdminClient();
   const { data: alvo } = await supabase
     .from("usuario")
-    .select("role, marca_ativa_id")
+    .select("role, marca_ativa_id, nome, email")
     .eq("id", id)
     .maybeSingle();
-  if (alvo?.role === "raiz")
+  if (!alvo) return { error: "Usuário não encontrado" };
+  if (alvo.role === "raiz")
     return { error: "Usuários administradores não podem ser editados pela interface" };
 
   // Não-raiz só edita usuários da própria marca
-  if (session.user.role !== "raiz" && alvo?.marca_ativa_id !== session.user.marca_ativa_id)
+  if (session.user.role !== "raiz" && alvo.marca_ativa_id !== session.user.marca_ativa_id)
     return { error: "Você só pode editar usuários da sua marca" };
 
-  type UsuarioUpdate = { ativo: boolean; role?: RoleUsuario };
+  type UsuarioUpdate = { ativo: boolean; role?: RoleUsuario; nome?: string; email?: string };
   const update: UsuarioUpdate = { ativo };
   if (session.user.role === "raiz") {
     if (role && Object.keys(ROLE_LABELS).includes(role)) update.role = role;
   }
 
+  // Nome e e-mail: só validam/gravam quando algo mudou de fato
+  const { nome, email } = normalizarDadosUsuario({ nome: nomeBruto, email: emailBruto });
+  const mudouNome = !!nome && nome !== alvo.nome;
+  const mudouEmail = !!email && email !== alvo.email?.toLowerCase();
+
+  if (nomeBruto || emailBruto) {
+    const { data: outros } = await supabase.from("usuario").select("email").neq("id", id);
+    const erros = validarEdicaoUsuario(
+      { nome: nome || alvo.nome, email: email || alvo.email },
+      { emailsEmUso: (outros ?? []).map((u) => u.email) },
+    );
+    if (erros.length) return { error: erros.join(" ") };
+    if (mudouNome) update.nome = nome;
+    if (mudouEmail) update.email = email;
+  }
+
+  // Auth primeiro: se o login não puder ser alterado, a tabela não é tocada (evita
+  // divergência entre o e-mail exibido e o e-mail com que a pessoa entra).
+  if (mudouNome || mudouEmail) {
+    const erroAuth = await atualizarAuthUser(id, {
+      email: mudouEmail ? email : undefined,
+      nome: mudouNome ? nome : undefined,
+    });
+    if (erroAuth) return { error: erroAuth };
+  }
+
   const { error } = await supabase.from("usuario").update(update).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    // Tabela falhou depois do Auth: desfaz o Auth para os dois voltarem a bater.
+    if (mudouNome || mudouEmail) {
+      await atualizarAuthUser(id, {
+        email: mudouEmail ? alvo.email : undefined,
+        nome: mudouNome ? alvo.nome : undefined,
+      });
+    }
+    return { error: error.message };
+  }
 
   revalidatePath(PATH);
   return { ok: true };
