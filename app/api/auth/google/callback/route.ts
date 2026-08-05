@@ -10,7 +10,7 @@ import {
   isAllowedStudentEmail,
   getRoleForEmail,
   getMarcaSlugForEmail,
-  ADMIN_EMAILS,
+  podeEntrarNoPortalStaff,
 } from "@/lib/auth/domains";
 import {
   ALUNO_SESSION_COOKIE,
@@ -102,7 +102,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/login?erro=dominio`);
     }
 
-    if (!ADMIN_EMAILS.has(email)) {
+    // Portal staff pelo Google: admins e staff-leitores designados (os demais entram
+    // por e-mail e senha, via convite).
+    if (!podeEntrarNoPortalStaff(email)) {
       return NextResponse.redirect(`${origin}/aluno/login?erro=portal`);
     }
 

@@ -12,9 +12,17 @@ export default async function UsuariosServerPage() {
   if (!canUser(session.user, "usuario:read")) redirect("/dashboard");
 
   const isRaiz = session.user.role === "raiz";
-  const isDiretor = session.user.role === "diretor";
   const marcaId = session.user.marca_ativa_id;
   const supabase = createAdminClient();
+
+  // Capacidades vêm da matriz (lib/auth/roles.ts), nunca do papel: a tela mostra
+  // exatamente o que a server action aceita.
+  const caps = {
+    podeConvidar: canUser(session.user, "convite:create"),
+    podeCriarUsuario: canUser(session.user, "usuario:create"),
+    podeEditarUsuario: canUser(session.user, "usuario:update"),
+    podeCancelarConvite: canUser(session.user, "convite:delete"),
+  };
 
   // Não-raiz sem marca definida não pode gerenciar usuário nenhum (evita ver tudo)
   if (!isRaiz && !marcaId) {
@@ -24,7 +32,7 @@ export default async function UsuariosServerPage() {
         convites={[]}
         marcas={[]}
         isRaiz={false}
-        isDiretor={isDiretor}
+        {...caps}
         currentUserId={session.user.id}
       />
     );
@@ -60,7 +68,7 @@ export default async function UsuariosServerPage() {
       convites={(convites ?? []) as any}
       marcas={marcas ?? []}
       isRaiz={isRaiz}
-      isDiretor={isDiretor}
+      {...caps}
       currentUserId={session.user.id}
     />
   );

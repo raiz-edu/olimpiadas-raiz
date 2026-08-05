@@ -41,10 +41,13 @@ describe("can() — diretor_marca", () => {
     expect(can("diretor_marca", "audit_log:read")).toBe(true);
   });
 
-  it("diretor_marca pode gerenciar usuários da marca", () => {
+  it("diretor_marca convida e vê a lista, mas não cria nem edita usuário", () => {
+    // Única exceção à regra somente-leitura (2026-08-05)
     expect(can("diretor_marca", "convite:create")).toBe(true);
-    expect(can("diretor_marca", "usuario:create")).toBe(true);
-    expect(can("diretor_marca", "usuario:update")).toBe(true);
+    expect(can("diretor_marca", "convite:delete")).toBe(true);
+    expect(can("diretor_marca", "usuario:read")).toBe(true);
+    expect(can("diretor_marca", "usuario:create")).toBe(false);
+    expect(can("diretor_marca", "usuario:update")).toBe(false);
   });
 
   it("diretor_marca NÃO pode deletar usuários (só raiz)", () => {
@@ -54,6 +57,8 @@ describe("can() — diretor_marca", () => {
   it("diretor_marca NÃO escreve conteúdo acadêmico", () => {
     expect(can("diretor_marca", "olimpiada:create")).toBe(false);
     expect(can("diretor_marca", "questao:create")).toBe(false);
+    expect(can("diretor_marca", "usuario:create")).toBe(false);
+    expect(can("diretor_marca", "usuario:update")).toBe(false);
     expect(can("diretor_marca", "simulado:create")).toBe(false);
     expect(can("diretor_marca", "projeto:create")).toBe(false);
   });
@@ -68,13 +73,14 @@ describe("can() — diretor_marca", () => {
 });
 
 describe("can() — gestor_conteudo", () => {
-  it("gestor_conteudo cria e edita questão, simulado, projeto", () => {
-    expect(can("gestor_conteudo", "questao:create")).toBe(true);
-    expect(can("gestor_conteudo", "questao:update")).toBe(true);
-    expect(can("gestor_conteudo", "simulado:create")).toBe(true);
-    expect(can("gestor_conteudo", "simulado:update")).toBe(true);
-    expect(can("gestor_conteudo", "projeto:create")).toBe(true);
-    expect(can("gestor_conteudo", "projeto:update")).toBe(true);
+  it("gestor_conteudo virou somente-leitura (2026-08-05)", () => {
+    expect(can("gestor_conteudo", "questao:read")).toBe(true);
+    expect(can("gestor_conteudo", "questao:create")).toBe(false);
+    expect(can("gestor_conteudo", "questao:update")).toBe(false);
+    expect(can("gestor_conteudo", "simulado:create")).toBe(false);
+    expect(can("gestor_conteudo", "simulado:update")).toBe(false);
+    expect(can("gestor_conteudo", "projeto:create")).toBe(false);
+    expect(can("gestor_conteudo", "projeto:update")).toBe(false);
   });
 
   it("gestor_conteudo NÃO deleta (só raiz)", () => {
@@ -132,12 +138,9 @@ describe("can() — roles de leitura (professor/coordenador/diretor)", () => {
     for (const role of LEITURA_ROLES) {
       expect(can(role, "audit_log:read")).toBe(false);
       expect(can(role, "usuario:create")).toBe(false);
+      expect(can(role, "usuario:read")).toBe(false);
+      expect(can(role, "convite:create")).toBe(false);
     }
-    // professor e coordenador não convidam; diretor PODE convidar roles de
-    // leitura da sua marca (decisão do permissionamento — ver comentário na matriz)
-    expect(can("professor", "convite:create")).toBe(false);
-    expect(can("coordenador", "convite:create")).toBe(false);
-    expect(can("diretor", "convite:create")).toBe(true);
   });
 });
 
@@ -148,9 +151,10 @@ describe("canUser()", () => {
     expect(canUser(user, "convite:create")).toBe(true);
   });
 
-  it("gestor_conteudo pode criar questão", () => {
+  it("gestor_conteudo lê mas não cria questão", () => {
     const user = { role: "gestor_conteudo" as RoleUsuario, admin_marca: false };
-    expect(canUser(user, "questao:create")).toBe(true);
+    expect(canUser(user, "questao:read")).toBe(true);
+    expect(canUser(user, "questao:create")).toBe(false);
     expect(canUser(user, "olimpiada:create")).toBe(false);
   });
 });
@@ -158,7 +162,8 @@ describe("canUser()", () => {
 describe("canAll()", () => {
   it("retorna true quando todas as permissões são satisfeitas", () => {
     expect(canAll("raiz", ["olimpiada:create", "olimpiada:delete"])).toBe(true);
-    expect(canAll("gestor_conteudo", ["questao:create", "simulado:update"])).toBe(true);
+    expect(canAll("gestor_conteudo", ["questao:read", "simulado:read"])).toBe(true);
+    expect(canAll("gestor_conteudo", ["questao:read", "questao:create"])).toBe(false);
   });
 
   it("retorna false quando ao menos uma permissão falta", () => {
@@ -197,10 +202,46 @@ describe("ROLE_PERMISSIONS — invariantes críticos", () => {
     }
   });
 
-  it("professor e coordenador têm o mesmo conjunto; diretor = leitura + convites", () => {
-    expect(ROLE_PERMISSIONS.professor!.size).toBe(ROLE_PERMISSIONS.coordenador!.size);
-    // diretor: leitura geral + usuario:read, convite:read, convite:create
-    expect(ROLE_PERMISSIONS.diretor!.size).toBe(ROLE_PERMISSIONS.professor!.size + 3);
+  it("todos os papéis de leitura têm exatamente o mesmo conjunto", () => {
+    // Desde 2026-08-05: gestor_conteudo e diretor também são somente-leitura.
+    const tamanhos = [...LEITURA_ROLES, "gestor_conteudo" as RoleUsuario].map(
+      (r) => ROLE_PERMISSIONS[r]!.size,
+    );
+    expect(new Set(tamanhos).size).toBe(1);
+  });
+
+  it("sistema é somente-leitura fora da raiz, exceto convite do diretor_marca", () => {
+    const ESCRITA = [
+      "questao:create",
+      "questao:update",
+      "questao:delete",
+      "simulado:create",
+      "simulado:update",
+      "projeto:create",
+      "projeto:update",
+      "olimpiada:create",
+      "aluno:create",
+      "turma:create",
+      "unidade:create",
+      "marca:create",
+      "inscricao:create",
+      "resultado:create",
+      "apostila:create",
+      "usuario:create",
+      "usuario:update",
+      "usuario:delete",
+    ] as const;
+    for (const role of ALL_ROLES.filter((r) => r !== "raiz")) {
+      for (const p of ESCRITA) {
+        expect({ role, p, pode: can(role, p) }).toEqual({ role, p, pode: false });
+      }
+    }
+    // A única exceção: convite, e só para o diretor_marca
+    expect(can("diretor_marca", "convite:create")).toBe(true);
+    expect(can("diretor_marca", "convite:delete")).toBe(true);
+    for (const role of ALL_ROLES.filter((r) => r !== "raiz" && r !== "diretor_marca")) {
+      expect(can(role, "convite:create")).toBe(false);
+    }
   });
 
   it("nenhuma role tem a permissão inexistente convite:export", () => {
@@ -228,10 +269,10 @@ describe("ROLE_PERMISSIONS — invariantes críticos", () => {
     }
   });
 
-  it("gestor_conteudo e roles leitura podem criar questão vs não podem", () => {
-    expect(can("gestor_conteudo", "questao:create")).toBe(true);
-    for (const role of LEITURA_ROLES) {
+  it("nenhum papel fora da raiz cria questão", () => {
+    for (const role of ALL_ROLES.filter((r) => r !== "raiz")) {
       expect(can(role, "questao:create")).toBe(false);
     }
+    expect(can("raiz", "questao:create")).toBe(true);
   });
 });
