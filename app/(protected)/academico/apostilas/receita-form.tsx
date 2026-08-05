@@ -5,19 +5,32 @@ import { inputClass, selectClass } from "@/components/ui/form-field";
 import { TOPICOS_QUESTOES } from "@/lib/questoes/taxonomia";
 import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
 import { SERIES_ORDEM, SERIE_LABEL } from "@/lib/questoes/series";
-import type { ReceitaConfig, SecaoReceita } from "@/lib/apostilas/receita";
-import { somaMix } from "@/lib/apostilas/receita";
+import type { MixDificuldade, ReceitaConfig, SecaoReceita } from "@/lib/apostilas/receita";
+import { DIFICULDADES_MIX, DIFICULDADE_LABEL, somaMix } from "@/lib/apostilas/receita";
 import { contarAcervo, salvarReceita, type ReceitaState } from "./actions";
-import type { ContagemSecao } from "@/lib/apostilas/queries";
+import type { ContagemSecao, NivelDificuldade } from "@/lib/apostilas/queries";
 import { Chip, MixEditor, SecaoCard } from "./secao-card";
 
 const CARD = "rounded-xl border border-border bg-card p-6 space-y-4";
 
-function alvoBucket(sec: SecaoReceita, global: ReceitaConfig["mix_dificuldade"], b: string) {
-  const mix = sec.mix_dificuldade ?? global;
-  if (!sec.quantidade || !mix) return null;
-  const pct = (mix as Record<string, number | undefined>)[b] ?? 0;
-  return Math.round((sec.quantidade * pct) / 100);
+/**
+ * Pedido e disponibilidade EFETIVA de um nível, espelhando a dobra da skill:
+ * quando o mix não cita elementar/muito_difícil, essas questões contam para o
+ * vizinho (fácil/difícil).
+ */
+function celulaBucket(
+  sec: SecaoReceita | undefined,
+  global: MixDificuldade | undefined,
+  raw: ContagemSecao["porDificuldade"],
+  b: NivelDificuldade,
+): { alvo: number; disponivel: number } | null {
+  const mix = sec?.mix_dificuldade ?? global;
+  if (!sec?.quantidade || !mix || !(b in mix)) return null;
+  const alvo = Math.round((sec.quantidade * (mix[b] ?? 0)) / 100);
+  let disponivel = raw[b];
+  if (b === "facil" && !("elementar" in mix)) disponivel += raw.elementar;
+  if (b === "dificil" && !("muito_dificil" in mix)) disponivel += raw.muito_dificil;
+  return { alvo, disponivel };
 }
 
 export function ReceitaForm({
@@ -296,13 +309,13 @@ export function ReceitaForm({
         </div>
         {contagem && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm text-foreground">
+            <table className="w-full min-w-[720px] text-sm text-foreground">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
                   <th className="py-1.5">Seção</th>
-                  <th>Fácil</th>
-                  <th>Médio</th>
-                  <th>Difícil</th>
+                  {DIFICULDADES_MIX.map((b) => (
+                    <th key={b}>{DIFICULDADE_LABEL[b]}</th>
+                  ))}
                   <th>Sem classif.</th>
                   <th>Total</th>
                 </tr>
@@ -313,13 +326,13 @@ export function ReceitaForm({
                   return (
                     <tr key={c.secao} className="border-t border-border/60">
                       <td className="py-1.5 font-medium text-foreground">{c.secao}</td>
-                      {(["facil", "medio", "dificil"] as const).map((b) => {
-                        const alvo = sec ? alvoBucket(sec, config.mix_dificuldade, b) : null;
-                        const deficit = alvo !== null && alvo > c.porDificuldade[b];
+                      {DIFICULDADES_MIX.map((b) => {
+                        const cel = celulaBucket(sec, config.mix_dificuldade, c.porDificuldade, b);
+                        const deficit = cel !== null && cel.alvo > cel.disponivel;
                         return (
                           <td key={b} className={deficit ? "font-semibold text-red-400" : ""}>
                             {c.porDificuldade[b]}
-                            {alvo !== null && ` / ${alvo} pedidas`}
+                            {cel !== null && ` / ${cel.alvo} pedidas`}
                           </td>
                         );
                       })}
@@ -332,14 +345,15 @@ export function ReceitaForm({
             </table>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Vermelho = pedido maior que o acervo (a skill completa da dificuldade vizinha e
-              reporta no balanço).
+              reporta no balanço). Quando o mix não cita Elementar/Muito difícil, essas questões
+              contam para Fácil/Difícil.
             </p>
           </div>
         )}
       </div>
 
       {state && "error" in state && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-400">
           {state.error}
         </p>
       )}

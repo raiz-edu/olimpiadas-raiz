@@ -76,17 +76,27 @@ export async function getReceita(
   return { ...(receita as ReceitaRow), geracoes: (geracoes ?? []) as GeracaoRow[] };
 }
 
+export const NIVEIS_DIFICULDADE = [
+  "elementar",
+  "facil",
+  "medio",
+  "dificil",
+  "muito_dificil",
+] as const;
+export type NivelDificuldade = (typeof NIVEIS_DIFICULDADE)[number];
+
 export type ContagemSecao = {
   secao: string;
-  porDificuldade: { facil: number; medio: number; dificil: number; sem: number };
+  porDificuldade: Record<NivelDificuldade | "sem", number>;
   total: number;
 };
 
 /**
  * Conta o acervo PUBLICADO disponível para cada seção da receita (contadores ao
- * vivo do construtor). Dobra elementar->fácil e muito_difícil->difícil, como a
- * skill faz quando o mix usa os 3 buckets. Uma query paginada; filtro de série
- * aplicado em memória (pares olimpiada/nivel).
+ * vivo do construtor), nos 5 níveis de dificuldade + "sem" (não classificada).
+ * A dobra elementar->fácil / muito_difícil->difícil (quando o mix não cita o
+ * nível) é responsabilidade do CLIENTE, espelhando a semântica da skill.
+ * Uma query paginada; filtro de série aplicado em memória (pares olimpiada/nivel).
  */
 export async function contarAcervoCore(config: ReceitaConfig): Promise<ContagemSecao[]> {
   const admin = createAdminClient();
@@ -123,12 +133,8 @@ export async function contarAcervoCore(config: ReceitaConfig): Promise<ContagemS
     filtradas = linhas.filter((q) => pares.has(`${q.olimpiada}|${q.nivel}`));
   }
 
-  const dobra = (d: string | null): "facil" | "medio" | "dificil" | "sem" => {
-    if (d === "elementar" || d === "facil") return "facil";
-    if (d === "medio") return "medio";
-    if (d === "dificil" || d === "muito_dificil") return "dificil";
-    return "sem";
-  };
+  const nivelDe = (d: string | null): NivelDificuldade | "sem" =>
+    d && (NIVEIS_DIFICULDADE as readonly string[]).includes(d) ? (d as NivelDificuldade) : "sem";
 
   const secoes = config.secoes?.length
     ? config.secoes.map((s) => ({
@@ -140,11 +146,18 @@ export async function contarAcervoCore(config: ReceitaConfig): Promise<ContagemS
     : [{ secao: "(sem seções — apostila inteira)", filtro: (_q: Linha) => true }];
 
   return secoes.map(({ secao, filtro }) => {
-    const porDificuldade = { facil: 0, medio: 0, dificil: 0, sem: 0 };
+    const porDificuldade: Record<NivelDificuldade | "sem", number> = {
+      elementar: 0,
+      facil: 0,
+      medio: 0,
+      dificil: 0,
+      muito_dificil: 0,
+      sem: 0,
+    };
     let total = 0;
     for (const q of filtradas) {
       if (!filtro(q)) continue;
-      porDificuldade[dobra(q.dificuldade)] += 1;
+      porDificuldade[nivelDe(q.dificuldade)] += 1;
       total += 1;
     }
     return { secao, porDificuldade, total };
