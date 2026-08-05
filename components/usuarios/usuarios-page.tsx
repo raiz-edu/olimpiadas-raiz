@@ -109,6 +109,42 @@ function EditarUsuarioForm({
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor={`nome-${usuario.id}`}
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Nome
+          </label>
+          <input
+            id={`nome-${usuario.id}`}
+            name="nome"
+            defaultValue={usuario.nome}
+            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor={`email-${usuario.id}`}
+            className="text-xs font-medium text-muted-foreground"
+          >
+            E-mail
+          </label>
+          <input
+            id={`email-${usuario.id}`}
+            name="email"
+            type="email"
+            defaultValue={usuario.email}
+            className="mt-1 block w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
+          />
+          <p className="mt-0.5 text-[10px] text-muted-foreground">
+            Altera também o e-mail de login. Precisa ser institucional.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         {/* Role — somente Raiz pode alterar */}
         {isRaiz && (
           <div>
