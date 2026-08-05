@@ -469,7 +469,7 @@ export async function uploadQuestaoImagem(
   formData: FormData,
 ): Promise<{ url: string } | { error: string }> {
   const session = await getServerSession();
-  if (!session || !can(session.user.role, "questao:read")) return { error: "Não autorizado" };
+  if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
   const file = formData.get("file") as File;
   const err = validateImageFile(file);
   if (err) return { error: err };
@@ -480,7 +480,7 @@ export async function uploadAlternativaImagem(
   formData: FormData,
 ): Promise<{ url: string } | { error: string }> {
   const session = await getServerSession();
-  if (!session || !can(session.user.role, "questao:read")) return { error: "Não autorizado" };
+  if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
   const file = formData.get("file") as File;
   const err = validateImageFile(file);
   if (err) return { error: err };
@@ -491,7 +491,7 @@ export async function uploadSolucaoImagem(
   formData: FormData,
 ): Promise<{ url: string } | { error: string }> {
   const session = await getServerSession();
-  if (!session || !can(session.user.role, "questao:read")) return { error: "Não autorizado" };
+  if (!session || !can(session.user.role, "questao:update")) return { error: "Não autorizado" };
   const file = formData.get("file") as File;
   const err = validateImageFile(file);
   if (err) return { error: err };

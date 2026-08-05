@@ -10,11 +10,19 @@ export const ALLOWED_DOMAINS = [
 
 export type AllowedDomain = (typeof ALLOWED_DOMAINS)[number];
 
-// Únicos emails com role raiz (admin total) — todos os demais recebem professor por padrão
+// Únicos emails com role raiz (admin total) — todos os demais recebem professor por
+// padrão. Restrito a Helio e Hugo em 2026-08-05 (decisão do Helio: "apenas eu e Hugo
+// devem ser os admins"). Bernardo e Milena passaram a STAFF_LEITOR_EMAILS.
 export const ADMIN_EMAILS = new Set([
   "helio.barbosa@matrizeducacao.com.br",
   "helio.barbosa@raizeducacao.com.br",
   "hugo.carvalho@raizeducacao.com.br",
+]);
+
+// Staff da rede SEM poderes de admin: entram no sistema pelo Google e leem tudo, mas
+// não criam nada (o papel no banco define as permissões — ver lib/auth/roles.ts).
+// Sem esta lista eles perderiam o login, porque o domínio da rede é fechado.
+export const STAFF_LEITOR_EMAILS = new Set([
   "bernardo.castro@raizeducacao.com.br",
   "milena.gallotte@raizeducacao.com.br",
 ]);
@@ -59,13 +67,23 @@ export function matchAllowedBaseDomain(domain: string): AllowedDomain | null {
   return null;
 }
 
+/**
+ * Pode entrar no portal STAFF pelo Google. Admins e staff-leitores designados; os
+ * demais (domínios de marca) entram por e-mail e senha, via convite.
+ */
+export function podeEntrarNoPortalStaff(email: string): boolean {
+  const e = email.toLowerCase();
+  return ADMIN_EMAILS.has(e) || STAFF_LEITOR_EMAILS.has(e);
+}
+
 export function isAllowedStaffEmail(email: string): boolean {
   const base = matchAllowedBaseDomain(getEmailDomain(email));
   if (!base) return false;
 
-  // raizeducacao.com.br (domínio da rede) e subdomínios são restritos aos admins designados.
+  // raizeducacao.com.br (domínio da rede) e subdomínios são restritos às pessoas
+  // designadas: admins (Helio, Hugo) e staff-leitores.
   if (base === "raizeducacao.com.br") {
-    return ADMIN_EMAILS.has(email.toLowerCase());
+    return podeEntrarNoPortalStaff(email);
   }
 
   return true;

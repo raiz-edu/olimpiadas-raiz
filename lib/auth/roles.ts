@@ -109,34 +109,26 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     "usuario:delete",
   ),
 
-  // Vê Gestão e Usuários, gerencia usuários da sua marca, leitura geral
+  // ÚNICA exceção à regra de somente-leitura (decisão do Helio 2026-08-05): convida
+  // e cancela convites da própria marca. Vê Gestão e a lista de usuários, mas NÃO
+  // cria usuário direto nem edita/desativa ninguém.
   diretor_marca: perms(
     ...LEITURA_GERAL,
     "audit_log:read",
     "convite:create",
     "convite:read",
     "convite:delete",
-    "usuario:create",
     "usuario:read",
-    "usuario:update",
   ),
 
-  // Cria e edita banco de questões, simulados e projetos; leitura geral; sem Gestão/Usuários
-  gestor_conteudo: perms(
-    ...LEITURA_GERAL,
-    "questao:create",
-    "questao:update",
-    "simulado:create",
-    "simulado:update",
-    "projeto:create",
-    "projeto:update",
-  ),
+  // Somente leitura (2026-08-05). Antes criava/editava questão, simulado e projeto.
+  gestor_conteudo: perms(...LEITURA_GERAL),
 
-  // Leitura geral — sem escrita, sem Gestão, sem Usuários
+  // Somente leitura — sem escrita, sem Gestão, sem Usuários
   professor: perms(...LEITURA_GERAL),
   coordenador: perms(...LEITURA_GERAL),
-  // Pode convidar roles de leitura (professor, coordenador, diretor) da sua marca
-  diretor: perms(...LEITURA_GERAL, "usuario:read", "convite:read", "convite:create"),
+  // Somente leitura (2026-08-05). Antes podia convidar; agora só o diretor_marca convida.
+  diretor: perms(...LEITURA_GERAL),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -181,8 +173,8 @@ export const ROLE_LABELS: Partial<Record<RoleUsuario, string>> = {
 };
 
 export const ROLE_DESCRIPTIONS: Partial<Record<RoleUsuario, string>> = {
-  diretor_marca: "Visão de Gestão e Usuários — gerencia usuários da marca",
-  gestor_conteudo: "Cria e edita banco de questões, simulados e projetos",
+  diretor_marca: "Leitura geral + Gestão; convida usuários da própria marca",
+  gestor_conteudo: "Leitura geral — sem acesso a Gestão ou Usuários",
   professor: "Leitura geral — sem acesso a Gestão ou Usuários",
   coordenador: "Leitura geral — sem acesso a Gestão ou Usuários",
   diretor: "Leitura geral — sem acesso a Gestão ou Usuários",

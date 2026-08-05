@@ -48,7 +48,12 @@ type Props = {
   convites: ConviteRow[];
   marcas: MarcaRow[];
   isRaiz: boolean;
-  isDiretor: boolean;
+  // Capacidades derivadas da matriz de permissões (lib/auth/roles.ts) — a tela nunca
+  // decide por PAPEL, senão UI e server action divergem quando a matriz muda.
+  podeConvidar: boolean;
+  podeCriarUsuario: boolean;
+  podeEditarUsuario: boolean;
+  podeCancelarConvite: boolean;
   currentUserId: string;
 };
 
@@ -168,13 +173,11 @@ function EditarUsuarioForm({
 function ConvidarForm({
   marcas,
   isRaiz,
-  isDiretor,
   marcaAtualId,
   onClose,
 }: {
   marcas: MarcaRow[];
   isRaiz: boolean;
-  isDiretor: boolean;
   marcaAtualId: string | null;
   onClose: () => void;
 }) {
@@ -253,12 +256,9 @@ function ConvidarForm({
             className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
           >
             <option value="">Selecione…</option>
-            {(isRaiz
-              ? NIVEIS_ROLE
-              : isDiretor
-                ? NIVEIS_ROLE.filter((r) => ["professor", "coordenador", "diretor"].includes(r))
-                : NIVEIS_ROLE
-            ).map((r) => (
+            {/* Não-raiz só convida papéis de leitura — espelha o guard da server
+                action (ROLES_ATRIBUIVEIS_NAO_RAIZ), que antes divergia da tela. */}
+            {(isRaiz ? NIVEIS_ROLE : ROLES_ATRIBUIVEIS_NAO_RAIZ).map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}
               </option>
@@ -466,7 +466,10 @@ export function UsuariosPage({
   convites,
   marcas,
   isRaiz,
-  isDiretor,
+  podeConvidar,
+  podeCriarUsuario,
+  podeEditarUsuario,
+  podeCancelarConvite,
   currentUserId,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -488,7 +491,7 @@ export function UsuariosPage({
         </div>
         {!showCriar && !showConvite && (
           <div className="flex gap-2">
-            {isDiretor ? (
+            {podeConvidar && (
               <button
                 type="button"
                 onClick={() => setShowConvite(true)}
@@ -505,21 +508,13 @@ export function UsuariosPage({
                 </svg>
                 Convidar usuário
               </button>
-            ) : (
+            )}
+            {podeCriarUsuario && (
               <button
                 type="button"
                 onClick={() => setShowCriar(true)}
-                className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: TEAL }}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                >
-                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
                 Adicionar usuário
               </button>
             )}
@@ -532,7 +527,6 @@ export function UsuariosPage({
         <ConvidarForm
           marcas={marcas}
           isRaiz={isRaiz}
-          isDiretor={isDiretor}
           marcaAtualId={usuarios.find((u) => u.id === currentUserId)?.marca_ativa_id ?? null}
           onClose={() => setShowConvite(false)}
         />
@@ -591,7 +585,7 @@ export function UsuariosPage({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {u.id !== currentUserId && u.role !== "raiz" && (
+                      {podeEditarUsuario && u.id !== currentUserId && u.role !== "raiz" && (
                         <button
                           type="button"
                           onClick={() => setEditingId(editingId === u.id ? null : u.id)}
@@ -654,18 +648,20 @@ export function UsuariosPage({
                     {new Date(c.expires_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={cancelando}
-                  onClick={() =>
-                    startCancelar(async () => {
-                      await cancelarConvite(c.id);
-                    })
-                  }
-                  className="shrink-0 text-xs text-muted-foreground hover:text-red-400 disabled:opacity-40 transition-colors"
-                >
-                  Cancelar
-                </button>
+                {podeCancelarConvite && (
+                  <button
+                    type="button"
+                    disabled={cancelando}
+                    onClick={() =>
+                      startCancelar(async () => {
+                        await cancelarConvite(c.id);
+                      })
+                    }
+                    className="shrink-0 text-xs text-muted-foreground hover:text-red-400 disabled:opacity-40 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                )}
               </div>
             ))}
           </div>

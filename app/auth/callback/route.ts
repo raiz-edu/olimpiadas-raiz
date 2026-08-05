@@ -8,7 +8,7 @@ import {
   isAllowedStaffEmail,
   getRoleForEmail,
   getMarcaSlugForEmail,
-  ADMIN_EMAILS,
+  podeEntrarNoPortalStaff,
 } from "@/lib/auth/domains";
 
 export async function GET(request: NextRequest) {
@@ -54,8 +54,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?erro=dominio`);
   }
 
-  // Area administrativa restrita: apenas admins designados.
-  if (!ADMIN_EMAILS.has(user.email.toLowerCase())) {
+  // Portal staff pelo Google: admins e staff-leitores designados (os demais entram
+  // por e-mail e senha, via convite).
+  if (!podeEntrarNoPortalStaff(user.email)) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/aluno/login?erro=portal`);
   }
