@@ -24,10 +24,18 @@ export type EstiloReceita = {
   espacamento?: number;
 };
 
+/** Alvos cuja produção anterior NÃO deve se repetir (Fase 2, issue #141). */
+export type ExcluirAplicadas = {
+  marcas?: string[];
+  unidades?: string[];
+  turmas?: string[];
+};
+
 export type ReceitaConfig = {
   titulo: string;
   subtitulo?: string;
   marca?: string;
+  excluir_aplicadas?: ExcluirAplicadas;
   series?: string[];
   origens?: string[];
   niveis?: string[];

@@ -852,6 +852,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      apostila_aplicacao: {
+        Row: {
+          id: string;
+          geracao_id: string;
+          marca_id: string | null;
+          unidade_id: string | null;
+          turma_id: string | null;
+          aplicado_em: string;
+          observacao: string | null;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          geracao_id: string;
+          marca_id?: string | null;
+          unidade_id?: string | null;
+          turma_id?: string | null;
+          aplicado_em?: string;
+          observacao?: string | null;
+          criado_por?: string | null;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          geracao_id?: string;
+          marca_id?: string | null;
+          unidade_id?: string | null;
+          turma_id?: string | null;
+          aplicado_em?: string;
+          observacao?: string | null;
+          criado_por?: string | null;
+          criado_em?: string;
+        };
+        Relationships: [];
+      };
       apostila_questao: {
         Row: {
           geracao_id: string;

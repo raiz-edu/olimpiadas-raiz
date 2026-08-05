@@ -6,11 +6,17 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth/session";
 import { can, podeGerirApostilas } from "@/lib/auth/roles";
-import { getNomeModulo, getReceita, type GeracaoRow } from "@/lib/apostilas/queries";
+import {
+  getNomeModulo,
+  getOpcoesAplicacao,
+  getReceita,
+  type GeracaoRow,
+} from "@/lib/apostilas/queries";
+import { inputClass, selectClass } from "@/components/ui/form-field";
 import { SERIE_LABEL, serieKey } from "@/lib/questoes/series";
 import { OLIMPIADA_LABEL } from "@/lib/questoes/olimpiadas";
 import { DIFICULDADE_LABEL, type ReceitaConfig } from "@/lib/apostilas/receita";
-import { excluirReceita } from "../actions";
+import { excluirAplicacao, excluirReceita, registrarAplicacao } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -87,10 +93,15 @@ export default async function ReceitaDetalhePage({ params }: { params: Promise<{
   const gestor = podeGerirApostilas(session.user.role, session.user.email);
 
   const { id } = await params;
-  const [nomeModulo, receita] = await Promise.all([getNomeModulo(), getReceita(id)]);
+  const [nomeModulo, receita, opcoes] = await Promise.all([
+    getNomeModulo(),
+    getReceita(id),
+    getOpcoesAplicacao(),
+  ]);
   if (!receita) notFound();
 
   const downloads = await Promise.all(receita.geracoes.map((g) => urlsAssinadas(g)));
+  const hoje = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -149,6 +160,99 @@ export default async function ReceitaDetalhePage({ params }: { params: Promise<{
                       PDF {d.rotulo}
                     </Link>
                   ))}
+                </div>
+                <div className="mt-3 border-t border-border/60 pt-3">
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Aplicações
+                  </p>
+                  {(receita.aplicacoesPorGeracao[g.id] ?? []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nenhuma aplicação registrada.</p>
+                  ) : (
+                    <ul className="space-y-1 text-sm text-foreground">
+                      {(receita.aplicacoesPorGeracao[g.id] ?? []).map((a) => (
+                        <li key={a.id} className="flex flex-wrap items-center gap-2">
+                          <span>{a.rotulo}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(`${a.aplicado_em}T12:00:00`).toLocaleDateString("pt-BR")}
+                            {a.observacao ? ` · ${a.observacao}` : ""}
+                          </span>
+                          {gestor && (
+                            <form action={excluirAplicacao}>
+                              <input type="hidden" name="id" value={a.id} />
+                              <input type="hidden" name="receita_id" value={receita.id} />
+                              <ConfirmButton
+                                message="Remover este registro de aplicação?"
+                                className="text-xs text-red-400 hover:underline"
+                              >
+                                remover
+                              </ConfirmButton>
+                            </form>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {gestor && (
+                    <form
+                      action={registrarAplicacao}
+                      className="mt-2 flex flex-wrap items-end gap-2 text-xs text-foreground"
+                    >
+                      <input type="hidden" name="geracao_id" value={g.id} />
+                      <input type="hidden" name="receita_id" value={receita.id} />
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Marca
+                        <select name="marca_id" className={`${selectClass} w-40`} defaultValue="">
+                          <option value="">—</option>
+                          {opcoes.marcas.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.nome}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Unidade
+                        <select name="unidade_id" className={`${selectClass} w-52`} defaultValue="">
+                          <option value="">—</option>
+                          {opcoes.unidades.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.rotulo}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Turma
+                        <select name="turma_id" className={`${selectClass} w-60`} defaultValue="">
+                          <option value="">—</option>
+                          {opcoes.turmas.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.rotulo}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Data
+                        <input
+                          type="date"
+                          name="aplicado_em"
+                          defaultValue={hoje}
+                          className={`${inputClass} w-36`}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Observação
+                        <input name="observacao" className={`${inputClass} w-48`} />
+                      </label>
+                      <button
+                        type="submit"
+                        className="rounded-lg border border-primary px-3 py-2 font-medium text-primary hover:bg-primary/5"
+                      >
+                        Registrar aplicação
+                      </button>
+                    </form>
+                  )}
                 </div>
                 {g.balanco?.length > 0 && (
                   <div className="mt-3 overflow-x-auto">

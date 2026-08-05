@@ -95,6 +95,48 @@ export async function contarAcervo(config: ReceitaConfig): Promise<ContagemSecao
   return contarAcervoCore(config);
 }
 
+// ─── Fase 2: aplicações (issue #141) ─────────────────────────────────────────
+
+export async function registrarAplicacao(formData: FormData): Promise<void> {
+  const session = await requireGestor();
+  const geracaoId = String(formData.get("geracao_id") ?? "");
+  const receitaId = String(formData.get("receita_id") ?? "");
+  const alvo = (campo: string) => {
+    const v = String(formData.get(campo) ?? "").trim();
+    return v || null;
+  };
+  const marcaId = alvo("marca_id");
+  const unidadeId = alvo("unidade_id");
+  const turmaId = alvo("turma_id");
+  if (!geracaoId || (!marcaId && !unidadeId && !turmaId)) {
+    throw new Error("Informe pelo menos um alvo (marca, unidade ou turma).");
+  }
+  const aplicadoEm = String(formData.get("aplicado_em") ?? "").trim();
+  const admin = createAdminClient();
+  const { error } = await admin.from("apostila_aplicacao").insert({
+    geracao_id: geracaoId,
+    marca_id: marcaId,
+    unidade_id: unidadeId,
+    turma_id: turmaId,
+    ...(aplicadoEm ? { aplicado_em: aplicadoEm } : {}),
+    observacao: String(formData.get("observacao") ?? "").trim() || null,
+    criado_por: session.user.id,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/academico/apostilas/${receitaId}`);
+}
+
+export async function excluirAplicacao(formData: FormData): Promise<void> {
+  await requireGestor();
+  const id = String(formData.get("id") ?? "");
+  const receitaId = String(formData.get("receita_id") ?? "");
+  if (!id) return;
+  const admin = createAdminClient();
+  const { error } = await admin.from("apostila_aplicacao").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/academico/apostilas/${receitaId}`);
+}
+
 export async function salvarNomeModulo(formData: FormData): Promise<void> {
   await requireGestor();
   const valor = String(formData.get("nome_modulo") ?? "").trim();
