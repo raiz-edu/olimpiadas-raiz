@@ -20,6 +20,7 @@ import {
 } from "docx";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { arquivoLogoDaMarca } from "@/lib/marcas/identidade";
 
 // ─── Paleta ──────────────────────────────────────────────────────────────────
 
@@ -45,17 +46,9 @@ const FONT_BODY = "Calibri";
 
 // ─── Logo ────────────────────────────────────────────────────────────────────
 
-const SLUG_TO_LOGO: Record<string, string> = {
-  americano: "americano",
-  apogeu: "apogeu",
-  "matriz-educacao": "matriz",
-  "qi-bilingue": "qi",
-  uniao: "uniao",
-  unificado: "unificado",
-};
-
 function loadLogo(slug: string) {
-  const file = SLUG_TO_LOGO[slug];
+  // documento impresso em papel branco -> versao colorida
+  const file = arquivoLogoDaMarca(slug, "claro");
   if (!file) return null;
   const p = pathModule.join(process.cwd(), "public", "marcas", `${file}.png`);
   if (!fs.existsSync(p)) return null;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAluno } from "@/app/aluno/login/actions";
 import type { Aluno } from "@/lib/types/database";
+import { identidadeDaMarca } from "@/lib/marcas/identidade";
 
 /* ── Desktop nav link ─────────────────────────────────────────────────────── */
 function NavLink({
@@ -70,20 +71,12 @@ function MobileNavLink({
 
 const TEAL = "rgb(91,184,193)";
 
-const SLUG_TO_LOGO: Record<string, string> = {
-  americano: "americano",
-  apogeu: "apogeu",
-  "matriz-educacao": "matriz",
-  "qi-bilingue": "qi",
-  uniao: "uniao",
-  unificado: "unificado",
-};
-
 /* ── Componente principal ─────────────────────────────────────────────────── */
 export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: string | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
-  const logoFile = marcaSlug ? SLUG_TO_LOGO[marcaSlug] : null;
+  // header do aluno tem fundo branco (#ffffff)
+  const identidade = identidadeDaMarca(marcaSlug, "claro");
 
   return (
     <header
@@ -98,11 +91,11 @@ export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: strin
       <div className="flex h-14 w-full items-center justify-between gap-4 px-4 sm:h-20 sm:px-10">
         {/* Logo */}
         <Link href="/aluno/dashboard" className="flex shrink-0 items-center gap-3">
-          {logoFile ? (
+          {identidade.temLogoPropria ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={`/marcas/${logoFile}.png`}
-              alt={marcaSlug ?? ""}
+              src={identidade.src}
+              alt={identidade.nome}
               className="block max-h-9 max-w-[160px] object-contain sm:max-h-14 sm:max-w-[200px]"
             />
           ) : (

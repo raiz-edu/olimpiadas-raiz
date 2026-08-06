@@ -21,20 +21,13 @@ import {
 import { CATALOGO } from "@/lib/olimpiadas/catalogo";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { arquivoLogoDaMarca } from "@/lib/marcas/identidade";
 
 // ─── Mapeamento slug → arquivo de logo ──────────────────────────────────────
 
-const SLUG_TO_LOGO: Record<string, string> = {
-  americano: "americano",
-  apogeu: "apogeu",
-  "matriz-educacao": "matriz",
-  "qi-bilingue": "qi",
-  uniao: "uniao",
-  unificado: "unificado",
-};
-
 function loadLogo(slug: string): { data: Buffer; width: number; height: number } | null {
-  const logoFile = SLUG_TO_LOGO[slug];
+  // documento impresso em papel branco -> versao colorida
+  const logoFile = arquivoLogoDaMarca(slug, "claro");
   if (!logoFile) return null;
   const logoPath = pathModule.join(process.cwd(), "public", "marcas", `${logoFile}.png`);
   if (!fs.existsSync(logoPath)) return null;
