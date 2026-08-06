@@ -1,3 +1,7 @@
+// Domínios institucionais com acesso ao sistema e à plataforma do aluno. Subdomínios
+// entram junto (ex.: alunos.colegioapogeu.com.br) via matchAllowedBaseDomain.
+// Escolas Integradas Raiz adicionadas em 2026-08-06: Sá Pereira, Escola SAP,
+// Cubo Global e Colégio Leonardo da Vinci.
 export const ALLOWED_DOMAINS = [
   "colegioapogeu.com.br",
   "matrizeducacao.com.br",
@@ -5,6 +9,10 @@ export const ALLOWED_DOMAINS = [
   "colegiouniao.com.br",
   "americanobilingue.com.br",
   "unificado.com.br",
+  "sapereira.com.br",
+  "escolasap.com.br",
+  "cubo.global", // sem .com.br de propósito — o TLD é .global
+  "colegioleonardodavinci.com.br",
   "raizeducacao.com.br",
 ] as const;
 
@@ -40,6 +48,8 @@ export const APOSTILA_AUTORES = new Set([
   "helio.barbosa@raizeducacao.com.br",
 ]);
 
+// Slug precisa existir na tabela `marca`, senão o vínculo automático no primeiro
+// login não acontece (o usuário entra sem marca e não vê os dados da escola dele).
 export const DOMAIN_TO_MARCA_SLUG: Record<string, string | null> = {
   "colegioapogeu.com.br": "apogeu",
   "matrizeducacao.com.br": "matriz-educacao",
@@ -47,7 +57,11 @@ export const DOMAIN_TO_MARCA_SLUG: Record<string, string | null> = {
   "colegiouniao.com.br": "uniao",
   "americanobilingue.com.br": "americano",
   "unificado.com.br": "unificado",
-  "raizeducacao.com.br": null,
+  "sapereira.com.br": "sa-pereira",
+  "escolasap.com.br": "escola-sap",
+  "cubo.global": "cubo-global",
+  "colegioleonardodavinci.com.br": "colegio-leonardo-da-vinci",
+  "raizeducacao.com.br": null, // domínio da rede: sem marca, restrito à allowlist
 };
 
 export function getEmailDomain(email: string): string {
