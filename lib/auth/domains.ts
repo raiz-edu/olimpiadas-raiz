@@ -90,14 +90,26 @@ export function podeEntrarNoPortalStaff(email: string): boolean {
   return isAllowedStaffEmail(email);
 }
 
+/**
+ * Exceções NOMINAIS: e-mails fora dos domínios institucionais liberados um a um,
+ * enquanto a pessoa não tem endereço da rede. É deliberadamente por e-mail, e não
+ * por domínio: liberar "gmail.com" abriria o sistema para qualquer conta.
+ *
+ * TEMPORÁRIO — remover cada linha assim que o e-mail institucional existir.
+ *   franco.natasha@gmail.com — Natasha Franco (Raiz), incluída em 2026-08-06.
+ */
+export const EMAILS_EXCECAO = new Set(["franco.natasha@gmail.com"]);
+
 export function isAllowedStaffEmail(email: string): boolean {
-  return matchAllowedBaseDomain(getEmailDomain(email)) !== null;
+  const e = email.toLowerCase();
+  if (EMAILS_EXCECAO.has(e)) return true;
+  return matchAllowedBaseDomain(getEmailDomain(e)) !== null;
 }
 
 export function isAllowedStudentEmail(email: string): boolean {
-  // Mesma regra do staff: domínio institucional entra. A equipe da rede precisa
-  // acessar a Plataforma Olímpica para acompanhar o que o aluno vê.
-  return matchAllowedBaseDomain(getEmailDomain(email)) !== null;
+  // Mesma regra do staff: domínio institucional (ou exceção nominal) entra. A
+  // equipe da rede precisa acessar a Plataforma Olímpica para ver o que o aluno vê.
+  return isAllowedStaffEmail(email);
 }
 
 export function isAllowedDomain(email: string): boolean {

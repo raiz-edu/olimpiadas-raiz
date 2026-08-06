@@ -8,9 +8,22 @@ import {
   ADMIN_EMAILS,
   ALLOWED_DOMAINS,
   DOMAIN_TO_MARCA_SLUG,
+  EMAILS_EXCECAO,
 } from "@/lib/auth/domains";
 
 describe("auth domains", () => {
+  it("excecao nominal libera SO o e-mail listado, nunca o dominio", () => {
+    // Natasha (Raiz) enquanto nao tem e-mail institucional
+    expect(isAllowedStaffEmail("franco.natasha@gmail.com")).toBe(true);
+    expect(isAllowedStudentEmail("franco.natasha@gmail.com")).toBe(true);
+    // qualquer outro gmail segue barrado — e o que separa excecao de furo
+    expect(isAllowedStaffEmail("outra.pessoa@gmail.com")).toBe(false);
+    expect(isAllowedStudentEmail("outra.pessoa@gmail.com")).toBe(false);
+    expect(EMAILS_EXCECAO.size).toBe(1);
+    // excecao nao ganha papel de administracao
+    expect(getRoleForEmail("franco.natasha@gmail.com")).toBe("professor");
+  });
+
   it("todo e-mail institucional entra no staff (2026-08-06)", () => {
     expect(isAllowedStaffEmail("helio.barbosa@raizeducacao.com.br")).toBe(true);
     expect(isAllowedStaffEmail("qualquer.pessoa@raizeducacao.com.br")).toBe(true);
