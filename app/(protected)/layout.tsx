@@ -8,15 +8,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 import { getNomeModulo } from "@/lib/apostilas/queries";
-
-const SLUG_TO_LOGO: Record<string, string> = {
-  americano: "americano",
-  apogeu: "apogeu",
-  "matriz-educacao": "matriz",
-  "qi-bilingue": "qi",
-  uniao: "uniao",
-  unificado: "unificado",
-};
+import { identidadeDaMarca } from "@/lib/marcas/identidade";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();
@@ -41,7 +33,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     marcaSlug = null;
   }
 
-  const logoFile = marcaSlug ? SLUG_TO_LOGO[marcaSlug] : null;
+  const identidade = identidadeDaMarca(marcaSlug);
 
   // Nome do módulo Apostilas (editável em configuracao_sistema) para o menu
   let apostilasLabel = "Apostilas";
@@ -67,19 +59,13 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             {/* Logo */}
             <div className="flex items-center gap-3">
               <MobileNav apostilasLabel={apostilasLabel} />
-              {logoFile ? (
+              {identidade.temLogoPropria ? (
                 /* Só a logo da marca — sem Raiz */
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
-                  src={`/marcas/${logoFile}.png`}
-                  alt={marcaSlug ?? ""}
-                  className={`block object-contain ${
-                    marcaSlug === "uniao"
-                      ? "max-h-12 max-w-[200px]"
-                      : ["apogeu", "matriz-educacao", "qi-bilingue"].includes(marcaSlug ?? "")
-                        ? "max-h-[77px] max-w-[224px]"
-                        : "max-h-16 max-w-[200px]"
-                  }`}
+                  src={identidade.src}
+                  alt={identidade.nome}
+                  className={`block object-contain ${identidade.classeHeaderSistema}`}
                 />
               ) : (
                 /* Sem marca: exibe logo Raiz + texto */

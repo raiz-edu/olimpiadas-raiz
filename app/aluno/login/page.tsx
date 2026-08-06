@@ -3,6 +3,7 @@ import { LoginAlunoForm } from "@/components/aluno/login-form";
 import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
 import { getConfigValue } from "@/app/(protected)/configuracoes/actions";
 import { ALUNO_PENDING_COOKIE } from "@/lib/auth/student-cookie";
+import { identidadeDaMarca } from "@/lib/marcas/identidade";
 
 export const metadata = {
   title: "Acesso do Aluno — Plataforma Olímpica",
@@ -65,24 +66,6 @@ function VideoBackground({ src }: { src: string }) {
   );
 }
 
-const SLUG_TO_LOGO: Record<string, string> = {
-  americano: "americano",
-  apogeu: "apogeu",
-  "matriz-educacao": "matriz",
-  "qi-bilingue": "qi",
-  uniao: "uniao",
-  unificado: "unificado",
-};
-
-const SLUG_TO_NOME: Record<string, string> = {
-  americano: "Americano",
-  apogeu: "Apogeu",
-  "matriz-educacao": "Matriz Educação",
-  "qi-bilingue": "QI Bilíngue",
-  uniao: "União",
-  unificado: "Unificado",
-};
-
 const TEAL = "rgb(91,184,193)";
 
 export default async function LoginAlunoPage({
@@ -96,8 +79,7 @@ export default async function LoginAlunoPage({
   const initialNeedsConsent = !!cookieStore.get(ALUNO_PENDING_COOKIE)?.value;
   const marcaHint = cookieStore.get("marca_hint")?.value || null;
   const effectiveMarca = marca ?? marcaHint;
-  const logoFile = effectiveMarca ? SLUG_TO_LOGO[effectiveMarca] : null;
-  const marcaNome = effectiveMarca ? SLUG_TO_NOME[effectiveMarca] : null;
+  const identidade = identidadeDaMarca(effectiveMarca);
 
   return (
     <main className="relative flex min-h-screen">
@@ -149,9 +131,13 @@ export default async function LoginAlunoPage({
           <div className="mb-8 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={logoFile ? `/marcas/${logoFile}.png` : "/logo-raiz.png"}
-              alt={marcaNome ?? "Raiz Educação"}
-              className={`mx-auto mb-6 block max-w-full ${effectiveMarca === "uniao" ? "max-h-20 sm:max-h-32" : "max-h-24 sm:max-h-40"}`}
+              src={identidade.src}
+              alt={identidade.nome}
+              className={`mx-auto mb-6 block max-w-full ${
+                identidade.classeLogin === "max-h-32"
+                  ? "max-h-20 sm:max-h-32"
+                  : "max-h-24 sm:max-h-40"
+              }`}
             />
             <h1 className="text-xl font-bold text-foreground">Plataforma Olímpica</h1>
           </div>

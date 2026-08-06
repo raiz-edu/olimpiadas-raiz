@@ -1,26 +1,9 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
+import { identidadeDaMarca } from "@/lib/marcas/identidade";
 
 export const metadata = {
   title: "Login — Olimpíadas do Conhecimento",
-};
-
-const SLUG_TO_LOGO: Record<string, string> = {
-  americano: "americano",
-  apogeu: "apogeu",
-  "matriz-educacao": "matriz",
-  "qi-bilingue": "qi",
-  uniao: "uniao",
-  unificado: "unificado",
-};
-
-const SLUG_TO_NOME: Record<string, string> = {
-  americano: "Americano",
-  apogeu: "Apogeu",
-  "matriz-educacao": "Matriz Educação",
-  "qi-bilingue": "QI Bilíngue",
-  uniao: "União",
-  unificado: "Unificado",
 };
 
 export default async function LoginPage({
@@ -29,8 +12,7 @@ export default async function LoginPage({
   searchParams: Promise<{ marca?: string }>;
 }) {
   const { marca } = await searchParams;
-  const logoFile = marca ? SLUG_TO_LOGO[marca] : null;
-  const marcaNome = marca ? SLUG_TO_NOME[marca] : null;
+  const identidade = identidadeDaMarca(marca);
 
   return (
     <main className="relative flex min-h-screen">
@@ -65,12 +47,12 @@ export default async function LoginPage({
           <div className="mb-8 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={logoFile ? `/marcas/${logoFile}.png` : "/logo-raiz.png"}
-              alt={marcaNome ?? "Raiz Educação"}
-              className={`mx-auto mb-4 block max-w-full ${marca === "uniao" ? "max-h-32" : "max-h-40"}`}
+              src={identidade.src}
+              alt={identidade.nome}
+              className={`mx-auto mb-4 block max-w-full ${identidade.classeLogin}`}
             />
             <h1 className="text-xl font-bold text-foreground">Olimpíadas do Conhecimento</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{marcaNome ?? "Raiz Educação"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{identidade.nome}</p>
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
