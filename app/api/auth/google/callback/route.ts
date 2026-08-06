@@ -3,12 +3,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { RoleUsuario } from "@/lib/types/database";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   isAllowedStaffEmail,
   isAllowedStudentEmail,
-  getRoleForEmail,
   getMarcaSlugForEmail,
   podeEntrarNoPortalStaff,
 } from "@/lib/auth/domains";
@@ -19,6 +17,7 @@ import {
   cookieSessionOpts,
   cookiePendingOpts,
 } from "@/lib/auth/student-cookie";
+import { resolverPrimeiroAcesso, marcarConviteAceito } from "@/lib/auth/primeiro-acesso";
 
 interface GoogleTokens {
   access_token: string;
@@ -96,14 +95,12 @@ export async function GET(request: NextRequest) {
 
   const admin = createAdminClient();
 
-  // ── Portal staff (apenas admins designados) ─────────────────────────────
+  // ── Portal staff (todo e-mail institucional) ────────────────────────────
   if (mode === "staff") {
     if (!isAllowedStaffEmail(email)) {
       return NextResponse.redirect(`${origin}/login?erro=dominio`);
     }
 
-    // Portal staff pelo Google: admins e staff-leitores designados (os demais entram
-    // por e-mail e senha, via convite).
     if (!podeEntrarNoPortalStaff(email)) {
       return NextResponse.redirect(`${origin}/aluno/login?erro=portal`);
     }
@@ -140,25 +137,21 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (!usuario) {
+      // Convite pendente manda na marca/papel; senão, marca vem do domínio.
+      const { role, marcaId, conviteId } = await resolverPrimeiroAcesso(email);
       await admin.from("usuario").insert({
         id: user.id,
         email,
         nome: payload.name,
-        role: getRoleForEmail(email) as RoleUsuario,
+        role,
         ativo: true,
+        marca_ativa_id: marcaId,
       });
 
-      const marcaSlug = getMarcaSlugForEmail(email);
-      if (marcaSlug) {
-        const { data: marca } = await admin
-          .from("marca")
-          .select("id")
-          .eq("slug", marcaSlug)
-          .maybeSingle();
-        if (marca) {
-          await admin.from("usuario_marca").insert({ usuario_id: user.id, marca_id: marca.id });
-        }
+      if (marcaId) {
+        await admin.from("usuario_marca").insert({ usuario_id: user.id, marca_id: marcaId });
       }
+      await marcarConviteAceito(conviteId);
     } else if (!usuario.ativo) {
       await supabase.auth.signOut();
       return NextResponse.redirect(`${origin}/login?erro=inativo`);

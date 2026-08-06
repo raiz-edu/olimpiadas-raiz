@@ -79,6 +79,21 @@ export const MARCAS: Record<string, IdentidadeMarca> = {
     logoEscura: "clv-escuro",
     classeHeaderSistema: "max-h-[68px] max-w-[224px]",
   },
+  // Lote CONVIDADOS RT (2026-08-06). Logos do Drive _Logotipos.
+  "global-tree": {
+    nome: "Global Tree",
+    logo: "globaltree",
+    logoEscura: "globaltree-escuro",
+    classeHeaderSistema: "max-h-[72px] max-w-[170px]",
+  },
+  "sarah-dawsey": {
+    nome: "Colégio Sarah Dawsey",
+    logo: "sarahdawsey",
+    logoEscura: "sarahdawsey-escuro",
+  },
+  // A rede é a identidade padrão do sistema: sem arte própria de propósito, para
+  // cair no bloco da Raiz (logo + "Programa Raiz Olímpica") que o header já monta.
+  "raiz-educacao": { nome: "Raiz Educação", logo: null },
 };
 
 export const LOGO_RAIZ = "/logo-raiz.png";

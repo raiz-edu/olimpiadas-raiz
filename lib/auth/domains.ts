@@ -13,6 +13,10 @@ export const ALLOWED_DOMAINS = [
   "escolasap.com.br",
   "cubo.global", // sem .com.br de propósito — o TLD é .global
   "colegioleonardodavinci.com.br",
+  // Lote CONVIDADOS RT (2026-08-06): Global Tree, APG Governo e Sarah Dawsey.
+  "crecheglobaltree.com.br",
+  "apggov.com.br",
+  "sarahdawsey.com.br",
   "raizeducacao.com.br",
 ] as const;
 
@@ -20,25 +24,17 @@ export type AllowedDomain = (typeof ALLOWED_DOMAINS)[number];
 
 // Únicos emails com role raiz (admin total) — todos os demais recebem professor por
 // padrão. Restrito a Helio e Hugo em 2026-08-05 (decisão do Helio: "apenas eu e Hugo
-// devem ser os admins"). Bernardo e Milena passaram a STAFF_LEITOR_EMAILS.
+// devem ser os admins"). Os demais entram como Professor (leitura).
 export const ADMIN_EMAILS = new Set([
   "helio.barbosa@matrizeducacao.com.br",
   "helio.barbosa@raizeducacao.com.br",
   "hugo.carvalho@raizeducacao.com.br",
 ]);
 
-// Staff da rede SEM poderes de admin: entram no sistema pelo Google e leem tudo, mas
-// não criam nada (o papel no banco define as permissões — ver lib/auth/roles.ts).
-// Sem esta lista eles perderiam o login, porque o domínio da rede é fechado.
-export const STAFF_LEITOR_EMAILS = new Set([
-  "bernardo.castro@raizeducacao.com.br",
-  "milena.gallotte@raizeducacao.com.br",
-]);
-
-export const ALLOWED_STUDENT_EMAILS = new Set([
-  "milena.gallotte@raizeducacao.com.br",
-  "bernardo.castro@raizeducacao.com.br",
-]);
+// NOTA (2026-08-06): a lista STAFF_LEITOR_EMAILS deixou de existir. Ela só era
+// necessária enquanto o domínio da rede era fechado à allowlist de admins; agora
+// todo e-mail institucional entra no portal staff (ver podeEntrarNoPortalStaff),
+// sempre com papel de leitura — só ADMIN_EMAILS recebe papel de administração.
 
 // Únicos e-mails que podem CRIAR/EDITAR/EXCLUIR receitas de apostila (issue #136,
 // decisão de 2026-08-04: "apenas o Helio, por enquanto"). A role raiz tem outros
@@ -61,7 +57,10 @@ export const DOMAIN_TO_MARCA_SLUG: Record<string, string | null> = {
   "escolasap.com.br": "escola-sap",
   "cubo.global": "cubo-global",
   "colegioleonardodavinci.com.br": "colegio-leonardo-da-vinci",
-  "raizeducacao.com.br": null, // domínio da rede: sem marca, restrito à allowlist
+  "crecheglobaltree.com.br": "global-tree",
+  "apggov.com.br": "apogeu", // APG Governo é área do Apogeu, não escola própria
+  "sarahdawsey.com.br": "sarah-dawsey",
+  "raizeducacao.com.br": "raiz-educacao", // equipe da rede
 };
 
 export function getEmailDomain(email: string): string {
@@ -82,37 +81,23 @@ export function matchAllowedBaseDomain(domain: string): AllowedDomain | null {
 }
 
 /**
- * Pode entrar no portal STAFF pelo Google. Admins e staff-leitores designados; os
- * demais (domínios de marca) entram por e-mail e senha, via convite.
+ * Pode entrar no portal STAFF pelo Google (decisão do Helio 2026-08-06): todo
+ * e-mail institucional entra, e é criado como Professor — papel de leitura, ver
+ * lib/auth/roles.ts. O convite com senha continua valendo para quem não tem
+ * conta Google no domínio.
  */
 export function podeEntrarNoPortalStaff(email: string): boolean {
-  const e = email.toLowerCase();
-  return ADMIN_EMAILS.has(e) || STAFF_LEITOR_EMAILS.has(e);
+  return isAllowedStaffEmail(email);
 }
 
 export function isAllowedStaffEmail(email: string): boolean {
-  const base = matchAllowedBaseDomain(getEmailDomain(email));
-  if (!base) return false;
-
-  // raizeducacao.com.br (domínio da rede) e subdomínios são restritos às pessoas
-  // designadas: admins (Helio, Hugo) e staff-leitores.
-  if (base === "raizeducacao.com.br") {
-    return podeEntrarNoPortalStaff(email);
-  }
-
-  return true;
+  return matchAllowedBaseDomain(getEmailDomain(email)) !== null;
 }
 
 export function isAllowedStudentEmail(email: string): boolean {
-  const normalizedEmail = email.toLowerCase();
-  const base = matchAllowedBaseDomain(getEmailDomain(normalizedEmail));
-  if (!base) return false;
-
-  if (base === "raizeducacao.com.br") {
-    return ADMIN_EMAILS.has(normalizedEmail) || ALLOWED_STUDENT_EMAILS.has(normalizedEmail);
-  }
-
-  return true;
+  // Mesma regra do staff: domínio institucional entra. A equipe da rede precisa
+  // acessar a Plataforma Olímpica para acompanhar o que o aluno vê.
+  return matchAllowedBaseDomain(getEmailDomain(email)) !== null;
 }
 
 export function isAllowedDomain(email: string): boolean {

@@ -11,12 +11,13 @@ import {
 } from "@/lib/auth/domains";
 
 describe("auth domains", () => {
-  it("mantem staff da Raiz restrito as pessoas designadas", () => {
+  it("todo e-mail institucional entra no staff (2026-08-06)", () => {
     expect(isAllowedStaffEmail("helio.barbosa@raizeducacao.com.br")).toBe(true);
-    // staff-leitores continuam entrando pelo Google, sem serem admins
-    expect(isAllowedStaffEmail("bernardo.castro@raizeducacao.com.br")).toBe(true);
-    expect(isAllowedStaffEmail("milena.gallotte@raizeducacao.com.br")).toBe(true);
-    expect(isAllowedStaffEmail("pessoa.nao.autorizada@raizeducacao.com.br")).toBe(false);
+    expect(isAllowedStaffEmail("qualquer.pessoa@raizeducacao.com.br")).toBe(true);
+    expect(isAllowedStaffEmail("professor@colegioqi.com.br")).toBe(true);
+    // fora dos domínios institucionais segue bloqueado
+    expect(isAllowedStaffEmail("pessoa@gmail.com")).toBe(false);
+    expect(isAllowedStaffEmail("pessoa@yahoo.com.br")).toBe(false);
   });
 
   it("admin e apenas Helio e Hugo (2026-08-05)", () => {
@@ -29,15 +30,40 @@ describe("auth domains", () => {
     expect(getRoleForEmail("milena.gallotte@raizeducacao.com.br")).toBe("professor");
   });
 
-  it("portal staff pelo Google: admins e staff-leitores; marca entra por senha", () => {
+  it("portal staff pelo Google aceita todo dominio institucional", () => {
     expect(podeEntrarNoPortalStaff("hugo.carvalho@raizeducacao.com.br")).toBe(true);
-    expect(podeEntrarNoPortalStaff("bernardo.castro@raizeducacao.com.br")).toBe(true);
-    expect(podeEntrarNoPortalStaff("professor@colegioqi.com.br")).toBe(false);
+    expect(podeEntrarNoPortalStaff("professor@colegioqi.com.br")).toBe(true);
+    expect(podeEntrarNoPortalStaff("pessoa@gmail.com")).toBe(false);
   });
 
-  it("permite os e-mails liberados no portal do aluno", () => {
+  it("papel de administracao continua so para ADMIN_EMAILS", () => {
+    expect(getRoleForEmail("qualquer.pessoa@raizeducacao.com.br")).toBe("professor");
+    expect(getRoleForEmail("professor@crecheglobaltree.com.br")).toBe("professor");
+    expect(getRoleForEmail("hugo.carvalho@raizeducacao.com.br")).toBe("raiz");
+  });
+
+  it("libera os dominios do lote CONVIDADOS RT com a marca certa", () => {
+    const casos: [string, string][] = [
+      ["crecheglobaltree.com.br", "global-tree"],
+      ["apggov.com.br", "apogeu"],
+      ["sarahdawsey.com.br", "sarah-dawsey"],
+      ["raizeducacao.com.br", "raiz-educacao"],
+    ];
+    for (const [dominio, slug] of casos) {
+      expect({ dominio, staff: isAllowedStaffEmail(`p@${dominio}`) }).toEqual({
+        dominio,
+        staff: true,
+      });
+      expect(getMarcaSlugForEmail(`p@${dominio}`)).toBe(slug);
+    }
+    // subdominio de escola ja liberada entra sem precisar de cadastro novo
+    expect(isAllowedStaffEmail("p@professores.colegioleonardodavinci.com.br")).toBe(true);
+  });
+
+  it("permite e-mail institucional no portal do aluno", () => {
     expect(isAllowedStudentEmail("milena.gallotte@raizeducacao.com.br")).toBe(true);
-    expect(isAllowedStudentEmail("bernardo.castro@raizeducacao.com.br")).toBe(true);
+    expect(isAllowedStudentEmail("equipe@raizeducacao.com.br")).toBe(true);
+    expect(isAllowedStudentEmail("aluno@alunos.colegioapogeu.com.br")).toBe(true);
   });
 
   it("continua bloqueando e-mails externos no portal do aluno", () => {
