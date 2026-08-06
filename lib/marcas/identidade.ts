@@ -56,9 +56,13 @@ export const MARCAS: Record<string, IdentidadeMarca> = {
     // Sem versão negativa de propósito: a arte colorida oficial tem contraste
     // suficiente no escuro (azul 4,6:1 no login e 3,6:1 no header; mínimo 3:1),
     // e a única alternativa do manual é toda branca, que apagaria os bonecos.
-    // logo quase quadrada (AR 1.24): limitar a altura evita que domine o header
-    classeLogin: "max-h-32",
-    classeHeaderSistema: "max-h-14 max-w-[140px]",
+    // Logo quase quadrada (AR 1.24): as demais são largas e param no limite de
+    // LARGURA do container, enquanto esta para no de ALTURA. Com max-h-32 ela
+    // renderizava 20k px² contra 27k-58k das outras; max-h-48 a põe em 46k, na
+    // mesma faixa de Apogeu (46k) e União (47k).
+    classeLogin: "max-h-48",
+    // No header o teto é físico: a barra tem 88px de altura.
+    classeHeaderSistema: "max-h-[72px] max-w-[120px]",
   },
   "escola-sap": {
     nome: "Escola SAP",
