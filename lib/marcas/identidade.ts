@@ -53,7 +53,9 @@ export const MARCAS: Record<string, IdentidadeMarca> = {
   "sa-pereira": {
     nome: "Sá Pereira",
     logo: "sapereira",
-    logoEscura: "sapereira-escuro",
+    // Sem versão negativa de propósito: a arte colorida oficial tem contraste
+    // suficiente no escuro (azul 4,6:1 no login e 3,6:1 no header; mínimo 3:1),
+    // e a única alternativa do manual é toda branca, que apagaria os bonecos.
     // logo quase quadrada (AR 1.24): limitar a altura evita que domine o header
     classeLogin: "max-h-32",
     classeHeaderSistema: "max-h-14 max-w-[140px]",
@@ -64,6 +66,8 @@ export const MARCAS: Record<string, IdentidadeMarca> = {
     logoEscura: "escolasap-escuro",
     classeHeaderSistema: "max-h-14 max-w-[200px]",
   },
+  // O cinza do wordmark do Cubo tem só 2,7:1 no escuro (apaga), então a versão
+  // escura preserva os símbolos coloridos e escreve o nome em branco.
   "cubo-global": { nome: "Cubo Global", logo: "cuboglobal", logoEscura: "cuboglobal-escuro" },
   "colegio-leonardo-da-vinci": {
     nome: "Colégio Leonardo da Vinci",

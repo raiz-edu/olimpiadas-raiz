@@ -33,8 +33,8 @@ describe("identidade das marcas", () => {
   });
 
   it("fundo escuro usa a versão negativa quando a marca tem uma", () => {
-    // as 4 escolas integradas escrevem o nome em cor escura
-    for (const slug of ["sa-pereira", "escola-sap", "cubo-global", "colegio-leonardo-da-vinci"]) {
+    // Sá Pereira fica de fora: a arte colorida oficial já tem contraste no escuro
+    for (const slug of ["escola-sap", "cubo-global", "colegio-leonardo-da-vinci"]) {
       const claro = identidadeDaMarca(slug, "claro").src;
       const escuro = identidadeDaMarca(slug, "escuro").src;
       expect({ slug, diferente: claro !== escuro }).toEqual({ slug, diferente: true });
@@ -93,7 +93,6 @@ describe("identidade das marcas", () => {
     ] as const) {
       expect(MARCAS[slug]?.nome).toBe(nome);
       expect(MARCAS[slug]?.logo).toBeTruthy();
-      expect(MARCAS[slug]?.logoEscura).toBeTruthy();
     }
   });
 });
