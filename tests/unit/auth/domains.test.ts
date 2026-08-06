@@ -6,6 +6,8 @@ import {
   getRoleForEmail,
   podeEntrarNoPortalStaff,
   ADMIN_EMAILS,
+  ALLOWED_DOMAINS,
+  DOMAIN_TO_MARCA_SLUG,
 } from "@/lib/auth/domains";
 
 describe("auth domains", () => {
@@ -44,5 +46,61 @@ describe("auth domains", () => {
 
   it("resolve marca de subdominio institucional", () => {
     expect(getMarcaSlugForEmail("aluno@alunos.colegioapogeu.com.br")).toBe("apogeu");
+  });
+
+  // ─── Escolas Integradas Raiz (2026-08-06) ──────────────────────────────────
+  const NOVAS: [dominio: string, slug: string][] = [
+    ["sapereira.com.br", "sa-pereira"],
+    ["escolasap.com.br", "escola-sap"],
+    ["cubo.global", "cubo-global"],
+    ["colegioleonardodavinci.com.br", "colegio-leonardo-da-vinci"],
+  ];
+
+  it("libera staff e aluno nos dominios das escolas integradas", () => {
+    for (const [dominio] of NOVAS) {
+      expect({ dominio, staff: isAllowedStaffEmail(`pessoa@${dominio}`) }).toEqual({
+        dominio,
+        staff: true,
+      });
+      expect({ dominio, aluno: isAllowedStudentEmail(`aluno@${dominio}`) }).toEqual({
+        dominio,
+        aluno: true,
+      });
+    }
+  });
+
+  it("libera o subdominio de aluno das escolas integradas", () => {
+    for (const [dominio] of NOVAS) {
+      expect({ dominio, ok: isAllowedStudentEmail(`aluno@alunos.${dominio}`) }).toEqual({
+        dominio,
+        ok: true,
+      });
+    }
+  });
+
+  it("vincula cada dominio novo a marca correta", () => {
+    for (const [dominio, slug] of NOVAS) {
+      expect(getMarcaSlugForEmail(`pessoa@${dominio}`)).toBe(slug);
+      expect(getMarcaSlugForEmail(`aluno@alunos.${dominio}`)).toBe(slug);
+    }
+  });
+
+  it("cubo.global funciona apesar do TLD fora do padrao .com.br", () => {
+    expect(isAllowedStaffEmail("pessoa@cubo.global")).toBe(true);
+    expect(getMarcaSlugForEmail("pessoa@cubo.global")).toBe("cubo-global");
+    // nao pode liberar dominio que apenas TERMINA parecido
+    expect(isAllowedStaffEmail("pessoa@naocubo.global")).toBe(false);
+    expect(isAllowedStaffEmail("pessoa@cubo.global.com")).toBe(false);
+  });
+
+  it("todo dominio liberado tem entrada no mapa de marcas", () => {
+    for (const d of ALLOWED_DOMAINS) {
+      expect({ d, temEntrada: d in DOMAIN_TO_MARCA_SLUG }).toEqual({ d, temEntrada: true });
+    }
+  });
+
+  it("segue bloqueando dominio externo", () => {
+    expect(isAllowedStaffEmail("pessoa@gmail.com")).toBe(false);
+    expect(isAllowedStudentEmail("pessoa@outraescola.com.br")).toBe(false);
   });
 });
