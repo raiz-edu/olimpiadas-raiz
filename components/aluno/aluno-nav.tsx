@@ -75,7 +75,8 @@ const TEAL = "rgb(91,184,193)";
 export function AlunoNav({ aluno, marcaSlug }: { aluno: Aluno; marcaSlug?: string | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
-  const identidade = identidadeDaMarca(marcaSlug);
+  // header do aluno tem fundo branco (#ffffff)
+  const identidade = identidadeDaMarca(marcaSlug, "claro");
 
   return (
     <header

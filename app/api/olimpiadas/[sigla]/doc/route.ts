@@ -26,7 +26,8 @@ import { arquivoLogoDaMarca } from "@/lib/marcas/identidade";
 // ─── Mapeamento slug → arquivo de logo ──────────────────────────────────────
 
 function loadLogo(slug: string): { data: Buffer; width: number; height: number } | null {
-  const logoFile = arquivoLogoDaMarca(slug);
+  // documento impresso em papel branco -> versao colorida
+  const logoFile = arquivoLogoDaMarca(slug, "claro");
   if (!logoFile) return null;
   const logoPath = pathModule.join(process.cwd(), "public", "marcas", `${logoFile}.png`);
   if (!fs.existsSync(logoPath)) return null;

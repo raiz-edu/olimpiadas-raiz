@@ -47,7 +47,8 @@ const FONT_BODY = "Calibri";
 // ─── Logo ────────────────────────────────────────────────────────────────────
 
 function loadLogo(slug: string) {
-  const file = arquivoLogoDaMarca(slug);
+  // documento impresso em papel branco -> versao colorida
+  const file = arquivoLogoDaMarca(slug, "claro");
   if (!file) return null;
   const p = pathModule.join(process.cwd(), "public", "marcas", `${file}.png`);
   if (!fs.existsSync(p)) return null;

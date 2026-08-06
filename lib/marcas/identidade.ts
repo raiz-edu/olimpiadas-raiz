@@ -11,6 +11,12 @@ export type IdentidadeMarca = {
   nome: string;
   /** Nome do arquivo em /public/marcas (sem extensão). null = ainda sem logo. */
   logo: string | null;
+  /**
+   * Versão para FUNDO ESCURO (logins e header do sistema). Marcas cujo nome é
+   * escrito em cor escura ficam ilegíveis no fundo #1e293b sem isto. Ausente =
+   * a logo padrão serve nos dois fundos.
+   */
+  logoEscura?: string;
   /** Ajuste fino de altura na tela de login (algumas logos são mais altas). */
   classeLogin?: string;
   /** Ajuste fino no header do sistema. */
@@ -42,11 +48,29 @@ export const MARCAS: Record<string, IdentidadeMarca> = {
   },
   unificado: { nome: "Unificado", logo: "unificado" },
   // Escolas Integradas Raiz (domínios liberados em 2026-08-06, PR #145).
-  // Assim que os PNGs entrarem em /public/marcas, trocar `logo: null` pelo arquivo.
-  "sa-pereira": { nome: "Sá Pereira", logo: null },
-  "escola-sap": { nome: "Escola SAP", logo: null },
-  "cubo-global": { nome: "Cubo Global", logo: null },
-  "colegio-leonardo-da-vinci": { nome: "Colégio Leonardo da Vinci", logo: null },
+  // Logos do Drive _Logotipos, pasta RGB-Digital de cada marca. As quatro têm o
+  // nome escrito em cor escura, então todas precisam da versão para fundo escuro.
+  "sa-pereira": {
+    nome: "Sá Pereira",
+    logo: "sapereira",
+    logoEscura: "sapereira-escuro",
+    // logo quase quadrada (AR 1.24): limitar a altura evita que domine o header
+    classeLogin: "max-h-32",
+    classeHeaderSistema: "max-h-14 max-w-[140px]",
+  },
+  "escola-sap": {
+    nome: "Escola SAP",
+    logo: "escolasap",
+    logoEscura: "escolasap-escuro",
+    classeHeaderSistema: "max-h-14 max-w-[200px]",
+  },
+  "cubo-global": { nome: "Cubo Global", logo: "cuboglobal", logoEscura: "cuboglobal-escuro" },
+  "colegio-leonardo-da-vinci": {
+    nome: "Colégio Leonardo da Vinci",
+    logo: "clv",
+    logoEscura: "clv-escuro",
+    classeHeaderSistema: "max-h-[68px] max-w-[224px]",
+  },
 };
 
 export const LOGO_RAIZ = "/logo-raiz.png";
@@ -57,12 +81,25 @@ export const NOME_RAIZ = "Raiz Educação";
  * do disco em `public/marcas` — geradores de DOCX do calendário e das olimpíadas.
  * Retorna null quando a marca ainda não tem logo própria.
  */
-export function arquivoLogoDaMarca(slug: string | null | undefined): string | null {
-  return (slug && MARCAS[slug]?.logo) || null;
+export function arquivoLogoDaMarca(
+  slug: string | null | undefined,
+  fundo: "claro" | "escuro" = "claro",
+): string | null {
+  const m = slug ? MARCAS[slug] : undefined;
+  return (fundo === "escuro" ? (m?.logoEscura ?? m?.logo) : m?.logo) || null;
 }
 
-/** Identidade de um slug, com fallback da rede quando o slug é nulo/desconhecido. */
-export function identidadeDaMarca(slug: string | null | undefined): {
+/**
+ * Identidade de um slug, com fallback da rede quando o slug é nulo/desconhecido.
+ *
+ * `fundo` escolhe a arte: "escuro" (logins e header do sistema, #1e293b) usa a
+ * versão negativa quando a marca tem uma; "claro" (header do aluno e documentos)
+ * usa sempre a colorida.
+ */
+export function identidadeDaMarca(
+  slug: string | null | undefined,
+  fundo: "claro" | "escuro" = "escuro",
+): {
   nome: string;
   src: string;
   temLogoPropria: boolean;
@@ -70,10 +107,11 @@ export function identidadeDaMarca(slug: string | null | undefined): {
   classeHeaderSistema: string;
 } {
   const m = slug ? MARCAS[slug] : undefined;
+  const arquivo = fundo === "escuro" ? (m?.logoEscura ?? m?.logo) : m?.logo;
   return {
     nome: m?.nome ?? NOME_RAIZ,
-    src: m?.logo ? `/marcas/${m.logo}.png` : LOGO_RAIZ,
-    temLogoPropria: !!m?.logo,
+    src: arquivo ? `/marcas/${arquivo}.png` : LOGO_RAIZ,
+    temLogoPropria: !!arquivo,
     classeLogin: m?.classeLogin ?? "max-h-40",
     classeHeaderSistema: m?.classeHeaderSistema ?? "max-h-16 max-w-[200px]",
   };
