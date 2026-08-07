@@ -6,7 +6,7 @@ import { randomBytes } from "crypto";
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get("mode") ?? "aluno";
   const isPopup = request.nextUrl.searchParams.get("popup") === "1";
-  const origin = request.nextUrl.origin;
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
 
   const nonce = randomBytes(16).toString("hex");
   const state = `${nonce}:${mode}${isPopup ? ":popup" : ""}`;

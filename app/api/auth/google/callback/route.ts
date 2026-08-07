@@ -43,7 +43,8 @@ async function verifyIdToken(token: string): Promise<GooglePayload> {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
