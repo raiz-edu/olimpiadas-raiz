@@ -140,4 +140,4 @@ jobs:
               --load-balancers "targetGroupArn=$TARGET_GROUP,containerName=web,containerPort=3000" >/dev/null
           fi
           aws ecs wait services-stable --cluster "$CLUSTER" --services "$ECS_SERVICE"
-          aws elasticloadbalancing describe-target-health --target-group-arn "$TARGET_GROUP"
+          aws elbv2 describe-target-health --target-group-arn "$TARGET_GROUP"
