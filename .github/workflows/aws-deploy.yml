@@ -82,7 +82,7 @@ jobs:
           SENTRY_DSN: ${{ steps.config.outputs.sentry_dsn }}
         run: |
           set -euo pipefail
-          image="$REPOSITORY:${GITHUB_SHA}"
+          image="$REPOSITORY:${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           docker build \
             --build-arg NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
