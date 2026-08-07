@@ -1,0 +1,142 @@
+name: Deploy AWS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: olimpiadas-raiz-aws-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: sa-east-1
+  STACK_NAME: olimpiadas-raiz-prd-foundation
+  ECS_SERVICE: olimpiadas-raiz-prd-web
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: aws-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::757843862365:role/olimpiadas-raiz-prd-github-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read infrastructure outputs
+        id: infra
+        shell: bash
+        run: |
+          set -euo pipefail
+          output() {
+            aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
+          }
+          echo "cluster=$(output EcsClusterName)" >> "$GITHUB_OUTPUT"
+          echo "repository=$(output EcrRepositoryUri)" >> "$GITHUB_OUTPUT"
+          echo "subnets=$(output AppSubnetIds)" >> "$GITHUB_OUTPUT"
+          echo "security_group=$(output AppSecurityGroupId)" >> "$GITHUB_OUTPUT"
+          echo "target_group=$(output TargetGroupArn)" >> "$GITHUB_OUTPUT"
+          echo "execution_role=$(output TaskExecutionRoleArn)" >> "$GITHUB_OUTPUT"
+          echo "task_role=$(output TaskRoleArn)" >> "$GITHUB_OUTPUT"
+          echo "secret_arn=$(output RuntimeSecretArn)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate runtime configuration
+        id: config
+        shell: bash
+        env:
+          SECRET_ARN: ${{ steps.infra.outputs.secret_arn }}
+        run: |
+          set -euo pipefail
+          secret_json="$(aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query SecretString --output text)"
+          required=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET SESSION_SIGNING_SECRET)
+          for key in "${required[@]}"; do
+            jq -e --arg key "$key" '.[$key] | type == "string" and length > 0' <<< "$secret_json" >/dev/null || {
+              echo "::error::Configuração obrigatória ausente: $key"
+              exit 1
+            }
+          done
+          {
+            echo "supabase_url=$(jq -r '.NEXT_PUBLIC_SUPABASE_URL' <<< "$secret_json")"
+            echo "supabase_anon_key=$(jq -r '.NEXT_PUBLIC_SUPABASE_ANON_KEY' <<< "$secret_json")"
+            echo "sentry_dsn=$(jq -r '.NEXT_PUBLIC_SENTRY_DSN // ""' <<< "$secret_json")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: image
+        shell: bash
+        env:
+          REPOSITORY: ${{ steps.infra.outputs.repository }}
+          SUPABASE_URL: ${{ steps.config.outputs.supabase_url }}
+          SUPABASE_ANON_KEY: ${{ steps.config.outputs.supabase_anon_key }}
+          SENTRY_DSN: ${{ steps.config.outputs.sentry_dsn }}
+        run: |
+          set -euo pipefail
+          image="$REPOSITORY:${GITHUB_SHA}"
+          docker build \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --build-arg NEXT_PUBLIC_APP_URL="https://olimpiadas.raizeducacao.com.br" \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN="$SENTRY_DSN" \
+            --tag "$image" .
+          docker push "$image"
+          echo "uri=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Register task definition
+        id: task
+        shell: bash
+        env:
+          IMAGE: ${{ steps.image.outputs.uri }}
+          SECRET_ARN: ${{ steps.infra.outputs.secret_arn }}
+          EXECUTION_ROLE: ${{ steps.infra.outputs.execution_role }}
+          TASK_ROLE: ${{ steps.infra.outputs.task_role }}
+        run: |
+          set -euo pipefail
+          keys=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET SESSION_SIGNING_SECRET GROQ_API_KEY RESEND_API_KEY RESEND_FROM_EMAIL NEXT_PUBLIC_SENTRY_DSN SENTRY_AUTH_TOKEN SENTRY_ORG SENTRY_PROJECT RAIZ_DATA_ENGINE_URL RAIZ_DATA_ENGINE_TOKEN)
+          secret_json="$(aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query SecretString --output text)"
+          secrets='[]'
+          for key in "${keys[@]}"; do
+            if jq -e --arg key "$key" '.[$key] | type == "string" and length > 0' <<< "$secret_json" >/dev/null; then
+              secrets="$(jq --arg name "$key" --arg valueFrom "$SECRET_ARN:$key::" '. + [{name:$name,valueFrom:$valueFrom}]' <<< "$secrets")"
+            fi
+          done
+          jq -n \
+            --arg executionRoleArn "$EXECUTION_ROLE" \
+            --arg taskRoleArn "$TASK_ROLE" \
+            --arg image "$IMAGE" \
+            --arg revision "$GITHUB_SHA" \
+            --argjson secrets "$secrets" \
+            '{family:"olimpiadas-raiz-prd-web",networkMode:"awsvpc",requiresCompatibilities:["FARGATE"],cpu:"512",memory:"1024",executionRoleArn:$executionRoleArn,taskRoleArn:$taskRoleArn,containerDefinitions:[{name:"web",image:$image,essential:true,portMappings:[{containerPort:3000,protocol:"tcp"}],environment:[{name:"APP_ENV",value:"production"},{name:"APP_REVISION",value:$revision},{name:"NEXT_PUBLIC_APP_URL",value:"https://olimpiadas.raizeducacao.com.br"}],secrets:$secrets,logConfiguration:{logDriver:"awslogs",options:{"awslogs-group":"/ecs/olimpiadas-raiz/prd","awslogs-region":"sa-east-1","awslogs-stream-prefix":"web"}},healthCheck:{command:["CMD-SHELL","node -e \"fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""],interval:30,timeout:5,retries:3,startPeriod:60}}]}' > task-definition.json
+          task_arn="$(aws ecs register-task-definition --cli-input-json file://task-definition.json --query taskDefinition.taskDefinitionArn --output text)"
+          echo "arn=$task_arn" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update ECS service
+        shell: bash
+        env:
+          CLUSTER: ${{ steps.infra.outputs.cluster }}
+          TASK_DEFINITION: ${{ steps.task.outputs.arn }}
+          SUBNETS: ${{ steps.infra.outputs.subnets }}
+          SECURITY_GROUP: ${{ steps.infra.outputs.security_group }}
+          TARGET_GROUP: ${{ steps.infra.outputs.target_group }}
+        run: |
+          set -euo pipefail
+          if aws ecs describe-services --cluster "$CLUSTER" --services "$ECS_SERVICE" --query 'services[0].status' --output text 2>/dev/null | grep -q ACTIVE; then
+            aws ecs update-service --cluster "$CLUSTER" --service "$ECS_SERVICE" --task-definition "$TASK_DEFINITION" --force-new-deployment >/dev/null
+          else
+            aws ecs create-service --cluster "$CLUSTER" --service-name "$ECS_SERVICE" \
+              --task-definition "$TASK_DEFINITION" --desired-count 2 --launch-type FARGATE \
+              --health-check-grace-period-seconds 120 \
+              --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=DISABLED}" \
+              --load-balancers "targetGroupArn=$TARGET_GROUP,containerName=web,containerPort=3000" >/dev/null
+          fi
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$ECS_SERVICE"
+          aws elasticloadbalancing describe-target-health --target-group-arn "$TARGET_GROUP"
