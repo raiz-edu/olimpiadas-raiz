@@ -287,6 +287,15 @@ export async function criarUsuarioDireto(
     return { error: dbError.message };
   }
 
+  // Vínculo em usuario_marca: o convite (via trigger) e o primeiro login pelo
+  // Google já gravam os dois lados; sem isto, quem é criado por aqui ficaria só
+  // com marca_ativa_id e sumiria de qualquer consulta que use o vínculo.
+  if (marcaId) {
+    await supabase
+      .from("usuario_marca")
+      .insert({ usuario_id: authData.user.id, marca_id: marcaId });
+  }
+
   revalidatePath(PATH);
   return { ok: true, tempPassword, email };
 }

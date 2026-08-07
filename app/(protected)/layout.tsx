@@ -16,19 +16,36 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   const { user } = session;
 
-  // Busca a marca do usuário
+  // Marca do usuário para a logo do header.
+  //
+  // A fonte é `usuario.marca_ativa_id` — é o que as telas gravam (cadastro pela
+  // interface, primeiro login pelo Google) e o que a lista de Usuários exibe na
+  // coluna Marca. Antes daqui só se lia `usuario_marca`, então quem era criado
+  // pela tela ficava com a marca certa na lista e a logo da Raiz no header.
+  // O fallback em `usuario_marca` cobre quem entrou pelo convite antigo, onde o
+  // vínculo é criado por trigger do banco.
   let marcaSlug: string | null = null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createAdminClient() as any;
-    const { data } = await supabase
-      .from("usuario_marca")
-      .select("marca:marca_id(slug)")
-      .eq("usuario_id", user.id)
-      .limit(1)
-      .single();
-    const marca = Array.isArray(data?.marca) ? data.marca[0] : data?.marca;
-    marcaSlug = marca?.slug ?? null;
+    if (user.marca_ativa_id) {
+      const { data } = await supabase
+        .from("marca")
+        .select("slug")
+        .eq("id", user.marca_ativa_id)
+        .maybeSingle();
+      marcaSlug = data?.slug ?? null;
+    }
+    if (!marcaSlug) {
+      const { data } = await supabase
+        .from("usuario_marca")
+        .select("marca:marca_id(slug)")
+        .eq("usuario_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      const marca = Array.isArray(data?.marca) ? data.marca[0] : data?.marca;
+      marcaSlug = marca?.slug ?? null;
+    }
   } catch {
     marcaSlug = null;
   }
