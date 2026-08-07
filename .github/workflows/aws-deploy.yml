@@ -1,6 +1,8 @@
 name: Deploy AWS
 
 on:
+  push:
+    branches: [aws]
   workflow_dispatch:
 
 permissions:
