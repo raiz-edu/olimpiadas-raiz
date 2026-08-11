@@ -1,9 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { login } from "@/app/login/actions";
+import { createClient } from "@/lib/supabase/client";
 import { inputClass } from "@/components/ui/form-field";
+
+const subscribeNoop = () => () => {};
 
 type LoginState = {
   error?: string;
@@ -22,9 +25,93 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const erroOAuth = searchParams.get("erro") ? ERROS_OAUTH[searchParams.get("erro")!] : null;
 
+  // Plataforma embutida em iframe (Painel Pedagógico): o Google proíbe OAuth em
+  // contexto embutido, então o login abre em popup e a sessão Supabase volta por
+  // postMessage + setSession (mesmo padrão do login do aluno).
+  const embutido = useSyncExternalStore(
+    subscribeNoop,
+    () => window.self !== window.top,
+    () => false,
+  );
+  // popup=1: este documento É o popup de login (erros continuam nele)
+  const popupMode = searchParams.get("popup") === "1";
+  const [popupBloqueado, setPopupBloqueado] = useState(false);
+  const [sessaoErro, setSessaoErro] = useState(false);
+  const sessaoEmAndamento = useRef(false);
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (window.self === window.top) return;
+      // Segurança: só aceita tokens vindos da própria origem (o popup é nosso).
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as {
+        type?: string;
+        access_token?: string;
+        refresh_token?: string;
+      } | null;
+      if (
+        data?.type !== "olimpiadas-auth-staff" ||
+        typeof data.access_token !== "string" ||
+        typeof data.refresh_token !== "string"
+      )
+        return;
+      if (sessaoEmAndamento.current) return;
+      sessaoEmAndamento.current = true;
+
+      // O particionamento de storage de terceiros do Chrome impede o iframe de
+      // enxergar a sessão criada no popup — aplica os tokens neste contexto.
+      const supabase = createClient();
+      supabase.auth
+        .setSession({ access_token: data.access_token, refresh_token: data.refresh_token })
+        .then(({ error }) => {
+          if (!error) {
+            window.location.href = "/dashboard";
+          } else {
+            sessaoEmAndamento.current = false;
+            setGooglePending(false);
+            setSessaoErro(true);
+          }
+        })
+        .catch(() => {
+          sessaoEmAndamento.current = false;
+          setGooglePending(false);
+          setSessaoErro(true);
+        });
+    }
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   function handleGoogle() {
+    if (embutido) {
+      // window.open síncrono dentro do clique conta como gesto do usuário e
+      // não é bloqueado; a URL já é final (OAuth próprio, sem await antes).
+      const win = window.open(
+        "/api/auth/google?mode=staff&popup=1",
+        "olimpiadas-google-login",
+        "popup,width=500,height=650",
+      );
+      if (!win) {
+        setPopupBloqueado(true);
+        return;
+      }
+      setPopupBloqueado(false);
+      setSessaoErro(false);
+      setGooglePending(true);
+      const timer = setInterval(() => {
+        if (win.closed) {
+          clearInterval(timer);
+          setGooglePending(false);
+        }
+      }, 500);
+      return;
+    }
     setGooglePending(true);
-    window.location.href = "/api/auth/google?mode=staff";
+    // Dentro do popup, mantém o flag para o fluxo voltar ao popup-callback.
+    window.location.href = popupMode
+      ? "/api/auth/google?mode=staff&popup=1"
+      : "/api/auth/google?mode=staff";
   }
 
   useEffect(() => {
@@ -83,6 +170,18 @@ export function LoginForm() {
       {erroOAuth && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {erroOAuth}
+        </p>
+      )}
+
+      {popupBloqueado && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          O navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.
+        </p>
+      )}
+
+      {sessaoErro && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          Não foi possível concluir o login. Tente novamente.
         </p>
       )}
 

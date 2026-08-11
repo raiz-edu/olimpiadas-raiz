@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
   // ── Portal staff (todo e-mail institucional) ────────────────────────────
   if (mode === "staff") {
     if (!isAllowedStaffEmail(email)) {
-      return NextResponse.redirect(`${origin}/login?erro=dominio`);
+      return NextResponse.redirect(`${origin}/login?erro=dominio${popupQS}`);
     }
 
     if (!podeEntrarNoPortalStaff(email)) {
@@ -123,12 +123,12 @@ export async function GET(request: NextRequest) {
       access_token: tokens.access_token,
     });
 
-    if (error) return NextResponse.redirect(`${origin}/login?erro=oauth`);
+    if (error) return NextResponse.redirect(`${origin}/login?erro=oauth${popupQS}`);
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return NextResponse.redirect(`${origin}/login?erro=oauth`);
+    if (!user) return NextResponse.redirect(`${origin}/login?erro=oauth${popupQS}`);
 
     const { data: usuario } = await admin
       .from("usuario")
@@ -154,10 +154,14 @@ export async function GET(request: NextRequest) {
       await marcarConviteAceito(conviteId);
     } else if (!usuario.ativo) {
       await supabase.auth.signOut();
-      return NextResponse.redirect(`${origin}/login?erro=inativo`);
+      return NextResponse.redirect(`${origin}/login?erro=inativo${popupQS}`);
     }
 
-    return NextResponse.redirect(`${origin}/dashboard`);
+    // Em popup (plataforma embutida no Painel), a sessão Supabase foi criada no
+    // jar do popup; /auth/popup-callback-staff entrega os tokens ao iframe.
+    return NextResponse.redirect(
+      `${origin}${isPopup ? "/auth/popup-callback-staff" : "/dashboard"}`,
+    );
   }
 
   // ── Portal aluno (default) ───────────────────────────────────────────────
