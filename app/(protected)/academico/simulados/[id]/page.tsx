@@ -20,6 +20,7 @@ import {
 import { SimuladoForm } from "../simulado-form";
 import { inputClass } from "@/components/ui/form-field";
 import { useUser } from "@/lib/auth/context";
+import { OLIMPIADA_LABEL, faseLabel } from "@/lib/questoes/olimpiadas";
 
 type Simulado = Awaited<ReturnType<typeof getSimuladoDetalhe>>;
 type Projeto = { id: string; nome: string; olimpiada_sigla: string; ano_letivo: number };
@@ -227,8 +228,9 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground">
-                      {q.olimpiada?.toUpperCase()} {q.fase != null ? `· ${q.fase}ª Fase` : ""} ·{" "}
-                      {q.ano} {q.numero != null ? `· Q${q.numero}` : ""}
+                      {q.olimpiada ? (OLIMPIADA_LABEL[q.olimpiada] ?? q.olimpiada) : ""}{" "}
+                      {q.fase != null ? `· ${faseLabel(q.olimpiada, q.fase)}` : ""} · {q.ano}{" "}
+                      {q.numero != null ? `· Q${q.numero}` : ""}
                       {q.topico ? ` · ${q.topico}` : ""}
                     </p>
                     <p className="text-sm text-foreground truncate">{q.enunciado}</p>
@@ -336,8 +338,9 @@ export default function EditarSimuladoPage({ params }: { params: Promise<{ id: s
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-0.5">
                             <p className="text-xs text-muted-foreground">
-                              {q.olimpiada?.toUpperCase()}{" "}
-                              {q.fase != null ? `· ${q.fase}ª Fase` : ""} · {q.ano}
+                              {q.olimpiada ? (OLIMPIADA_LABEL[q.olimpiada] ?? q.olimpiada) : ""}{" "}
+                              {q.fase != null ? `· ${faseLabel(q.olimpiada, q.fase)}` : ""} ·{" "}
+                              {q.ano}
                               {q.numero != null ? ` · Q${q.numero}` : ""}
                             </p>
                             {(q.usos ?? 0) > 0 && (
