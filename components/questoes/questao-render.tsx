@@ -77,7 +77,7 @@ export function QuestaoRender({
       ) : (
         <>
           <p className="text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
-            {questao.enunciado}
+            <FormattedText text={questao.enunciado} />
           </p>
           {questao.imagem_url && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -123,7 +123,11 @@ export function QuestaoRender({
                 {alt.letra}
               </span>
               <div className="flex-1">
-                {alt.texto && <p className="text-sm text-foreground">{alt.texto}</p>}
+                {alt.texto && (
+                  <p className="text-sm text-foreground">
+                    <FormattedText text={alt.texto} />
+                  </p>
+                )}
                 {alt.imagem_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
