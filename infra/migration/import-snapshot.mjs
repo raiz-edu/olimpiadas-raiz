@@ -11,6 +11,12 @@ const client = new pg.Client({
 });
 await client.connect();
 
+const marcasOrigem = JSON.parse(await readFile(path.join(inputDir, "marca.json"), "utf8"));
+for (const marca of marcasOrigem) {
+  // A origem produtiva é soberana sobre UUIDs fixos criados por seeds históricos.
+  await client.query("DELETE FROM marca WHERE slug = $1 AND id <> $2", [marca.slug, marca.id]);
+}
+
 // Preserva as chaves históricas durante a transição. A aplicação passa a usar
 // cognito_sub, mas as FKs legadas ainda referenciam auth.users até a migration
 // de identidade concluir o desacoplamento.
@@ -19,7 +25,7 @@ const alunosOrigem = JSON.parse(await readFile(path.join(inputDir, "aluno.json")
 for (const usuario of usuariosOrigem) {
   await client.query(
     `INSERT INTO auth.users(id, email, raw_user_meta_data)
-     VALUES ($1, $2, jsonb_build_object('nome', $3)) ON CONFLICT (id) DO NOTHING`,
+     VALUES ($1, $2, jsonb_build_object('nome', $3::text)) ON CONFLICT (id) DO NOTHING`,
     [usuario.id, usuario.email, usuario.nome],
   );
 }
@@ -27,7 +33,7 @@ for (const aluno of alunosOrigem) {
   if (!aluno.supabase_auth_id || !aluno.email) continue;
   await client.query(
     `INSERT INTO auth.users(id, email, raw_user_meta_data)
-     VALUES ($1, $2, jsonb_build_object('nome', $3, 'tipo', 'aluno')) ON CONFLICT (id) DO NOTHING`,
+     VALUES ($1, $2, jsonb_build_object('nome', $3::text, 'tipo', 'aluno')) ON CONFLICT (id) DO NOTHING`,
     [aluno.supabase_auth_id, aluno.email, aluno.nome],
   );
 }
@@ -39,8 +45,10 @@ const order = [
   "usuario",
   "usuario_marca",
   "usuario_unidade",
+  "usuario_turma",
   "aluno",
   "olimpiada",
+  "olimpiada_marca",
   "olimpiada_fase",
   "inscricao",
   "resultado",
@@ -62,6 +70,7 @@ const order = [
   "apostila_aplicacao",
   "configuracao_sistema",
   "convite",
+  "audit_log",
   "simulado_sessao",
 ].filter((table) => Object.hasOwn(manifest.tables, table));
 
