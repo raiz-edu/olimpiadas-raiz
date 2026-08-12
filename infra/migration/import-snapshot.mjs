@@ -72,10 +72,19 @@ const order = [
   "convite",
   "audit_log",
   "simulado_sessao",
-].filter((table) => Object.hasOwn(manifest.tables, table));
+];
+
+const existingTables = new Set(
+  (await client.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).rows.map(
+    ({ tablename }) => tablename,
+  ),
+);
+const importOrder = order.filter(
+  (table) => Object.hasOwn(manifest.tables, table) && existingTables.has(table),
+);
 
 try {
-  for (const table of order) {
+  for (const table of importOrder) {
     const rows = JSON.parse(await readFile(path.join(inputDir, `${table}.json`), "utf8"));
     if (rows.length !== manifest.tables[table])
       throw new Error(`${table}: contagem de origem divergente`);

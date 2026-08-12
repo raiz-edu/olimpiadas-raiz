@@ -9,5 +9,5 @@
 import { createAwsDataClient } from "@/lib/aws/backend";
 
 export function createAdminClient() {
-  return createAwsDataClient();
+  return createAwsDataClient(null, true);
 }

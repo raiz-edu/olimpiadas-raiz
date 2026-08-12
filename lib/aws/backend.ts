@@ -176,9 +176,25 @@ function storageAdapter() {
   };
 }
 
-export function createAwsDataClient(currentUser?: AuthUser | null) {
+function postgrestToken(role: "anon" | "authenticated" | "service_role", sub: string) {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const header = encode({ alg: "HS256", typ: "JWT" });
+  const payload = encode({
+    role,
+    sub,
+    exp: Math.floor(Date.now() / 1000) + 300,
+  });
+  const signature = createHmac("sha256", required("SESSION_SIGNING_SECRET"))
+    .update(`${header}.${payload}`)
+    .digest("base64url");
+  return `${header}.${payload}.${signature}`;
+}
+
+export function createAwsDataClient(currentUser?: AuthUser | null, admin = false) {
+  const role = admin ? "service_role" : currentUser ? "authenticated" : "anon";
+  const sub = currentUser?.id ?? "00000000-0000-0000-0000-000000000000";
   const postgrest = new PostgrestClient<Database>(required("POSTGREST_URL"), {
-    headers: { "X-Olimpiadas-User": currentUser?.id ?? "system" },
+    headers: { Authorization: `Bearer ${postgrestToken(role, sub)}` },
   });
 
   return Object.assign(postgrest, {
