@@ -1,10 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "@/lib/types/database";
 import { AulaPlayer } from "@/components/aluno/aula-player";
 import { MaterialList } from "@/components/aluno/material-list";
 import { TreinoClient } from "@/app/aluno/(area)/treino/treino-client";
@@ -40,21 +38,7 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
+  const supabase = createAdminClient();
 
   const { data: aula } = await supabase
     .from("preparacao_aula")
@@ -68,10 +52,9 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
   if (!aula) notFound();
 
   const adminClient = createAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const materiais = (aula as any).materiais ?? [];
   const materiaisComUrl = await Promise.all(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     materiais.map(async (m: any) => {
       const { data } = await adminClient.storage
         .from("preparacao-materiais")
@@ -81,7 +64,7 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
   );
 
   // Questões vinculadas a esta aula
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const { data: aulaQuestoes } = await (adminClient as any)
     .from("preparacao_aula_questao")
     .select(
@@ -97,7 +80,6 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
   const primeiraAlt =
     questoesAula.length > 0 ? await getAlternativasQuestao(questoesAula[0].id) : [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const projeto = (aula as any).projeto;
   const isLive = aula.tipo === "online" && isLiveNow(aula.data_hora);
   const waitingForLive = aula.tipo === "online" && isBeforeLive(aula.data_hora);

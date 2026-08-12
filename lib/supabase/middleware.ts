@@ -1,6 +1,5 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/lib/types/database";
+import { STAFF_SESSION_COOKIE } from "@/lib/auth/cognito-session";
 
 function getRouteAccess(pathname: string) {
   const isAuthPage = pathname.startsWith("/login");
@@ -34,43 +33,12 @@ function getRouteAccess(pathname: string) {
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { isPublicPath } = getRouteAccess(pathname);
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    if (isPublicPath) return NextResponse.next({ request });
-
+  const hasStaffSession = Boolean(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+  if (!hasStaffSession && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  let supabaseResponse = NextResponse.next({ request });
-
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
-        );
-      },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user && !isPublicPath) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  return supabaseResponse;
+  return NextResponse.next({ request });
 }

@@ -1,6 +1,5 @@
 "use server";
 
-import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -23,20 +22,6 @@ const MARCA_HINT_OPTS = {
 };
 
 export type LoginAlunoState = { error: string } | { needsConsent: true } | null;
-
-// Cliente isolado: não lê nem escreve cookies do request — não interfere com sessão do admin.
-function makeVerifySupabase() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => [],
-        setAll: () => {},
-      },
-    },
-  );
-}
 
 export async function loginAluno(
   _prevState: LoginAlunoState,
@@ -91,8 +76,7 @@ export async function loginAluno(
   if (!email || !password) return { error: "Preencha e-mail e senha." };
 
   // Cliente isolado: verifica credenciais sem tocar nos cookies do request
-  const supabase = makeVerifySupabase();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await adminClient.auth.signInWithPassword({ email, password });
 
   if (error) {
     const isInvalid =

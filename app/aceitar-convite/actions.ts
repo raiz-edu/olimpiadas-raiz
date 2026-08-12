@@ -1,10 +1,14 @@
 "use server";
 
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { Database, Convite } from "@/lib/types/database";
+import type { Convite } from "@/lib/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  STAFF_SESSION_COOKIE,
+  signCognitoSession,
+  staffCookieOptions,
+} from "@/lib/auth/cognito-session";
 
 type AceitarState = { error?: string } | null;
 
@@ -43,29 +47,16 @@ export async function aceitarConvite(
     return { error: "Este convite expirou. Solicite um novo convite ao administrador." };
   }
 
-  // Criar usuário via Supabase Auth Admin API (REST)
-  const signUpResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      },
-      body: JSON.stringify({
-        email: convite.email,
-        password,
-        email_confirm: true,
-        user_metadata: { nome, convite_token: token },
-      }),
-    },
-  );
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    email: convite.email,
+    password,
+    email_confirm: true,
+    user_metadata: { nome, convite_token: token },
+  });
 
-  if (!signUpResponse.ok) {
-    const err = (await signUpResponse.json()) as { msg?: string; message?: string };
-    const msg = err.msg ?? err.message ?? "";
-    if (msg.toLowerCase().includes("already registered")) {
+  if (authError || !authData.user) {
+    const msg = authError?.message ?? "";
+    if (msg.toLowerCase().includes("exists")) {
       return {
         error:
           "Este e-mail já possui cadastro. Faça login com sua senha ou contate o administrador.",
@@ -75,7 +66,7 @@ export async function aceitarConvite(
     return { error: "Erro ao criar conta. Tente novamente." };
   }
 
-  const newAuthUser = (await signUpResponse.json()) as { id: string };
+  const newAuthUser = authData.user;
 
   // Marcar convite como aceito
   await supabaseAdmin
@@ -112,23 +103,17 @@ export async function aceitarConvite(
       });
   }
 
-  // Login automático após aceitar convite
+  // Login automático após aceitar convite, por sessão BFF assinada.
   const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
+  cookieStore.set(
+    STAFF_SESSION_COOKIE,
+    signCognitoSession({
+      sub: newAuthUser.id,
+      email: convite.email,
+      name: nome,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    }),
+    staffCookieOptions,
   );
-
-  await supabase.auth.signInWithPassword({ email: convite.email, password });
   redirect("/dashboard");
 }

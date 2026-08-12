@@ -1,7 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database, RoleUsuario, Usuario } from "@/lib/types/database";
+import type { RoleUsuario, Usuario } from "@/lib/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readCognitoSession } from "@/lib/auth/cognito-session";
 
 export type ServerSession = {
   user: Usuario;
@@ -14,30 +13,8 @@ export type ServerSession = {
  * Retorna null se não autenticado ou se o usuário ainda não tiver registro.
  */
 export async function getServerSession(): Promise<ServerSession> {
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-
-  if (!authUser) return null;
+  const identity = await readCognitoSession();
+  if (!identity) return null;
 
   // Admin client bypassa RLS para garantir que a leitura do usuario funcione
   // tanto em Server Components quanto em Server Actions
@@ -45,7 +22,7 @@ export async function getServerSession(): Promise<ServerSession> {
   const { data: usuario, error } = await admin
     .from("usuario")
     .select("*")
-    .eq("id", authUser.id)
+    .eq("email", identity.email)
     .eq("ativo", true)
     .single();
 
@@ -53,7 +30,7 @@ export async function getServerSession(): Promise<ServerSession> {
 
   return {
     user: usuario,
-    supabaseUserId: authUser.id,
+    supabaseUserId: identity.sub,
   };
 }
 

@@ -2,9 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "@/lib/types/database";
 import { getAlternativasQuestao } from "@/app/aluno/(area)/treino/actions";
 import { ProjetoPageClient, type AulaCompleta } from "./projeto-page-client";
 
@@ -16,21 +13,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
+  const supabase = createAdminClient();
 
   const { data: projeto } = await supabase
     .from("preparacao_projeto")

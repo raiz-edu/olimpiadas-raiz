@@ -56,18 +56,14 @@ jobs:
         run: |
           set -euo pipefail
           secret_json="$(aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query SecretString --output text)"
-          required=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET SESSION_SIGNING_SECRET)
+          required=(DATABASE_URL COGNITO_USER_POOL_ID COGNITO_CLIENT_ID COGNITO_CLIENT_SECRET COGNITO_DOMAIN SESSION_SIGNING_SECRET STORAGE_BUCKET)
           for key in "${required[@]}"; do
             jq -e --arg key "$key" '.[$key] | type == "string" and length > 0' <<< "$secret_json" >/dev/null || {
               echo "::error::Configuração obrigatória ausente: $key"
               exit 1
             }
           done
-          {
-            echo "supabase_url=$(jq -r '.NEXT_PUBLIC_SUPABASE_URL' <<< "$secret_json")"
-            echo "supabase_anon_key=$(jq -r '.NEXT_PUBLIC_SUPABASE_ANON_KEY' <<< "$secret_json")"
-            echo "sentry_dsn=$(jq -r '.NEXT_PUBLIC_SENTRY_DSN // ""' <<< "$secret_json")"
-          } >> "$GITHUB_OUTPUT"
+          echo "sentry_dsn=$(jq -r '.NEXT_PUBLIC_SENTRY_DSN // ""' <<< "$secret_json")" >> "$GITHUB_OUTPUT"
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -77,20 +73,40 @@ jobs:
         shell: bash
         env:
           REPOSITORY: ${{ steps.infra.outputs.repository }}
-          SUPABASE_URL: ${{ steps.config.outputs.supabase_url }}
-          SUPABASE_ANON_KEY: ${{ steps.config.outputs.supabase_anon_key }}
           SENTRY_DSN: ${{ steps.config.outputs.sentry_dsn }}
         run: |
           set -euo pipefail
           image="$REPOSITORY:${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           docker build \
-            --build-arg NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
-            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --build-arg NEXT_PUBLIC_APP_URL="https://olimpiadas.raizeducacao.com.br" \
             --build-arg NEXT_PUBLIC_SENTRY_DSN="$SENTRY_DSN" \
             --tag "$image" .
           docker push "$image"
+          migration_image="$REPOSITORY:migration-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --file Dockerfile.migration --tag "$migration_image" .
+          docker push "$migration_image"
           echo "uri=$image" >> "$GITHUB_OUTPUT"
+          echo "migration_uri=$migration_image" >> "$GITHUB_OUTPUT"
+
+      - name: Apply Aurora schema
+        shell: bash
+        env:
+          IMAGE: ${{ steps.image.outputs.migration_uri }}
+          SECRET_ARN: ${{ steps.infra.outputs.secret_arn }}
+          EXECUTION_ROLE: ${{ steps.infra.outputs.execution_role }}
+          TASK_ROLE: ${{ steps.infra.outputs.task_role }}
+          CLUSTER: ${{ steps.infra.outputs.cluster }}
+          SUBNETS: ${{ steps.infra.outputs.subnets }}
+          SECURITY_GROUP: ${{ steps.infra.outputs.security_group }}
+        run: |
+          set -euo pipefail
+          jq -n --arg executionRoleArn "$EXECUTION_ROLE" --arg taskRoleArn "$TASK_ROLE" --arg image "$IMAGE" --arg database "$SECRET_ARN:DATABASE_URL::" \
+            '{family:"olimpiadas-raiz-prd-migration",networkMode:"awsvpc",requiresCompatibilities:["FARGATE"],cpu:"512",memory:"1024",executionRoleArn:$executionRoleArn,taskRoleArn:$taskRoleArn,containerDefinitions:[{name:"migration",image:$image,essential:true,secrets:[{name:"DATABASE_URL",valueFrom:$database}],logConfiguration:{logDriver:"awslogs",options:{"awslogs-group":"/ecs/olimpiadas-raiz-prd","awslogs-region":"sa-east-1","awslogs-stream-prefix":"migration"}}}]}' > migration-task.json
+          task_definition="$(aws ecs register-task-definition --cli-input-json file://migration-task.json --query taskDefinition.taskDefinitionArn --output text)"
+          task="$(aws ecs run-task --cluster "$CLUSTER" --task-definition "$task_definition" --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=DISABLED}" --query 'tasks[0].taskArn' --output text)"
+          aws ecs wait tasks-stopped --cluster "$CLUSTER" --tasks "$task"
+          exit_code="$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$task" --query 'tasks[0].containers[0].exitCode' --output text)"
+          test "$exit_code" = "0"
 
       - name: Register task definition
         id: task
@@ -102,7 +118,7 @@ jobs:
           TASK_ROLE: ${{ steps.infra.outputs.task_role }}
         run: |
           set -euo pipefail
-          keys=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET SESSION_SIGNING_SECRET GROQ_API_KEY RESEND_API_KEY RESEND_FROM_EMAIL NEXT_PUBLIC_SENTRY_DSN SENTRY_AUTH_TOKEN SENTRY_ORG SENTRY_PROJECT RAIZ_DATA_ENGINE_URL RAIZ_DATA_ENGINE_TOKEN)
+          keys=(COGNITO_USER_POOL_ID COGNITO_CLIENT_ID COGNITO_CLIENT_SECRET COGNITO_DOMAIN SESSION_SIGNING_SECRET STORAGE_BUCKET GROQ_API_KEY RESEND_API_KEY RESEND_FROM_EMAIL NEXT_PUBLIC_SENTRY_DSN SENTRY_AUTH_TOKEN SENTRY_ORG SENTRY_PROJECT RAIZ_DATA_ENGINE_URL RAIZ_DATA_ENGINE_TOKEN)
           secret_json="$(aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query SecretString --output text)"
           secrets='[]'
           for key in "${keys[@]}"; do
@@ -115,8 +131,9 @@ jobs:
             --arg taskRoleArn "$TASK_ROLE" \
             --arg image "$IMAGE" \
             --arg revision "$GITHUB_SHA" \
+            --arg secret_arn "$SECRET_ARN" \
             --argjson secrets "$secrets" \
-            '{family:"olimpiadas-raiz-prd-web",networkMode:"awsvpc",requiresCompatibilities:["FARGATE"],cpu:"512",memory:"1024",executionRoleArn:$executionRoleArn,taskRoleArn:$taskRoleArn,containerDefinitions:[{name:"web",image:$image,essential:true,portMappings:[{containerPort:3000,protocol:"tcp"}],environment:[{name:"APP_ENV",value:"production"},{name:"APP_REVISION",value:$revision},{name:"NEXT_PUBLIC_APP_URL",value:"https://olimpiadas.raizeducacao.com.br"}],secrets:$secrets,logConfiguration:{logDriver:"awslogs",options:{"awslogs-group":"/ecs/olimpiadas-raiz-prd","awslogs-region":"sa-east-1","awslogs-stream-prefix":"web"}}}]}' > task-definition.json
+            '{family:"olimpiadas-raiz-prd-web",networkMode:"awsvpc",requiresCompatibilities:["FARGATE"],cpu:"1024",memory:"2048",executionRoleArn:$executionRoleArn,taskRoleArn:$taskRoleArn,containerDefinitions:[{name:"postgrest",image:"postgrest/postgrest:v12.2.8",essential:true,environment:[{name:"PGRST_DB_SCHEMAS",value:"public"},{name:"PGRST_DB_ANON_ROLE",value:"olimpiadas_api"},{name:"PGRST_SERVER_PORT",value:"3001"}],secrets:[{name:"PGRST_DB_URI",valueFrom:($secret_arn + ":DATABASE_URL::")}],logConfiguration:{logDriver:"awslogs",options:{"awslogs-group":"/ecs/olimpiadas-raiz-prd","awslogs-region":"sa-east-1","awslogs-stream-prefix":"postgrest"}}},{name:"web",image:$image,essential:true,dependsOn:[{containerName:"postgrest",condition:"START"}],portMappings:[{containerPort:3000,protocol:"tcp"}],environment:[{name:"APP_ENV",value:"production"},{name:"APP_REVISION",value:$revision},{name:"NEXT_PUBLIC_APP_URL",value:"https://olimpiadas.raizeducacao.com.br"},{name:"POSTGREST_URL",value:"http://127.0.0.1:3001"}],secrets:$secrets,logConfiguration:{logDriver:"awslogs",options:{"awslogs-group":"/ecs/olimpiadas-raiz-prd","awslogs-region":"sa-east-1","awslogs-stream-prefix":"web"}}}]}' > task-definition.json
           task_arn="$(aws ecs register-task-definition --cli-input-json file://task-definition.json --query taskDefinition.taskDefinitionArn --output text)"
           echo "arn=$task_arn" >> "$GITHUB_OUTPUT"
 

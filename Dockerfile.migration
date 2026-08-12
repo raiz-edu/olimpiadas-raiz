@@ -1,0 +1,8 @@
+FROM node:24-bookworm-slim
+WORKDIR /migration
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+COPY infra/migration ./runner
+COPY supabase/migrations ./sql
+ENTRYPOINT ["node"]
+CMD ["runner/bootstrap-aurora.mjs", "/migration/sql"]

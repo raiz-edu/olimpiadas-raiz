@@ -1,0 +1,181 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Dados AWS nativos do modulo Olimpiadas Raiz.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: olimpiadas-raiz
+  Environment:
+    Type: String
+    Default: prd
+    AllowedValues: [dev, prd]
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  AppSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+  AppSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+
+Resources:
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL somente a partir das tasks do Olimpiadas Raiz
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref AppSecurityGroupId
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - { Key: Application, Value: !Ref ProjectName }
+        - { Key: Environment, Value: !Ref Environment }
+
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets privadas do banco Olimpíadas Raiz
+      SubnetIds: !Ref AppSubnetIds
+      Tags:
+        - { Key: Application, Value: !Ref ProjectName }
+        - { Key: Environment, Value: !Ref Environment }
+
+  DatabaseKmsKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: Criptografia do Aurora Olimpíadas Raiz
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnableRootPermissions
+            Effect: Allow
+            Principal: { AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root" }
+            Action: "kms:*"
+            Resource: "*"
+
+  DatabaseSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: !Sub "${ProjectName}/${Environment}/database"
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"olimpiadas_admin"}'
+        GenerateStringKey: password
+        PasswordLength: 40
+        ExcludeCharacters: '"@/\\'
+      Tags:
+        - { Key: Application, Value: !Ref ProjectName }
+        - { Key: Environment, Value: !Ref Environment }
+
+  DatabaseCluster:
+    Type: AWS::RDS::DBCluster
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBClusterIdentifier: !Sub "${ProjectName}-${Environment}"
+      Engine: aurora-postgresql
+      EngineMode: provisioned
+      DatabaseName: olimpiadas
+      Port: 5432
+      MasterUsername: !Sub "{{resolve:secretsmanager:${DatabaseSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}"
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      VpcSecurityGroupIds: [!Ref DatabaseSecurityGroup]
+      StorageEncrypted: true
+      KmsKeyId: !Ref DatabaseKmsKey
+      BackupRetentionPeriod: 14
+      PreferredBackupWindow: 05:00-06:00
+      PreferredMaintenanceWindow: sun:06:00-sun:07:00
+      DeletionProtection: true
+      CopyTagsToSnapshot: true
+      EnableCloudwatchLogsExports: [postgresql]
+      ServerlessV2ScalingConfiguration:
+        MinCapacity: 0.5
+        MaxCapacity: 4
+      Tags:
+        - { Key: Application, Value: !Ref ProjectName }
+        - { Key: Environment, Value: !Ref Environment }
+
+  DatabaseInstanceA:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DatabaseCluster
+      DBInstanceIdentifier: !Sub "${ProjectName}-${Environment}-a"
+      Engine: aurora-postgresql
+      DBInstanceClass: db.serverless
+      PubliclyAccessible: false
+      AutoMinorVersionUpgrade: true
+
+  DatabaseInstanceB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DatabaseCluster
+      DBInstanceIdentifier: !Sub "${ProjectName}-${Environment}-b"
+      Engine: aurora-postgresql
+      DBInstanceClass: db.serverless
+      PubliclyAccessible: false
+      AutoMinorVersionUpgrade: true
+
+  StorageKmsKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: Criptografia dos objetos Olimpíadas Raiz
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnableRootPermissions
+            Effect: Allow
+            Principal: { AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root" }
+            Action: "kms:*"
+            Resource: "*"
+
+  StorageBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-${Environment}-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !GetAtt StorageKmsKey.Arn
+            BucketKeyEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 }
+          - Id: NoncurrentVersions
+            Status: Enabled
+            NoncurrentVersionExpiration: { NoncurrentDays: 90 }
+      Tags:
+        - { Key: Application, Value: !Ref ProjectName }
+        - { Key: Environment, Value: !Ref Environment }
+
+Outputs:
+  DatabaseClusterArn: { Value: !GetAtt DatabaseCluster.DBClusterArn }
+  DatabaseEndpoint: { Value: !GetAtt DatabaseCluster.Endpoint.Address }
+  DatabasePort: { Value: !GetAtt DatabaseCluster.Endpoint.Port }
+  DatabaseName: { Value: olimpiadas }
+  DatabaseSecretArn: { Value: !Ref DatabaseSecret }
+  DatabaseSecurityGroupId: { Value: !Ref DatabaseSecurityGroup }
+  StorageBucketName: { Value: !Ref StorageBucket }
+  StorageBucketArn: { Value: !GetAtt StorageBucket.Arn }
+  StorageKmsKeyArn: { Value: !GetAtt StorageKmsKey.Arn }

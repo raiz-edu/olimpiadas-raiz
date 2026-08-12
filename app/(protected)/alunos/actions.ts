@@ -2,26 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "@/lib/types/database";
+import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/auth/roles";
 
 type ActionState = { error?: string } | null;
 
 async function makeClient() {
-  const cookieStore = await cookies();
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (list: Array<{ name: string; value: string; options: CookieOptions }>) =>
-          list.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
-      },
-    },
-  );
+  return createClient();
 }
 
 // ---------------------------------------------------------------------------

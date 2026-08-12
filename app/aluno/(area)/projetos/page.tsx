@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database, PreparacaoProjeto, PreparacaoAula } from "@/lib/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { PreparacaoProjeto, PreparacaoAula } from "@/lib/types/database";
 
 export const metadata = { title: "Projetos — Plataforma Olímpica" };
 
@@ -23,21 +22,7 @@ export default async function ProjetosPage() {
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cs) {
-          cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
+  const supabase = createAdminClient();
 
   const { data: inscricoes } = await supabase
     .from("inscricao")

@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Identidade Cognito independente do modulo Olimpiadas Raiz.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: olimpiadas-raiz
+  Environment:
+    Type: String
+    Default: prd
+    AllowedValues: [dev, prd]
+  ApplicationUrl:
+    Type: String
+    Default: https://olimpiadas.raizeducacao.com.br
+  RuntimeSecretArn:
+    Type: String
+  CognitoDomainPrefix:
+    Type: String
+    Default: olimpiadas-raiz-prd-757843862365
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Sub "${ProjectName}-${Environment}"
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 14
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 3
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: name
+          Required: false
+          Mutable: true
+      UserPoolTags:
+        Application: !Ref ProjectName
+        Environment: !Ref Environment
+
+  GoogleIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: Google
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Sub "{{resolve:secretsmanager:${RuntimeSecretArn}:SecretString:GOOGLE_CLIENT_ID}}"
+        client_secret: !Sub "{{resolve:secretsmanager:${RuntimeSecretArn}:SecretString:GOOGLE_CLIENT_SECRET}}"
+        authorize_scopes: openid email profile
+      AttributeMapping:
+        email: email
+        username: sub
+        name: name
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoDomainPrefix
+      UserPoolId: !Ref UserPool
+
+  ApplicationClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: GoogleIdentityProvider
+    Properties:
+      ClientName: !Sub "${ProjectName}-${Environment}-bff"
+      UserPoolId: !Ref UserPool
+      GenerateSecret: true
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      RefreshTokenValidity: 1
+      AccessTokenValidity: 15
+      IdTokenValidity: 15
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: minutes
+        IdToken: minutes
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      SupportedIdentityProviders: [COGNITO, Google]
+      CallbackURLs:
+        - !Sub "${ApplicationUrl}/api/auth/cognito/callback"
+      LogoutURLs:
+        - !Sub "${ApplicationUrl}/login"
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+Outputs:
+  UserPoolId: { Value: !Ref UserPool }
+  UserPoolArn: { Value: !GetAtt UserPool.Arn }
+  AppClientId: { Value: !Ref ApplicationClient }
+  CognitoDomain:
+    Value: !Sub "https://${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com"
+  GoogleRedirectUri:
+    Value: !Sub "https://${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com/oauth2/idpresponse"

@@ -21,7 +21,7 @@ export type UsuarioState =
 // ─── Atualizar usuário (nome, e-mail, role, ativo) ───────────────────────────
 
 /**
- * Atualiza o e-mail/nome no Supabase Auth (fonte do login). Sem isto, mudar o
+ * Atualiza o e-mail/nome no Cognito (fonte do login). Sem isto, mudar o
  * e-mail só na tabela `usuario` faria a tela mostrar um endereço com o qual a
  * pessoa não consegue entrar.
  */
@@ -29,26 +29,9 @@ async function atualizarAuthUser(
   id: string,
   campos: { email?: string; nome?: string },
 ): Promise<string | null> {
-  const body: Record<string, unknown> = {};
-  if (campos.email) {
-    body.email = campos.email;
-    body.email_confirm = true; // e-mail institucional trocado por admin, sem reconfirmação
-  }
-  if (campos.nome) body.user_metadata = { nome: campos.nome };
-  if (!Object.keys(body).length) return null;
-
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    },
-    body: JSON.stringify(body),
-  });
-  if (resp.ok) return null;
-  const err = (await resp.json().catch(() => ({}))) as { msg?: string; message?: string };
-  return err.msg ?? err.message ?? `Falha ao atualizar o login (HTTP ${resp.status})`;
+  if (!campos.email && !campos.nome) return null;
+  const { error } = await createAdminClient().auth.admin.updateUserById(id, campos);
+  return error?.message ?? null;
 }
 
 export async function atualizarUsuario(

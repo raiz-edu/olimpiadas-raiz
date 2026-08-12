@@ -7,8 +7,11 @@ on:
     branches: [main]
 
 env:
-  NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+  POSTGREST_URL: http://127.0.0.1:3001
+  COGNITO_USER_POOL_ID: sa-east-1_ci
+  COGNITO_CLIENT_ID: ci-client
+  COGNITO_CLIENT_SECRET: ci-secret
+  STORAGE_BUCKET: ci-bucket
   NEXT_PUBLIC_APP_URL: http://localhost:3000
 
 jobs:

@@ -8,11 +8,11 @@ export async function GET(request: NextRequest) {
   const isPopup = request.nextUrl.searchParams.get("popup") === "1";
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
 
-  const nonce = randomBytes(16).toString("hex");
+  const nonce = randomBytes(24).toString("base64url");
   const state = `${nonce}:${mode}${isPopup ? ":popup" : ""}`;
 
   const cookieStore = await cookies();
-  cookieStore.set("_goauth_state", state, {
+  cookieStore.set("_cognito_state", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -20,15 +20,14 @@ export async function GET(request: NextRequest) {
     path: "/",
   });
 
+  const redirectUri = `${origin}/api/auth/cognito/callback`;
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    redirect_uri: `${origin}/api/auth/google/callback`,
+    client_id: process.env.COGNITO_CLIENT_ID!,
     response_type: "code",
     scope: "openid email profile",
+    redirect_uri: redirectUri,
     state,
-    prompt: "select_account",
-    access_type: "online",
+    identity_provider: "Google",
   });
-
-  return NextResponse.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+  return NextResponse.redirect(`${process.env.COGNITO_DOMAIN}/oauth2/authorize?${params}`);
 }

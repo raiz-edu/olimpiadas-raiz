@@ -5,7 +5,7 @@ export const ALUNO_PENDING_COOKIE = "aluno_pending_consent";
 
 /** Assina value com HMAC-SHA256 usando SESSION_SIGNING_SECRET (isolado do service_role). */
 export function signStudentCookie(value: string): string {
-  const secret = process.env.SESSION_SIGNING_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const secret = process.env.SESSION_SIGNING_SECRET!;
   const hmac = createHmac("sha256", secret).update(value).digest("hex");
   return `${value}.${hmac}`;
 }
