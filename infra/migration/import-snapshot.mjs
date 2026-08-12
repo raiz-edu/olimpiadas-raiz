@@ -11,6 +11,27 @@ const client = new pg.Client({
 });
 await client.connect();
 
+// Preserva as chaves históricas durante a transição. A aplicação passa a usar
+// cognito_sub, mas as FKs legadas ainda referenciam auth.users até a migration
+// de identidade concluir o desacoplamento.
+const usuariosOrigem = JSON.parse(await readFile(path.join(inputDir, "usuario.json"), "utf8"));
+const alunosOrigem = JSON.parse(await readFile(path.join(inputDir, "aluno.json"), "utf8"));
+for (const usuario of usuariosOrigem) {
+  await client.query(
+    `INSERT INTO auth.users(id, email, raw_user_meta_data)
+     VALUES ($1, $2, jsonb_build_object('nome', $3)) ON CONFLICT (id) DO NOTHING`,
+    [usuario.id, usuario.email, usuario.nome],
+  );
+}
+for (const aluno of alunosOrigem) {
+  if (!aluno.supabase_auth_id || !aluno.email) continue;
+  await client.query(
+    `INSERT INTO auth.users(id, email, raw_user_meta_data)
+     VALUES ($1, $2, jsonb_build_object('nome', $3, 'tipo', 'aluno')) ON CONFLICT (id) DO NOTHING`,
+    [aluno.supabase_auth_id, aluno.email, aluno.nome],
+  );
+}
+
 const order = [
   "marca",
   "unidade",
