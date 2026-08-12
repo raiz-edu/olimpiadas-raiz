@@ -158,6 +158,7 @@ export type Database = {
           consentimento_responsavel_nome: string | null;
           consentimento_responsavel_documento: string | null;
           supabase_auth_id: string | null;
+          cognito_sub: string | null;
           consentimento_responsavel_tipo: "pedagogico" | "financeiro" | null;
           ativo: boolean;
           created_at: string;
@@ -184,6 +185,7 @@ export type Database = {
           consentimento_responsavel_nome?: string | null;
           consentimento_responsavel_documento?: string | null;
           supabase_auth_id?: string | null;
+          cognito_sub?: string | null;
           consentimento_responsavel_tipo?: "pedagogico" | "financeiro" | null;
           ativo?: boolean;
           created_at?: string;
@@ -210,6 +212,7 @@ export type Database = {
           consentimento_responsavel_nome?: string | null;
           consentimento_responsavel_documento?: string | null;
           supabase_auth_id?: string | null;
+          cognito_sub?: string | null;
           consentimento_responsavel_tipo?: "pedagogico" | "financeiro" | null;
           ativo?: boolean;
           created_at?: string;
@@ -226,6 +229,7 @@ export type Database = {
       usuario: {
         Row: {
           id: string;
+          cognito_sub: string | null;
           nome: string;
           email: string;
           role: RoleUsuario;
@@ -236,6 +240,7 @@ export type Database = {
         };
         Insert: {
           id: string;
+          cognito_sub?: string | null;
           nome: string;
           email: string;
           role: RoleUsuario;
@@ -246,6 +251,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          cognito_sub?: string | null;
           nome?: string;
           email?: string;
           role?: RoleUsuario;

@@ -250,7 +250,7 @@ export async function sincronizarAlunosTOTVS(): Promise<SyncResult> {
         email,
         cpf: cpf ?? null,
         data_nascimento: nascimento ?? "2000-01-01",
-        supabase_auth_id: authData.user.id,
+        cognito_sub: authData.user.id,
         consentimento_responsavel: false,
         ativo: true,
         serie,

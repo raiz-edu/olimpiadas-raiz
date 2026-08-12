@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
       .eq("ativo", true)
       .maybeSingle();
     if (!aluno) return NextResponse.redirect(`${origin}/aluno/login?erro=acesso`);
+    await admin.from("aluno").update({ cognito_sub: sub }).eq("id", aluno.id);
     const response = NextResponse.redirect(
       `${origin}${popup ? "/auth/popup-callback" : "/aluno/dashboard"}`,
     );
@@ -102,7 +103,15 @@ export async function GET(request: NextRequest) {
     const { role, marcaId, conviteId } = await resolverPrimeiroAcesso(email);
     const created = await admin
       .from("usuario")
-      .insert({ id: sub, email, nome: name, role, ativo: true, marca_ativa_id: marcaId })
+      .insert({
+        id: sub,
+        cognito_sub: sub,
+        email,
+        nome: name,
+        role,
+        ativo: true,
+        marca_ativa_id: marcaId,
+      })
       .select("*")
       .single();
     usuario = created.data;
@@ -111,6 +120,9 @@ export async function GET(request: NextRequest) {
     await marcarConviteAceito(conviteId);
   }
   if (!usuario?.ativo) return NextResponse.redirect(`${origin}/login?erro=inativo`);
+  if (usuario.cognito_sub !== sub) {
+    await admin.from("usuario").update({ cognito_sub: sub }).eq("id", usuario.id);
+  }
 
   const session = signCognitoSession({
     sub,

@@ -93,7 +93,7 @@ export async function loginAluno(
   const { data: aluno, error: alunoError } = await adminClient
     .from("aluno")
     .select("id, consentimento_responsavel")
-    .eq("supabase_auth_id", data.user.id)
+    .eq("cognito_sub", data.user.id)
     .eq("ativo", true)
     .maybeSingle();
 

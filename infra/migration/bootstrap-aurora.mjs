@@ -100,16 +100,6 @@ try {
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO olimpiadas_api;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO olimpiadas_api;
     GRANT olimpiadas_api, authenticated, anon, service_role TO CURRENT_USER;
-    CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
-    LANGUAGE sql STABLE AS $$
-      SELECT NULLIF(
-        COALESCE(
-          current_setting('request.jwt.claim.sub', true),
-          (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'),
-          (NULLIF(current_setting('request.headers', true), '')::jsonb ->> 'x-olimpiadas-user')
-        ), ''
-      )::uuid
-    $$;
     NOTIFY pgrst, 'reload schema';
   `);
 } finally {
