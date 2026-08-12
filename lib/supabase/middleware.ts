@@ -4,7 +4,8 @@ import { STAFF_SESSION_COOKIE } from "@/lib/auth/cognito-session";
 function getRouteAccess(pathname: string) {
   const isAuthPage = pathname.startsWith("/login");
   const isAlunoArea = pathname.startsWith("/aluno/");
-  const isStaffCallback = pathname.startsWith("/auth/callback");
+  const isStaffCallback =
+    pathname.startsWith("/auth/callback") || pathname.startsWith("/api/auth/cognito/callback");
   const isAcceptInvite = pathname.startsWith("/aceitar-convite");
   const isGoogleOAuth = pathname.startsWith("/api/auth/google");
   const isHealthCheck = pathname === "/api/health";
