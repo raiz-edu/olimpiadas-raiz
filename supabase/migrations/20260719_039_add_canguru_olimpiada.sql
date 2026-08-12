@@ -12,4 +12,12 @@
 -- ALTER TYPE ... DROP VALUE). Reverter exigiria recriar o tipo e migrar a
 -- coluna — não fazer sem necessidade real.
 
-ALTER TYPE olimpiada_questao ADD VALUE IF NOT EXISTS 'canguru';
+DO $$
+BEGIN
+  -- A migration 017 converteu a coluna para text e removeu este enum. Em bancos
+  -- antigos onde o enum ainda existe, mantemos a alteração idempotente.
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'olimpiada_questao') THEN
+    ALTER TYPE olimpiada_questao ADD VALUE IF NOT EXISTS 'canguru';
+  END IF;
+END
+$$;
