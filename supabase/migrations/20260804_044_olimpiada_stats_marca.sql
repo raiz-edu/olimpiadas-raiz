@@ -68,6 +68,8 @@ create policy olimpiada_stats_marca_write on olimpiada_stats_marca
 
 -- ─── Histórico: RPC passa a somar detalhe + agregado ─────────────────────────
 
+drop function if exists public.get_olimpiadas_stats(integer[], text[], text[]);
+
 create or replace function public.get_olimpiadas_stats(
   p_anos    integer[],
   p_marcas  text[],
