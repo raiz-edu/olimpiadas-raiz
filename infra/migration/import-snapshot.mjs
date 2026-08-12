@@ -5,7 +5,10 @@ import pg from "pg";
 const inputDir = process.argv[2] ?? "/migration/snapshot";
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL não configurada");
 const manifest = JSON.parse(await readFile(path.join(inputDir, "manifest.json"), "utf8"));
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: false });
+const client = new pg.Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 await client.connect();
 
 const order = [
