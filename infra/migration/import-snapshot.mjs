@@ -81,9 +81,23 @@ try {
       throw new Error(`${table}: contagem de origem divergente`);
     await client.query("BEGIN");
     try {
+      const columnsResult = await client.query(
+        `SELECT a.attname
+           FROM pg_attribute a
+           JOIN pg_class c ON c.oid = a.attrelid
+           JOIN pg_namespace n ON n.oid = c.relnamespace
+          WHERE n.nspname = 'public' AND c.relname = $1
+            AND a.attnum > 0 AND NOT a.attisdropped AND a.attgenerated = ''
+          ORDER BY a.attnum`,
+        [table],
+      );
+      const columns = columnsResult.rows.map(({ attname }) => `"${attname.replaceAll('"', '""')}"`);
+      const columnList = columns.join(", ");
       for (const row of rows) {
         await client.query(
-          `INSERT INTO ${table} SELECT (jsonb_populate_record(NULL::${table}, $1::jsonb)).* ON CONFLICT DO NOTHING`,
+          `INSERT INTO ${table} (${columnList})
+           SELECT ${columnList} FROM jsonb_populate_record(NULL::${table}, $1::jsonb)
+           ON CONFLICT DO NOTHING`,
           [JSON.stringify(row)],
         );
       }
