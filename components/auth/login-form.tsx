@@ -11,6 +11,8 @@ type LoginState = {
 
 const ERROS_OAUTH: Record<string, string> = {
   oauth: "Não foi possível autenticar com o Google. Tente novamente.",
+  provisionamento:
+    "Não foi possível preparar seu perfil de acesso. Tente novamente ou fale com o administrador.",
   dominio: "Este e-mail não pertence a uma instituição parceira. Use seu e-mail institucional.",
   inativo: "Sua conta está inativa. Fale com o administrador.",
 };

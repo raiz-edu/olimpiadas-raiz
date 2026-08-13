@@ -114,6 +114,14 @@ export async function GET(request: NextRequest) {
       })
       .select("*")
       .single();
+    if (created.error || !created.data) {
+      console.error("Falha ao provisionar perfil local do Cognito", {
+        email,
+        cognitoSub: sub,
+        error: created.error?.message ?? "Perfil não retornado após inserção",
+      });
+      return NextResponse.redirect(`${origin}/login?erro=provisionamento`);
+    }
     usuario = created.data;
     if (usuario && marcaId)
       await admin.from("usuario_marca").insert({ usuario_id: usuario.id, marca_id: marcaId });
