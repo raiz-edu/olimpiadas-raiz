@@ -1,5 +1,13 @@
 # Guia de Deploy — olimpiadas-raiz
 
+> **Atualização 2026-08-28.** A produção **não roda mais na Vercel**: o app está na AWS
+> (CloudFront na frente) e o banco migrou para o projeto Supabase da Raiz Educação.
+> O runbook da migração — estado atual, ordem de execução, header CSP, env vars de
+> build × runtime, verificação e rollback — está em
+> [`docs/ops/migracao-supabase-raiz.md`](ops/migracao-supabase-raiz.md).
+> As seções abaixo descrevem a configuração original e continuam válidas para
+> Supabase, Resend e Google OAuth; a parte da Vercel é histórica.
+
 ## Visão geral
 
 ```

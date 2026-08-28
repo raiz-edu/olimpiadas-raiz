@@ -6,21 +6,9 @@ import { getServerSession } from "@/lib/auth/session";
 
 export type ConfigState = { error: string } | { ok: true; message: string } | null;
 
-export async function getConfigValue(chave: string): Promise<string> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any;
-    const { data, error } = await supabase
-      .from("configuracao_sistema")
-      .select("valor")
-      .eq("chave", chave)
-      .single();
-    if (error) return "";
-    return data?.valor ?? "";
-  } catch {
-    return "";
-  }
-}
+// getConfigValue vivia aqui e, por estar num módulo "use server", era uma Server
+// Action invocável por qualquer usuário logado sem checar sessão. Foi para
+// lib/config/queries.ts (módulo de servidor comum) — issue #159.
 
 export async function salvarConfig(_prev: ConfigState, formData: FormData): Promise<ConfigState> {
   const session = await getServerSession();

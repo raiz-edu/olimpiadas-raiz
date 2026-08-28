@@ -7,7 +7,7 @@ import {
   avaliarRespostaAberta,
   avaliarRespostaAbertaComImagem,
   transcreverFotoAluno,
-} from "@/lib/ai/groq";
+} from "@/lib/ai/avaliador";
 import type { FeedbackIA } from "@/lib/ai/types";
 import {
   containsPromptInjection,
@@ -349,11 +349,16 @@ export async function getAlternativasQuestao(questaoId: string) {
     .maybeSingle();
   if (!questao) return [];
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("alternativa")
     .select("id, letra, texto, imagem_url, imagem_largura")
     .eq("questao_id", questaoId)
     .order("letra");
+  // Erro aqui é infra (coluna ausente, banco errado), não "questão sem alternativas".
+  // Devolver [] em silêncio deixa a tela em "Carregando alternativas…" sem pista
+  // nenhuma — foi assim na migração de projeto Supabase (ago/2026).
+  if (error)
+    console.error("[treino] alternativas da questao", questaoId, "falharam:", error.message);
   return data ?? [];
 }
 
