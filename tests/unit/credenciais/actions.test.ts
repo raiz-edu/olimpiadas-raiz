@@ -171,8 +171,28 @@ describe("salvarCredencial", () => {
     expect(admin.upserts).toHaveLength(0);
   });
 
-  it("sem CREDENCIAIS_MASTER_KEY → erro com instrução, nada gravado", async () => {
+  it("só SESSION_SIGNING_SECRET → grava com a chave derivada (provisória)", async () => {
     delete process.env.CREDENCIAIS_MASTER_KEY;
+    process.env.SESSION_SIGNING_SECRET = "segredo-de-sessao-de-teste";
+    mocks.getServerSession.mockResolvedValue(sessao("raiz", HELIO, "u-helio"));
+    const admin = makeAdmin();
+    mocks.createAdminClient.mockReturnValue(admin.client);
+    const { salvarCredencial } =
+      await import("@/app/(protected)/configuracoes/credenciais/actions");
+
+    const r = await salvarCredencial(
+      null,
+      form({ chave: "openai_api_key", valor: "sk-live-abcdefgh1234" }),
+    );
+    expect(r).toEqual({ ok: true, message: "Chave da OpenAI salva (····1234)." });
+    expect(admin.upserts[0].valor_cifrado.startsWith("v1:")).toBe(true);
+    expect(JSON.stringify(admin.upserts[0])).not.toContain("sk-live-abcdefgh1234");
+    delete process.env.SESSION_SIGNING_SECRET;
+  });
+
+  it("sem CREDENCIAIS_MASTER_KEY nem SESSION_SIGNING_SECRET → erro com instrução, nada gravado", async () => {
+    delete process.env.CREDENCIAIS_MASTER_KEY;
+    delete process.env.SESSION_SIGNING_SECRET;
     mocks.getServerSession.mockResolvedValue(sessao("raiz", HELIO));
     const admin = makeAdmin();
     mocks.createAdminClient.mockReturnValue(admin.client);

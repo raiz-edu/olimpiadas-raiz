@@ -16,7 +16,7 @@ export default async function CredenciaisPage() {
   // Gate duplo: permissão da role E e-mail em ADMIN_EMAILS (só Helio e Hugo).
   if (!podeGerirCredenciais(session.user.role, session.user.email)) redirect("/dashboard");
 
-  const [{ itens, masterKeyOk }, configIA] = await Promise.all([
+  const [{ itens, masterKeyOk, chaveMestra }, configIA] = await Promise.all([
     listarCredenciais(),
     getConfigIA({ semCache: true }),
   ]);
@@ -40,11 +40,20 @@ export default async function CredenciaisPage() {
         </p>
       </div>
 
-      {!masterKeyOk && (
+      {chaveMestra === "ausente" && (
         <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          <strong>CREDENCIAIS_MASTER_KEY</strong> não está configurada neste ambiente. Salvar e
-          remover ficam desabilitados; o servidor continua usando as env vars. Gere com{" "}
-          <code>openssl rand -base64 32</code> e defina no ambiente do servidor.
+          Nenhuma chave-mestra neste ambiente (<strong>CREDENCIAIS_MASTER_KEY</strong> nem{" "}
+          <strong>SESSION_SIGNING_SECRET</strong>). Salvar e remover ficam desabilitados; o servidor
+          continua usando as env vars. Gere com <code>openssl rand -base64 32</code> e defina no
+          ambiente do servidor.
+        </p>
+      )}
+      {chaveMestra === "derivada" && (
+        <p className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-700 dark:text-sky-300">
+          Chave-mestra <strong>provisória</strong>, derivada de <code>SESSION_SIGNING_SECRET</code>.
+          Gravar chaves já funciona. Quando puder, defina <code>CREDENCIAIS_MASTER_KEY</code> (
+          <code>openssl rand -base64 32</code>) no ambiente do servidor: o que já estiver gravado
+          continua legível e passa a usar a chave própria na próxima gravação.
         </p>
       )}
 
