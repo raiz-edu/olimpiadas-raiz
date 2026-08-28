@@ -55,19 +55,20 @@ Isso sozinho resolve as alternativas (problema 2).
 
 `NEXT_PUBLIC_*` são **inlined no build** — precisam existir na hora do `next build` (build args do Docker), não só no runtime do container.
 
-| Variável                                              | Build | Runtime | Valor                                                                           |
-| ----------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                            | ✅    | ✅      | `https://<REF_RAIZ>.supabase.co`                                                |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`                       | ✅    | ✅      | projeto da Raiz                                                                 |
-| `NEXT_PUBLIC_APP_URL`                                 | ✅    | ✅      | `https://olimpiadas.raizeducacao.com.br`                                        |
-| `NEXT_PUBLIC_CSP_EXTRA_ORIGINS`                       | ✅    | —       | `https://ebdazvyyunilbkygtevn.supabase.co` até o Passo 3 terminar; depois vazio |
-| `NEXT_PUBLIC_SENTRY_DSN`                              | ✅    | ✅      | opcional                                                                        |
-| `SUPABASE_SERVICE_ROLE_KEY`                           | —     | ✅      | projeto da Raiz (segredo)                                                       |
-| `SESSION_SIGNING_SECRET`                              | —     | ✅      | o mesmo de antes, senão todo aluno é deslogado                                  |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`            | —     | ✅      |                                                                                 |
-| `GROQ_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | —     | ✅      |                                                                                 |
-| `RAIZ_DATA_ENGINE_URL`, `RAIZ_DATA_ENGINE_TOKEN`      | —     | ✅      | se a sincronização estiver ativa                                                |
-| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`   | ✅    | —       | só para upload de sourcemaps                                                    |
+| Variável                                              | Build | Runtime | Valor                                                                                                  |
+| ----------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`                            | ✅    | ✅      | `https://<REF_RAIZ>.supabase.co`                                                                       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`                       | ✅    | ✅      | projeto da Raiz                                                                                        |
+| `NEXT_PUBLIC_APP_URL`                                 | ✅    | ✅      | `https://olimpiadas.raizeducacao.com.br`                                                               |
+| `NEXT_PUBLIC_CSP_EXTRA_ORIGINS`                       | ✅    | —       | `https://ebdazvyyunilbkygtevn.supabase.co` até o Passo 3 terminar; depois vazio                        |
+| `NEXT_PUBLIC_SENTRY_DSN`                              | ✅    | ✅      | opcional                                                                                               |
+| `SUPABASE_SERVICE_ROLE_KEY`                           | —     | ✅      | projeto da Raiz (segredo)                                                                              |
+| `SESSION_SIGNING_SECRET`                              | —     | ✅      | o mesmo de antes, senão todo aluno é deslogado                                                         |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`            | —     | ✅      |                                                                                                        |
+| `CREDENCIAIS_MASTER_KEY`                              | —     | ✅      | `openssl rand -base64 32`; cifra a tabela `credencial` (issue #159). Guardar também no cofre da equipe |
+| `GROQ_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | —     | ✅      | Groq e OpenAI podem vir da tela `/configuracoes/credenciais`; a env é fallback                         |
+| `RAIZ_DATA_ENGINE_URL`, `RAIZ_DATA_ENGINE_TOKEN`      | —     | ✅      | se a sincronização estiver ativa                                                                       |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`   | ✅    | —       | só para upload de sourcemaps                                                                           |
 
 ### Passo 5 — Deploy do master (Infra)
 

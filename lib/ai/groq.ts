@@ -1,4 +1,5 @@
 import Groq from "groq-sdk";
+import { getCredencial } from "@/lib/credenciais/queries";
 import type { FeedbackIA } from "./types";
 import {
   containsPromptInjection,
@@ -10,9 +11,10 @@ import {
   type TranscricaoFotoAluno,
 } from "./feedback-security";
 
-function getClient() {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error("GROQ_API_KEY nao configurado");
+// Chave vem de /configuracoes/credenciais (banco, cifrada) com fallback em GROQ_API_KEY — issue #159.
+async function getClient() {
+  const key = await getCredencial("groq_api_key");
+  if (!key) throw new Error("Chave do Groq nao configurada (credenciais ou GROQ_API_KEY)");
   return new Groq({ apiKey: key });
 }
 
@@ -70,7 +72,7 @@ export async function avaliarRespostaAberta(
   solucao: string,
   resposta: string,
 ): Promise<FeedbackIA> {
-  const groq = getClient();
+  const groq = await getClient();
   const expectedItems = extractExpectedItems(enunciado);
 
   const completion = await groq.chat.completions.create({
@@ -93,7 +95,7 @@ export async function transcreverFotoAluno(
   enunciado: string,
   fotoAlunoBase64: string,
 ): Promise<TranscricaoFotoAluno> {
-  const groq = getClient();
+  const groq = await getClient();
 
   const content: Array<
     { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
@@ -156,7 +158,7 @@ async function extrairTextoSolucaoDeImagens(
   enunciado: string,
   imagensSolucaoUrls: string[],
 ): Promise<string> {
-  const groq = getClient();
+  const groq = await getClient();
 
   const content: Array<
     { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
