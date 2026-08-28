@@ -13,7 +13,12 @@ import {
   type CredencialChave,
   type IntegracaoDef,
 } from "./catalogo";
-import { decifrar, getMasterKey, MasterKeyAusenteError } from "./crypto";
+import {
+  decifrar,
+  MasterKeyAusenteError,
+  origemChaveMestra,
+  type OrigemChaveMestra,
+} from "./crypto";
 
 const TTL_CACHE_MS = 60_000;
 const cache = new Map<string, { valor: string | null; expiraEm: number }>();
@@ -44,7 +49,10 @@ export async function getCredencial(
     if (data?.valor_cifrado) valor = decifrar(data.valor_cifrado);
   } catch (e) {
     if (e instanceof MasterKeyAusenteError) {
-      console.error("[credenciais] CREDENCIAIS_MASTER_KEY ausente — usando env var para", chave);
+      console.error(
+        "[credenciais] sem chave-mestra (CREDENCIAIS_MASTER_KEY) — usando env var para",
+        chave,
+      );
     } else {
       console.error("[credenciais] decifrar falhou:", chave, (e as Error).message);
     }
@@ -78,14 +86,12 @@ export type CredencialResumo = {
 
 export async function listarCredenciais(): Promise<{
   itens: CredencialResumo[];
+  /** "env" = CREDENCIAIS_MASTER_KEY; "derivada" = HKDF de SESSION_SIGNING_SECRET (provisório). */
+  chaveMestra: OrigemChaveMestra | "ausente";
   masterKeyOk: boolean;
 }> {
-  let masterKeyOk = true;
-  try {
-    getMasterKey();
-  } catch {
-    masterKeyOk = false;
-  }
+  const chaveMestra = origemChaveMestra();
+  const masterKeyOk = chaveMestra !== "ausente";
 
   const admin = createAdminClient();
   // Sem a tabela (migration 053 ainda não rodou) a tela continua útil: mostra o status via env.
@@ -126,5 +132,5 @@ export async function listarCredenciais(): Promise<{
     };
   });
 
-  return { itens, masterKeyOk };
+  return { itens, chaveMestra, masterKeyOk };
 }

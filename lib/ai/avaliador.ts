@@ -98,12 +98,21 @@ export async function testarModelo(
       apiKey,
       model,
       messages: [{ role: "user", content: "Responda apenas com a palavra OK." }],
-      maxTokens: 20,
+      // Modelos com raciocínio (gpt-oss, o-series) gastam tokens pensando antes de
+      // responder: com 20 o conteúdo voltava vazio e o teste dizia "ok".
+      maxTokens: 256,
       campoMaxTokens: def.campoMaxTokens,
       extra: def.extra?.[tipo],
       timeoutMs: 20_000,
     });
-    return { ok: true, resposta: resposta.trim().slice(0, 40) };
+    const texto = resposta.trim();
+    if (!texto) {
+      return {
+        ok: false,
+        erro: `${def.rotulo} (${model}): resposta vazia — o modelo gastou o orçamento raciocinando ou não respondeu; aumente os tokens ou troque o modelo.`,
+      };
+    }
+    return { ok: true, resposta: texto.slice(0, 40) };
   } catch (e) {
     return { ok: false, erro: (e as Error).message };
   }
