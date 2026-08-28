@@ -18,7 +18,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: mocks.createAdminClient,
 }));
 
-vi.mock("@/lib/ai/groq", () => ({
+vi.mock("@/lib/ai/avaliador", () => ({
   avaliarRespostaAberta: mocks.avaliarRespostaAberta,
   avaliarRespostaAbertaComImagem: mocks.avaliarRespostaAbertaComImagem,
   transcreverFotoAluno: mocks.transcreverFotoAluno,

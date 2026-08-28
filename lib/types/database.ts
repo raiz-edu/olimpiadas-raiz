@@ -792,6 +792,34 @@ export type Database = {
         Update: { chave?: string; valor?: string; atualizado_em?: string };
         Relationships: [];
       };
+      // Migration 053 (issue #159): chaves de integração cifradas — só service_role.
+      credencial: {
+        Row: {
+          id: string;
+          chave: string;
+          valor_cifrado: string;
+          ultimos4: string;
+          atualizado_em: string;
+          atualizado_por: string | null;
+        };
+        Insert: {
+          id?: string;
+          chave: string;
+          valor_cifrado: string;
+          ultimos4: string;
+          atualizado_em?: string;
+          atualizado_por?: string | null;
+        };
+        Update: {
+          id?: string;
+          chave?: string;
+          valor_cifrado?: string;
+          ultimos4?: string;
+          atualizado_em?: string;
+          atualizado_por?: string | null;
+        };
+        Relationships: [];
+      };
       apostila_receita: {
         Row: {
           id: string;

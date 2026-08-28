@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { LoginAlunoForm } from "@/components/aluno/login-form";
 import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
-import { getConfigValue } from "@/app/(protected)/configuracoes/actions";
+import { getConfigValue } from "@/lib/config/queries";
 import { ALUNO_PENDING_COOKIE } from "@/lib/auth/student-cookie";
 import { identidadeDaMarca } from "@/lib/marcas/identidade";
 

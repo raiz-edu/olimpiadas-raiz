@@ -44,19 +44,21 @@ Copie o template e preencha:
 cp .env.example .env.local
 ```
 
-| Variável                                    | Obrigatória em dev              | Onde obter                                                      |
-| ------------------------------------------- | ------------------------------- | --------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                  | ✅                              | Supabase → Settings → API                                       |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`             | ✅                              | Supabase → Settings → API                                       |
-| `SUPABASE_SERVICE_ROLE_KEY`                 | ✅                              | Supabase → Settings → API (⚠️ segredo — nunca no client)        |
-| `SUPABASE_PAT`                              | ⬜                              | Supabase → Account → Access Tokens (só p/ scripts de migration) |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✅ (p/ login)                   | Google Cloud Console → Credentials                              |
-| `SESSION_SIGNING_SECRET`                    | ✅ (p/ portal aluno)            | gere: `openssl rand -base64 32`                                 |
-| `GROQ_API_KEY`                              | ⬜ (só p/ questões abertas/OCR) | console.groq.com/keys                                           |
-| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`      | ⬜ (só p/ convites)             | resend.com/api-keys                                             |
-| `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_*`       | ⬜                              | sentry.io                                                       |
-| `RAIZ_DATA_ENGINE_URL` / `_TOKEN`           | ⬜                              | integração interna Raiz                                         |
-| `NEXT_PUBLIC_APP_URL`                       | ✅                              | `http://localhost:3000` em dev                                  |
+| Variável                                    | Obrigatória em dev            | Onde obter                                                      |
+| ------------------------------------------- | ----------------------------- | --------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                  | ✅                            | Supabase → Settings → API                                       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`             | ✅                            | Supabase → Settings → API                                       |
+| `SUPABASE_SERVICE_ROLE_KEY`                 | ✅                            | Supabase → Settings → API (⚠️ segredo — nunca no client)        |
+| `SUPABASE_PAT`                              | ⬜                            | Supabase → Account → Access Tokens (só p/ scripts de migration) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✅ (p/ login)                 | Google Cloud Console → Credentials                              |
+| `SESSION_SIGNING_SECRET`                    | ✅ (p/ portal aluno)          | gere: `openssl rand -base64 32`                                 |
+| `CREDENCIAIS_MASTER_KEY`                    | ⬜ (p/ gravar chaves na tela) | gere: `openssl rand -base64 32` — cifra a tabela `credencial`   |
+| `OPENAI_API_KEY`                            | ⬜ (fallback; tela primeiro)  | platform.openai.com/api-keys ou `/configuracoes/credenciais`    |
+| `GROQ_API_KEY`                              | ⬜ (fallback; tela primeiro)  | console.groq.com/keys ou `/configuracoes/credenciais`           |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`      | ⬜ (só p/ convites)           | resend.com/api-keys                                             |
+| `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_*`       | ⬜                            | sentry.io                                                       |
+| `RAIZ_DATA_ENGINE_URL` / `_TOKEN`           | ⬜                            | integração interna Raiz                                         |
+| `NEXT_PUBLIC_APP_URL`                       | ✅                            | `http://localhost:3000` em dev                                  |
 
 > Em produção, todas as variáveis vivem nas **env vars da Vercel** (Production +
 > Preview + Development) — nunca em arquivo commitado.
