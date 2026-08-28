@@ -58,6 +58,9 @@ export async function imagemParaDataUrl(
   return `data:${tipo};base64,${bytes.toString("base64")}`;
 }
 
-/** PNG 1×1 usado pelo "Testar modelos" para provar que o modelo de visão aceita imagem. */
+/**
+ * PNG 8×8 (xadrez cinza) usado pelo "Testar modelos" para provar que o modelo de
+ * visão aceita imagem. Não pode ser 1×1: o Groq exige ≥ 2 px por dimensão.
+ */
 export const PIXEL_PNG_DATA_URL =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAG0lEQVR4nGM4cOCAg4MDJsmAVfTAgQMMg1IHAILzYAG5Ne11AAAAAElFTkSuQmCC";
