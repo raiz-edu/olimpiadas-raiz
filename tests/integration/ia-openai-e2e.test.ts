@@ -16,8 +16,10 @@ const LIGADO = process.env.IA_E2E === "1";
 
 if (LIGADO && fs.existsSync(".env.local")) {
   for (const l of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
-    const m = l.match(/^([A-Z_]+)=(.*)$/);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^"|"$/g, "");
+    const [, nome, valor] = l.match(/^([A-Z_]+)=(.*)$/) ?? [];
+    if (nome && valor !== undefined && process.env[nome] === undefined) {
+      process.env[nome] = valor.replace(/^"|"$/g, "");
+    }
   }
 }
 
