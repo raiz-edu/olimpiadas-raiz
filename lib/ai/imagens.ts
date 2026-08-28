@@ -23,7 +23,9 @@ async function urlAssinadaDaRota(url: string): Promise<string | null> {
     .storage.from(bucket)
     .createSignedUrl(caminho, 300);
   if (error || !data?.signedUrl) {
-    throw new Error(`imagem ${url}: sem URL assinada (${error?.message ?? "vazia"})`);
+    // `error` é `StorageError | null` no Supabase e `null` no shim S3 (vira `never` aqui).
+    const motivo = (error as { message?: string } | null)?.message ?? "vazia";
+    throw new Error(`imagem ${url}: sem URL assinada (${motivo})`);
   }
   return data.signedUrl;
 }
