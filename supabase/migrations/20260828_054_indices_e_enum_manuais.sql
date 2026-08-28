@@ -22,8 +22,6 @@ create index if not exists idx_feriado_data on feriado (data);
 
 create index if not exists idx_meta_marca_ano on meta_marca (ano_letivo);
 
--- Consultas do dashboard do aluno por contexto (banco / aula / simulado).
-create index if not exists idx_resposta_contexto on resposta_aluno (aluno_id, contexto);
 
 -- Sessões do simulado: lookup por aluno e, no máximo, UMA sessão viva por aula.
 create index if not exists idx_simulado_sessao_aluno on simulado_sessao (aluno_id);
