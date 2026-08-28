@@ -15,6 +15,13 @@ vi.mock("@/lib/ai/openai-compatible", async (importOriginal) => {
 });
 vi.mock("@/lib/credenciais/queries", () => ({ getCredencial: mocks.getCredencial }));
 vi.mock("@/lib/ai/config", () => ({ getConfigIA: mocks.getConfigIA }));
+vi.mock("@/lib/ai/imagens", () => ({
+  // base64 determinístico a partir da URL, para o teste conferir o que foi enviado
+  imagemParaDataUrl: vi.fn(
+    async (url: string) => `data:image/png;base64,${Buffer.from(url).toString("base64")}`,
+  ),
+  PIXEL_PNG_DATA_URL: "data:image/png;base64,PIXEL",
+}));
 
 const CONFIG: ConfigIA = {
   provedor: "openai",
@@ -232,5 +239,60 @@ describe("testarModelo (botão 'Testar modelos')", () => {
       erro: "OpenAI: chave ausente.",
     });
     expect(mocks.chatCompletion).not.toHaveBeenCalled();
+  });
+
+  it("visão manda uma imagem de verdade (base64) junto com o pedido", async () => {
+    mocks.chatCompletion.mockResolvedValue("OK");
+    const { testarModelo } = await import("@/lib/ai/avaliador");
+
+    expect(await testarModelo("openai", "visao", "gpt-visao")).toEqual({
+      ok: true,
+      resposta: "OK",
+    });
+    const conteudo = mocks.chatCompletion.mock.calls[0]![0].messages[0].content;
+    expect(Array.isArray(conteudo)).toBe(true);
+    expect(conteudo[1]).toEqual({
+      type: "image_url",
+      image_url: { url: "data:image/png;base64,PIXEL" },
+    });
+  });
+});
+
+describe("avaliarRespostaAbertaComImagem — solução só em imagem", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getConfigIA.mockResolvedValue(CONFIG);
+    mocks.getCredencial.mockImplementation(async (chave: string) => CHAVES[chave] ?? null);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it("baixa as figuras da solução para base64, transcreve (visão) e depois avalia (texto)", async () => {
+    // Era o que quebrava na AWS em 2026-08-28: a URL /api/storage ia crua para o provedor.
+    mocks.chatCompletion
+      .mockResolvedValueOnce("Solução: a) o arco mede 90 graus.")
+      .mockResolvedValueOnce(FEEDBACK_JSON);
+    const { avaliarRespostaAbertaComImagem } = await import("@/lib/ai/avaliador");
+
+    const urlSolucao = "/api/storage/questoes/solucoes/OBMEP2015_N3_2F_Q05_sol.png";
+    const feedback = await avaliarRespostaAbertaComImagem(
+      "a) Calcule o arco.",
+      [urlSolucao],
+      "a) 54",
+    );
+
+    expect(feedback.itens[0]).toMatchObject({ item: "a", status: "correto" });
+    expect(mocks.chatCompletion).toHaveBeenCalledTimes(2);
+
+    const visao = mocks.chatCompletion.mock.calls[0]![0];
+    expect(visao.model).toBe("gpt-visao");
+    expect(visao.messages[0].content[1]).toEqual({
+      type: "image_url",
+      image_url: { url: `data:image/png;base64,${Buffer.from(urlSolucao).toString("base64")}` },
+    });
+
+    const texto = mocks.chatCompletion.mock.calls[1]![0];
+    expect(texto.model).toBe("gpt-texto");
+    expect(texto.messages[1].content).toContain("Solução: a) o arco mede 90 graus.");
   });
 });
