@@ -31,7 +31,7 @@ A partir deste PR o `next.config.ts` monta esses hosts sozinho: o do projeto vem
 ### Passo 1 — Schema no projeto da Raiz (Helio, SQL Editor)
 
 1. Conferir se todas as migrations até a 051 foram aplicadas (`supabase/migrations/`). Se o projeto foi criado por dump, provavelmente sim.
-2. Rodar `supabase/migrations/20260828_052_schema_manual_nao_versionado.sql` — idempotente.
+2. Rodar, nesta ordem, `supabase/migrations/20260828_052_schema_manual_nao_versionado.sql`, `20260828_053_credencial.sql` e `20260828_054_indices_e_enum_manuais.sql` — todas idempotentes. (A 054 veio do dump de schema do projeto antigo via `exportar-schema.mjs`: 7 índices e 3 valores de enum criados à mão.)
 3. Rodar `supabase/scripts/migracao-raiz/01-verificar-schema.sql` bloco a bloco: A e B têm que dar tudo `ok`; D mostra se a cópia de dados está completa; G mostra se o staff vai conseguir logar.
 
 Isso sozinho resolve as alternativas (problema 2).

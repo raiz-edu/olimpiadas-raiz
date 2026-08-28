@@ -11,13 +11,20 @@ select item, ok from (
   union all select 'tabela simulado_sessao',           exists (select 1 from information_schema.tables  where table_schema = 'public' and table_name = 'simulado_sessao')
   union all select 'tabela serie_classificacao',       exists (select 1 from information_schema.tables  where table_schema = 'public' and table_name = 'serie_classificacao')
   union all select 'tabela feriado',                   exists (select 1 from information_schema.tables  where table_schema = 'public' and table_name = 'feriado')
+  union all select 'tabela credencial (053)',          exists (select 1 from information_schema.tables  where table_schema = 'public' and table_name = 'credencial')
+  union all select 'índice idx_aluno_ra_coligada_unique (054)', exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'idx_aluno_ra_coligada_unique')
+  union all select 'índice idx_simulado_sessao_ativa (054)',    exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'idx_simulado_sessao_ativa')
+  union all select 'índice idx_resposta_contexto (054)',        exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'idx_resposta_contexto')
 ) t order by ok, item;
 
--- B. Funções (RPC) que o app chama — todas devem existir ──────────────────────
+-- B. Funções — as 11 RPCs que o app chama e as 7 de trigger (auditoria, consentimento,
+--    updated_at, novo usuário). Todas devem existir (dump do projeto antigo: 18) ───
 with esperadas(nome) as (values
   ('inscrever_com_lock'), ('registrar_login_aluno'), ('cancelar_inscricoes_olimpiada'),
   ('get_olimpiadas_stats'), ('dificuldade_absoluta_calc'), ('mask_pii'),
-  ('current_aluno_id'), ('current_user_role'), ('user_marca_ids'), ('user_turma_ids'), ('user_unidade_ids')
+  ('current_aluno_id'), ('current_user_role'), ('user_marca_ids'), ('user_turma_ids'), ('user_unidade_ids'),
+  ('audit_trigger_fn'), ('check_consentimento_inscricao'), ('check_resultado_inscricao_ativa'),
+  ('handle_new_user'), ('set_cancelado_em'), ('set_updated_at')
 )
 select e.nome, exists (
   select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
