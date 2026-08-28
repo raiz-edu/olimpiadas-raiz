@@ -95,6 +95,7 @@ describe("completar — cadeia primário → fallback", () => {
       apiKey: "gsk-groq",
       model: "llama-texto",
       campoMaxTokens: "max_tokens",
+      extra: { reasoning_effort: "low" },
     });
     expect(consoleError.mock.calls[0]!.join(" ")).toContain("rate limit");
     expect(consoleError.mock.calls[0]!.join(" ")).toContain("tentando groq");
