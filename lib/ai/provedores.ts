@@ -15,8 +15,8 @@ export type DefinicaoProvedor = {
   campoMaxTokens: CampoMaxTokens;
   modeloTextoDefault: string;
   modeloVisaoDefault: string;
-  /** Campos extras enviados só nas chamadas de visão. */
-  extraVisao?: Record<string, unknown>;
+  /** Campos extras por tipo de chamada (ex.: `reasoning_effort`). */
+  extra?: Partial<Record<"texto" | "visao", Record<string, unknown>>>;
 };
 
 export const PROVEDORES: Record<ProvedorIA, DefinicaoProvedor> = {
@@ -33,11 +33,17 @@ export const PROVEDORES: Record<ProvedorIA, DefinicaoProvedor> = {
     baseUrl: "https://api.groq.com/openai/v1",
     credencial: "groq_api_key",
     campoMaxTokens: "max_tokens",
-    modeloTextoDefault: "llama-3.3-70b-versatile",
+    // llama-3.3-70b-versatile (o default histórico) sumiu do Groq — HTTP 404 em
+    // 2026-08-28. Dos 6 modelos de chat restantes, gpt-oss-120b devolve o JSON
+    // limpo em ~0,8 s com reasoning_effort "low".
+    modeloTextoDefault: "openai/gpt-oss-120b",
     // llama-4-scout foi descontinuado pelo Groq; qwen3.6 é o modelo com visão disponível.
     modeloVisaoDefault: "qwen/qwen3.6-27b",
-    // Obrigatório no qwen: sem isso ele responde com <think> antes do JSON.
-    extraVisao: { reasoning_effort: "none" },
+    extra: {
+      texto: { reasoning_effort: "low" },
+      // Obrigatório no qwen: sem isso ele responde com <think> antes do JSON.
+      visao: { reasoning_effort: "none" },
+    },
   },
 };
 

@@ -68,7 +68,7 @@ export async function completar(
         temperature: opcoes.temperature,
         maxTokens: opcoes.maxTokens,
         campoMaxTokens: def.campoMaxTokens,
-        extra: tipo === "visao" ? def.extraVisao : undefined,
+        extra: def.extra?.[tipo],
       });
       if (i > 0) console.warn(`[ia] respondeu pelo fallback ${nome} (${model})`);
       return conteudo;
@@ -100,7 +100,7 @@ export async function testarModelo(
       messages: [{ role: "user", content: "Responda apenas com a palavra OK." }],
       maxTokens: 20,
       campoMaxTokens: def.campoMaxTokens,
-      extra: tipo === "visao" ? def.extraVisao : undefined,
+      extra: def.extra?.[tipo],
       timeoutMs: 20_000,
     });
     return { ok: true, resposta: resposta.trim().slice(0, 40) };

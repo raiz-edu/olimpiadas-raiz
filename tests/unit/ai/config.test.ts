@@ -21,6 +21,8 @@ describe("montarConfigIA", () => {
     expect(c.fallback).toBe("groq");
     expect(c.modelos.openai.texto).toBe("gpt-4.1-mini");
     expect(c.modelos.groq.visao).toBe("qwen/qwen3.6-27b");
+    // llama-3.3-70b-versatile morreu no Groq em 2026-08-28 (HTTP 404) — o default não pode voltar a ele.
+    expect(c.modelos.groq.texto).toBe("openai/gpt-oss-120b");
   });
 
   it("valores do banco sobrescrevem; inválidos caem no default; fallback vazio → null", async () => {
