@@ -135,8 +135,22 @@ describe("listarCredenciais", () => {
 
   afterEach(() => {
     delete process.env.CREDENCIAIS_MASTER_KEY;
+    delete process.env.SESSION_SIGNING_SECRET;
     delete process.env.GROQ_API_KEY;
     vi.restoreAllMocks();
+  });
+
+  it("só SESSION_SIGNING_SECRET → chaveMestra 'derivada' e masterKeyOk", async () => {
+    delete process.env.CREDENCIAIS_MASTER_KEY;
+    process.env.SESSION_SIGNING_SECRET = "segredo-de-sessao-de-teste";
+    mocks.createAdminClient.mockReturnValue(
+      makeAdmin({ credencial: { data: [], error: null } }).client,
+    );
+    const { listarCredenciais } = await import("@/lib/credenciais/queries");
+
+    const { masterKeyOk, chaveMestra } = await listarCredenciais();
+    expect(masterKeyOk).toBe(true);
+    expect(chaveMestra).toBe("derivada");
   });
 
   it("classifica origem (banco / env / ausente), resolve o autor e NUNCA expõe o segredo", async () => {
@@ -157,10 +171,11 @@ describe("listarCredenciais", () => {
     mocks.createAdminClient.mockReturnValue(admin.client);
     const { listarCredenciais } = await import("@/lib/credenciais/queries");
 
-    const { itens, masterKeyOk } = await listarCredenciais();
+    const { itens, masterKeyOk, chaveMestra } = await listarCredenciais();
     const porChave = Object.fromEntries(itens.map((i) => [i.chave, i]));
 
     expect(masterKeyOk).toBe(true);
+    expect(chaveMestra).toBe("env");
     expect(porChave.openai_api_key).toMatchObject({
       origem: "banco",
       ultimos4: "9zZ1",
@@ -184,8 +199,9 @@ describe("listarCredenciais", () => {
     mocks.createAdminClient.mockReturnValue(admin.client);
     const { listarCredenciais } = await import("@/lib/credenciais/queries");
 
-    const { itens, masterKeyOk } = await listarCredenciais();
+    const { itens, masterKeyOk, chaveMestra } = await listarCredenciais();
     expect(masterKeyOk).toBe(false);
+    expect(chaveMestra).toBe("ausente");
     expect(itens.find((i) => i.chave === "groq_api_key")?.origem).toBe("env");
     expect(itens.find((i) => i.chave === "openai_api_key")?.origem).toBe("ausente");
     expect(admin.chamadas).toEqual(["credencial"]); // sem autores, não consulta usuario
