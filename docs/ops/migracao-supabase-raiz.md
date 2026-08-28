@@ -9,7 +9,7 @@ O que o repositório revelou depois do diagnóstico da manhã: a produção roda
 Consequências para este runbook:
 
 - **Alternativas vazias**: o Aurora foi criado pelas migrations do repositório (`infra/migration/bootstrap-aurora.mjs`) e o snapshot foi importado com `jsonb_populate_record`, que descarta colunas inexistentes. As colunas manuais (052) faltam e os valores de `imagem_largura` foram perdidos — a **056** os restaura a partir do backup.
-- **Imagens**: os arquivos JÁ estão no S3 (`migrate-storage.mjs`); faltava reescrever as URLs no banco para `/api/storage/…` (**055**) e liberar o host do S3 no CSP, porque a rota responde com redirect para URL assinada e o CSP vale no destino (`next.config.ts`).
+- **Imagens**: os arquivos JÁ estão no S3 (`migrate-storage.mjs`); faltava reescrever as URLs no banco para `/api/storage/…` (**058**) e liberar o host do S3 no CSP, porque a rota responde com redirect para URL assinada e o CSP vale no destino (`next.config.ts`).
 - **Como as migrations chegam ao Aurora**: pelo deploy da branch `aws` — o runner aplica, em ordem, todo arquivo de `supabase/migrations/` ainda não registrado em `migration.schema_migrations`. Logo, tudo que está em `master` precisa ser mergeado em `aws` (PR `merge/master-into-aws`).
 - **Segredos**: `olimpiadas-raiz/prd/runtime` no Secrets Manager precisa ganhar `OPENAI_API_KEY` e `CREDENCIAIS_MASTER_KEY`; o workflow só injeta as chaves listadas em `aws-deploy.yml` (já incluídas no PR).
 - **Auth**: Cognito. O Passo 2 abaixo (Supabase Auth) não se aplica; o cliente OAuth do Google usado em produção é o do Cognito.
@@ -17,7 +17,7 @@ Consequências para este runbook:
 
 **Sequência real para colocar tudo no ar:**
 
-1. Mergear o PR `merge/master-into-aws` na `aws` → o deploy sobe a imagem nova e o runner aplica 051 (níveis nomeados), 052, 053, 054, 055 e 056.
+1. Mergear o PR `merge/master-into-aws` na `aws` → o deploy sobe a imagem nova e o runner aplica 051 (níveis nomeados), 052, 053, 054, 055 (colunas manuais que a 052 não pegou: `solucao.blocos`, `resposta_aluno.contexto`/`aula_id`, `meta_marca.criado_em`), 056 e 057 (dados perdidos no import, restaurados do backup) e 058 (URLs → `/api/storage`).
 2. Antes do deploy, gravar no Secrets Manager (`olimpiadas-raiz/prd/runtime`): `OPENAI_API_KEY` e `CREDENCIAIS_MASTER_KEY`.
 3. Depois do deploy: `/aluno/treino` com imagens e alternativas; `/configuracoes/credenciais` → Testar conexão / Testar modelos → Salvar.
 4. Projeto antigo: com o backup local íntegro e os arquivos no S3, ele só serve como rollback. Manter até a verificação final (seção 3) ficar verde.
