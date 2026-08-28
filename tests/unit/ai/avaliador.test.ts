@@ -191,3 +191,46 @@ describe("avaliarRespostaAberta (integração com parseStrictFeedback)", () => {
     );
   });
 });
+
+describe("testarModelo (botão 'Testar modelos')", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getCredencial.mockImplementation(async (chave: string) => CHAVES[chave] ?? null);
+  });
+
+  it("resposta com texto → ok, com orçamento de tokens suficiente para modelos com raciocínio", async () => {
+    mocks.chatCompletion.mockResolvedValue("  OK  ");
+    const { testarModelo } = await import("@/lib/ai/avaliador");
+
+    expect(await testarModelo("groq", "texto", "openai/gpt-oss-120b")).toEqual({
+      ok: true,
+      resposta: "OK",
+    });
+    expect(mocks.chatCompletion.mock.calls[0]![0]).toMatchObject({
+      nome: "groq",
+      model: "openai/gpt-oss-120b",
+      maxTokens: 256,
+      extra: { reasoning_effort: "low" },
+    });
+  });
+
+  it("resposta vazia NÃO é ok — foi o que a produção mostrou como 'ok (\"\")'", async () => {
+    mocks.chatCompletion.mockResolvedValue("   ");
+    const { testarModelo } = await import("@/lib/ai/avaliador");
+
+    const r = await testarModelo("groq", "texto", "openai/gpt-oss-120b");
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.erro).toContain("resposta vazia");
+  });
+
+  it("sem chave → erro nomeando o provedor, sem chamar a API", async () => {
+    mocks.getCredencial.mockResolvedValue(null);
+    const { testarModelo } = await import("@/lib/ai/avaliador");
+
+    expect(await testarModelo("openai", "texto", "gpt-4.1-mini")).toEqual({
+      ok: false,
+      erro: "OpenAI: chave ausente.",
+    });
+    expect(mocks.chatCompletion).not.toHaveBeenCalled();
+  });
+});

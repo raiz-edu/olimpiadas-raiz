@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   cifrar,
   decifrar,
+  decifrarComChaves,
   getMasterKey,
   MasterKeyAusenteError,
+  origemChaveMestra,
+  resolverChavesMestras,
   ultimos4,
 } from "@/lib/credenciais/crypto";
 
@@ -69,5 +72,63 @@ describe("ultimos4", () => {
   it("devolve só o sufixo", () => {
     expect(ultimos4("sk-abcd1234")).toBe("1234");
     expect(ultimos4("ab")).toBe("ab");
+  });
+});
+
+describe("resolverChavesMestras — chave derivada de SESSION_SIGNING_SECRET (provisória)", () => {
+  const SESSAO = { SESSION_SIGNING_SECRET: "segredo-de-sessao-de-teste" };
+  const AMBAS = { ...SESSAO, CREDENCIAIS_MASTER_KEY: CHAVE.toString("base64") };
+
+  it("sem nenhuma env → MasterKeyAusenteError; origem 'ausente'", () => {
+    expect(() => resolverChavesMestras({})).toThrow(MasterKeyAusenteError);
+    expect(origemChaveMestra({})).toBe("ausente");
+  });
+
+  it("só SESSION_SIGNING_SECRET → origem 'derivada', 32 bytes, determinística e diferente do segredo", () => {
+    const a = resolverChavesMestras(SESSAO);
+    const b = resolverChavesMestras(SESSAO);
+    expect(a.origem).toBe("derivada");
+    expect(a.principal.length).toBe(32);
+    expect(a.principal.equals(b.principal)).toBe(true);
+    expect(a.principal.toString("utf8")).not.toContain("segredo-de-sessao");
+    expect(a.alternativas).toEqual([]);
+    expect(origemChaveMestra(SESSAO)).toBe("derivada");
+    expect(
+      resolverChavesMestras({ SESSION_SIGNING_SECRET: "outro" }).principal.equals(a.principal),
+    ).toBe(false);
+  });
+
+  it("com CREDENCIAIS_MASTER_KEY → origem 'env' e a derivada fica como alternativa", () => {
+    const r = resolverChavesMestras(AMBAS);
+    expect(r.origem).toBe("env");
+    expect(r.principal).toEqual(CHAVE);
+    expect(r.alternativas).toHaveLength(1);
+    expect(r.alternativas[0]!.equals(resolverChavesMestras(SESSAO).principal)).toBe(true);
+  });
+
+  it("rotação: gravado com a derivada continua legível depois de definir a chave própria", () => {
+    const antes = resolverChavesMestras(SESSAO);
+    const blob = cifrar("sk-gravada-antes", antes.principal);
+
+    const depois = resolverChavesMestras(AMBAS);
+    expect(() => decifrar(blob, depois.principal)).toThrow();
+    expect(decifrarComChaves(blob, [depois.principal, ...depois.alternativas])).toBe(
+      "sk-gravada-antes",
+    );
+  });
+
+  it("chave malformada não cai no fallback derivado", () => {
+    expect(() =>
+      resolverChavesMestras({
+        ...SESSAO,
+        CREDENCIAIS_MASTER_KEY: Buffer.alloc(8).toString("base64"),
+      }),
+    ).toThrow("32 bytes");
+  });
+
+  it("decifrarComChaves: nenhuma chave certa → erro explícito; formato inválido → erro de formato", () => {
+    const blob = cifrar("x", CHAVE);
+    expect(() => decifrarComChaves(blob, [OUTRA_CHAVE])).toThrow("outra chave-mestra");
+    expect(() => decifrarComChaves("lixo", [CHAVE])).toThrow("formato desconhecido");
   });
 });
