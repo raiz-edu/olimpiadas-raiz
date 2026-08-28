@@ -14,6 +14,11 @@ export type IntegracaoDef = {
   descricao: string;
   /** Env var lida como fallback (gerenciável) ou como fonte única (não gerenciável). */
   env: string;
+  /**
+   * Outras env vars que cumprem o mesmo papel em outro ambiente — a tela mostra a
+   * primeira que existir. Ex.: na AWS o login pelo Google passa pelo Cognito.
+   */
+  envAlternativas?: readonly string[];
   obterEm: string;
   gerenciavel: boolean;
   teste?: TesteProvedor;
@@ -49,8 +54,9 @@ export const CATALOGO_CREDENCIAIS = [
   {
     chave: "google_client_secret",
     rotulo: "Google OAuth",
-    descricao: "Login do staff e do aluno pelo Google.",
+    descricao: "Login do staff e do aluno pelo Google — direto (Supabase) ou pelo Cognito (AWS).",
     env: "GOOGLE_CLIENT_SECRET",
+    envAlternativas: ["COGNITO_CLIENT_SECRET"],
     obterEm: "https://console.cloud.google.com/apis/credentials",
     gerenciavel: false,
   },

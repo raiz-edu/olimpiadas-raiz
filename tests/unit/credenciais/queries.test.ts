@@ -190,4 +190,26 @@ describe("listarCredenciais", () => {
     expect(itens.find((i) => i.chave === "openai_api_key")?.origem).toBe("ausente");
     expect(admin.chamadas).toEqual(["credencial"]); // sem autores, não consulta usuario
   });
+
+  it("env alternativa: na AWS o Google OAuth aparece via COGNITO_CLIENT_SECRET", async () => {
+    delete process.env.GOOGLE_CLIENT_SECRET;
+    process.env.COGNITO_CLIENT_SECRET = "cognito-secret";
+    mocks.createAdminClient.mockReturnValue(
+      makeAdmin({ credencial: { data: [], error: null } }).client,
+    );
+    const { listarCredenciais } = await import("@/lib/credenciais/queries");
+
+    const { itens } = await listarCredenciais();
+    const google = itens.find((i) => i.chave === "google_client_secret");
+    expect(google).toMatchObject({ origem: "env", envVar: "COGNITO_CLIENT_SECRET" });
+    expect(JSON.stringify(itens)).not.toContain("cognito-secret");
+
+    delete process.env.COGNITO_CLIENT_SECRET;
+    const { listarCredenciais: listar2 } = await import("@/lib/credenciais/queries");
+    const { itens: itens2 } = await listar2();
+    expect(itens2.find((i) => i.chave === "google_client_secret")).toMatchObject({
+      origem: "ausente",
+      envVar: "GOOGLE_CLIENT_SECRET",
+    });
+  });
 });
