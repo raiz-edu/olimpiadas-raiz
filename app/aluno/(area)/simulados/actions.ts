@@ -44,10 +44,13 @@ async function sanitizarRespostasDoSimulado(
 
   const alternativasPorId = new Map<string, { id: string; questao_id: string; correta: boolean }>();
   if (alternativaIds.length > 0) {
-    const { data: alternativas } = await db
+    const { data: alternativas, error: erroAlternativas } = await db
       .from("alternativa")
       .select("id, questao_id, correta")
       .in("id", alternativaIds);
+    // Mesmo motivo do treino: erro de infra não pode virar "nenhuma alternativa" calado.
+    if (erroAlternativas)
+      console.error("[simulados] alternativas falharam:", erroAlternativas.message);
 
     for (const alternativa of alternativas ?? []) {
       alternativasPorId.set(alternativa.id, alternativa);
