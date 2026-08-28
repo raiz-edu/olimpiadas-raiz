@@ -3,7 +3,10 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { getServerSession } from "@/lib/auth/session";
 import { podeGerirCredenciais } from "@/lib/auth/roles";
 import { listarCredenciais } from "@/lib/credenciais/queries";
+import { getConfigIA } from "@/lib/ai/config";
+import { PROVEDORES, PROVEDORES_IA } from "@/lib/ai/provedores";
 import { CredenciaisTabela } from "./credenciais-tabela";
+import { IaConfigCard } from "./ia-config-card";
 
 export const metadata = { title: "Credenciais — Olimpíadas" };
 
@@ -13,7 +16,15 @@ export default async function CredenciaisPage() {
   // Gate duplo: permissão da role E e-mail em ADMIN_EMAILS (só Helio e Hugo).
   if (!podeGerirCredenciais(session.user.role, session.user.email)) redirect("/dashboard");
 
-  const { itens, masterKeyOk } = await listarCredenciais();
+  const [{ itens, masterKeyOk }, configIA] = await Promise.all([
+    listarCredenciais(),
+    getConfigIA({ semCache: true }),
+  ]);
+  const provedores = PROVEDORES_IA.map((id) => ({
+    id,
+    rotulo: PROVEDORES[id].rotulo,
+    comChave: itens.some((i) => i.chave === PROVEDORES[id].credencial && i.origem !== "ausente"),
+  }));
 
   return (
     <div className="space-y-6">
@@ -36,6 +47,8 @@ export default async function CredenciaisPage() {
           <code>openssl rand -base64 32</code> e defina no ambiente do servidor.
         </p>
       )}
+
+      <IaConfigCard config={configIA} provedores={provedores} />
 
       <CredenciaisTabela itens={itens} masterKeyOk={masterKeyOk} />
     </div>

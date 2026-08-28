@@ -7,7 +7,7 @@ import {
   avaliarRespostaAberta,
   avaliarRespostaAbertaComImagem,
   transcreverFotoAluno,
-} from "@/lib/ai/groq";
+} from "@/lib/ai/avaliador";
 import type { FeedbackIA } from "@/lib/ai/types";
 import {
   containsPromptInjection,
