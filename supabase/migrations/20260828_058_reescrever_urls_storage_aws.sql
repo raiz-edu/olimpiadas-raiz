@@ -1,4 +1,4 @@
--- 055 — URLs de imagem: Storage do Supabase antigo → rota /api/storage do ambiente AWS.
+-- 058 — URLs de imagem: Storage do Supabase antigo → rota /api/storage do ambiente AWS.
 --
 -- Na AWS os arquivos foram copiados para o S3 (infra/migration/migrate-storage.mjs)
 -- e são servidos por app/api/storage/<bucket>/<caminho>, na mesma origem — mas as
@@ -22,29 +22,29 @@ begin
     select 1 from information_schema.tables
     where table_schema = 'migration' and table_name = 'schema_migrations'
   ) then
-    raise notice '055: fora do ambiente AWS — nada a reescrever';
+    raise notice '058: fora do ambiente AWS — nada a reescrever';
     return;
   end if;
 
   update alternativa set imagem_url = replace(imagem_url, prefixo_antigo, prefixo_novo)
    where imagem_url like prefixo_antigo || '%';
-  get diagnostics n = row_count; raise notice '055 alternativa.imagem_url: %', n;
+  get diagnostics n = row_count; raise notice '058 alternativa.imagem_url: %', n;
 
   update solucao set imagem_url = replace(imagem_url, prefixo_antigo, prefixo_novo)
    where imagem_url like prefixo_antigo || '%';
-  get diagnostics n = row_count; raise notice '055 solucao.imagem_url: %', n;
+  get diagnostics n = row_count; raise notice '058 solucao.imagem_url: %', n;
 
   update solucao set blocos = replace(blocos::text, prefixo_antigo, prefixo_novo)::jsonb
    where blocos::text like '%' || prefixo_antigo || '%';
-  get diagnostics n = row_count; raise notice '055 solucao.blocos: %', n;
+  get diagnostics n = row_count; raise notice '058 solucao.blocos: %', n;
 
   update questao set imagem_url = replace(imagem_url, prefixo_antigo, prefixo_novo)
    where imagem_url like prefixo_antigo || '%';
-  get diagnostics n = row_count; raise notice '055 questao.imagem_url: %', n;
+  get diagnostics n = row_count; raise notice '058 questao.imagem_url: %', n;
 
   update questao set enunciado_blocos = replace(enunciado_blocos::text, prefixo_antigo, prefixo_novo)::jsonb
    where enunciado_blocos::text like '%' || prefixo_antigo || '%';
-  get diagnostics n = row_count; raise notice '055 questao.enunciado_blocos: %', n;
+  get diagnostics n = row_count; raise notice '058 questao.enunciado_blocos: %', n;
 end $$;
 
 -- Down: não há — o prefixo antigo pertence a um projeto que será desligado.
