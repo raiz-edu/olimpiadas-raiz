@@ -31,7 +31,7 @@ O segredo `olimpiadas-raiz/prd/runtime` deve conter, no mínimo:
 - `GOOGLE_CLIENT_SECRET`
 - `SESSION_SIGNING_SECRET`
 
-As integrações opcionais podem usar `OPENAI_API_KEY` (avaliação das discursivas — primário), `GROQ_API_KEY` (reserva), `CREDENCIAIS_MASTER_KEY` (cifra das chaves gravadas em `/configuracoes/credenciais`; 32 bytes base64, `openssl rand -base64 32`), `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `RAIZ_DATA_ENGINE_URL` e `RAIZ_DATA_ENGINE_TOKEN`.
+As integrações opcionais podem usar `OPENAI_API_KEY` (avaliação das discursivas — primário), `GROQ_API_KEY` (reserva), `CREDENCIAIS_MASTER_KEY` (cifra das chaves gravadas em `/configuracoes/credenciais`; 32 bytes base64, `openssl rand -base64 32` — enquanto ausente, o app deriva uma chave provisória de `SESSION_SIGNING_SECRET`), `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `RAIZ_DATA_ENGINE_URL` e `RAIZ_DATA_ENGINE_TOKEN`.
 
 Não registre valores de segredos em arquivos, commits, outputs ou logs. O workflow interrompe o deploy quando uma configuração obrigatória está ausente.
 
