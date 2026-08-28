@@ -107,16 +107,19 @@ export async function listarCredenciais(): Promise<{
   const catalogo: readonly IntegracaoDef[] = CATALOGO_CREDENCIAIS;
   const itens = catalogo.map((def): CredencialResumo => {
     const row = def.gerenciavel ? porChave.get(def.chave) : undefined;
-    const emEnv = Boolean(process.env[def.env]);
+    // A primeira env var presente entre a principal e as alternativas do ambiente.
+    const envPresente = [def.env, ...(def.envAlternativas ?? [])].find((nome) =>
+      Boolean(process.env[nome]),
+    );
     return {
       chave: def.chave,
       rotulo: def.rotulo,
       descricao: def.descricao,
-      envVar: def.env,
+      envVar: envPresente ?? def.env,
       obterEm: def.obterEm,
       gerenciavel: def.gerenciavel,
       testavel: Boolean(def.teste),
-      origem: row ? "banco" : emEnv ? "env" : "ausente",
+      origem: row ? "banco" : envPresente ? "env" : "ausente",
       ultimos4: row?.ultimos4 ?? null,
       atualizadoEm: row?.atualizado_em ?? null,
       atualizadoPor: row?.atualizado_por ? (nomes.get(row.atualizado_por) ?? null) : null,
