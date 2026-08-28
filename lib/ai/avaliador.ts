@@ -8,6 +8,7 @@
  */
 import { getCredencial } from "@/lib/credenciais/queries";
 import { getConfigIA } from "./config";
+import { imagemParaDataUrl, PIXEL_PNG_DATA_URL } from "./imagens";
 import {
   containsPromptInjection,
   createInvalidImageFeedback,
@@ -97,7 +98,19 @@ export async function testarModelo(
       baseUrl: def.baseUrl,
       apiKey,
       model,
-      messages: [{ role: "user", content: "Responda apenas com a palavra OK." }],
+      // Visão recebe uma imagem de verdade: prova que o modelo aceita image_url em base64.
+      messages: [
+        {
+          role: "user",
+          content:
+            tipo === "visao"
+              ? [
+                  { type: "text", text: "Responda apenas com a palavra OK." },
+                  { type: "image_url", image_url: { url: PIXEL_PNG_DATA_URL } },
+                ]
+              : "Responda apenas com a palavra OK.",
+        },
+      ],
       // Modelos com raciocínio (gpt-oss, o-series) gastam tokens pensando antes de
       // responder: com 20 o conteúdo voltava vazio e o teste dizia "ok".
       maxTokens: 256,
@@ -178,7 +191,9 @@ async function extrairTextoSolucaoDeImagens(
   imagensSolucaoUrls: string[],
 ): Promise<string> {
   const content: BlocoConteudo[] = [{ type: "text", text: buildSolucaoImagensPrompt(enunciado) }];
-  for (const url of imagensSolucaoUrls) content.push({ type: "image_url", image_url: { url } });
+  // O provedor não alcança /api/storage (relativa, com sessão): o servidor baixa e manda base64.
+  const imagens = await Promise.all(imagensSolucaoUrls.map((url) => imagemParaDataUrl(url)));
+  for (const url of imagens) content.push({ type: "image_url", image_url: { url } });
 
   const conteudo = await completar("visao", [{ role: "user", content }], {
     temperature: 0.1,

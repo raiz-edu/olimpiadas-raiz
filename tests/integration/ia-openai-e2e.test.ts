@@ -121,4 +121,47 @@ describe.skipIf(!LIGADO)("OpenAI ponta a ponta", () => {
       "respondeu pelo fallback, não pela OpenAI",
     ).toEqual([]);
   }, 120_000);
+
+  it("solução só em imagem (OBMEP 2015 N3 2ª fase Q5): baixa a figura, transcreve e avalia", async () => {
+    // A questão da captura de 2026-08-28 que falhava na AWS ("Não foi possível avaliar agora").
+    const QUESTAO_IMG = "280dbee7-984c-42ca-ab93-6a3ee049241a";
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient() as any;
+    const { data: questao } = await admin
+      .from("questao")
+      .select("enunciado")
+      .eq("id", QUESTAO_IMG)
+      .single();
+    const { data: solucao } = await admin
+      .from("solucao")
+      .select("texto, blocos")
+      .eq("questao_id", QUESTAO_IMG)
+      .single();
+    const imagens = ((solucao?.blocos ?? []) as Array<{ tipo: string; url?: string }>)
+      .filter((b) => b.tipo === "imagem" && b.url)
+      .map((b) => b.url as string);
+    expect(solucao?.texto ?? "").toBe("");
+    expect(imagens.length).toBeGreaterThanOrEqual(1);
+
+    const { avaliarRespostaAbertaComImagem } = await import("@/lib/ai/avaliador");
+    const inicio = Date.now();
+    const feedback = await avaliarRespostaAbertaComImagem(questao.enunciado, imagens, "a) 54");
+    const ms = Date.now() - inicio;
+
+    console.info(
+      "\n[e2e solução-imagem] imagens:",
+      imagens.map((u) => u.split("/").pop()).join(", "),
+    );
+    console.info("[e2e solução-imagem] feedback:", JSON.stringify(feedback));
+    console.info(`[e2e solução-imagem] ${ms} ms`);
+
+    expect(feedback.itens.map((i) => i.item)).toEqual(["a", "b", "c"]);
+    expect(["correto", "parcial", "incorreto"]).toContain(feedback.itens[0]!.status);
+    expect(feedback.itens[1]!.status).toBe("nao_respondido");
+    expect(feedback.itens[2]!.status).toBe("nao_respondido");
+    expect(
+      avisos.filter((a) => /fallback/.test(a)),
+      "respondeu pelo fallback, não pela OpenAI",
+    ).toEqual([]);
+  }, 180_000);
 });
