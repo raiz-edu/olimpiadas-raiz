@@ -1,7 +1,8 @@
 import type { RoleUsuario } from "@/lib/types/database";
-import { APOSTILA_AUTORES } from "@/lib/auth/domains";
+import { ADMIN_EMAILS, APOSTILA_AUTORES } from "@/lib/auth/domains";
 
 export type Resource =
+  | "credencial"
   | "marca"
   | "unidade"
   | "turma"
@@ -52,6 +53,10 @@ const LEITURA_GERAL = perms(
 export const ROLE_PERMISSIONS: RolePermissions = {
   // Flag interno dos 2 admins do sistema (Helio e Hugo) — acesso total
   raiz: perms(
+    // Credenciais de integrações (issue #159): só raiz, e ainda assim com o gate
+    // adicional por e-mail em podeGerirCredenciais().
+    "credencial:read",
+    "credencial:update",
     "apostila:create",
     "apostila:read",
     "apostila:update",
@@ -159,6 +164,15 @@ export function canAny(role: RoleUsuario, permissions: Permission[]): boolean {
  */
 export function podeGerirApostilas(role: RoleUsuario, email: string | null | undefined): boolean {
   return can(role, "apostila:create") && !!email && APOSTILA_AUTORES.has(email.toLowerCase());
+}
+
+/**
+ * Gate da tela de credenciais (issue #159): exige credencial:update E o e-mail em
+ * ADMIN_EMAILS (Helio e Hugo). A role sozinha não basta — uma conta que virasse
+ * raiz por engano no banco continuaria sem ver as chaves.
+ */
+export function podeGerirCredenciais(role: RoleUsuario, email: string | null | undefined): boolean {
+  return can(role, "credencial:update") && !!email && ADMIN_EMAILS.has(email.toLowerCase());
 }
 
 // ─── Labels e descrições ──────────────────────────────────────────────────────
