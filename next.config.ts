@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${REMOTE_ORIGINS}`,
               "media-src 'self' https:",
-              "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
+              "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://drive.google.com",
               `connect-src 'self' ${REMOTE_ORIGINS} https://vitals.vercel-insights.com`,
               "font-src 'self'",
               "frame-ancestors 'self' https://painel-pedagogico-raiz-rho.vercel.app",

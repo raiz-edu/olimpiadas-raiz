@@ -1,19 +1,6 @@
 "use client";
 
-function extractYouTubeId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null;
-    if (u.hostname.includes("youtube.com")) {
-      if (u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] ?? null;
-      if (u.pathname.startsWith("/live/")) return u.pathname.split("/")[2] ?? null;
-      return u.searchParams.get("v");
-    }
-  } catch {
-    // not a URL
-  }
-  return null;
-}
+import { getAulaEmbedUrl } from "@/lib/aluno/aula-video";
 
 export function AulaPlayer({
   url,
@@ -24,16 +11,16 @@ export function AulaPlayer({
   titulo: string;
   isLive?: boolean;
 }) {
-  const ytId = extractYouTubeId(url);
+  const embedUrl = getAulaEmbedUrl(url, isLive);
 
-  if (ytId) {
-    const embedUrl = `https://www.youtube.com/embed/${ytId}${isLive ? "?autoplay=1" : ""}`;
+  if (embedUrl) {
     return (
       <div className="overflow-hidden rounded-xl border border-border bg-black">
         <div className="relative pt-[56.25%]">
           <iframe
             src={embedUrl}
             title={titulo}
+            loading="lazy"
             className="absolute inset-0 h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -43,20 +30,31 @@ export function AulaPlayer({
     );
   }
 
-  // URL externa (Zoom, Meet, etc.)
+  // Apenas links HTTP(S) podem ser abertos como alternativa ao player.
+  let externalUrl: string;
+  try {
+    const parsed = new URL(url);
+    if (!["https:", "http:"].includes(parsed.protocol)) return null;
+    externalUrl = parsed.toString();
+  } catch {
+    return null;
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card p-6 text-center">
       <p className="mb-3 text-sm text-muted-foreground">
-        Esta aula acontece em uma plataforma externa.
+        {isLive
+          ? "Esta aula ao vivo acontece em uma plataforma externa."
+          : "Este link de vídeo ainda não pode ser reproduzido dentro da plataforma."}
       </p>
       <a
-        href={url}
+        href={externalUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         style={{ background: "rgb(91,184,193)" }}
       >
-        Entrar na aula
+        {isLive ? "Entrar na aula" : "Abrir vídeo"}
         <svg
           className="h-4 w-4"
           viewBox="0 0 24 24"
