@@ -1,5 +1,22 @@
 # Registro de correções
 
+## 2026-09-16 — Retirada da lista de questões das aulas
+
+- **Sintoma:** a “Lista de questões” continuava aparecendo abaixo do vídeo na
+  página do projeto. A correção anterior tratou apenas do player; o usuário
+  esclareceu que a retirada desejada era desse bloco de exercícios.
+- **Correção:** retirar a lista e seu contador nas aulas do projeto e também a
+  seção equivalente na página individual de aula. Essas páginas deixam de buscar
+  questões e alternativas e de carregar o componente de treino.
+- **Validação:** suíte com 244 testes aprovados, 3 ignorados e 14 pendentes,
+  concluída com exit 0. Lint em `app`, `components`, `lib` e `tests` sem erros,
+  com apenas um aviso anterior em `treino-client.tsx`. A busca nas páginas de aula
+  e projeto confirmou a retirada das referências à lista, ao treino e às
+  consultas de questões e alternativas. Prettier e `git diff --check` aprovados.
+- **Escopo:** apresentação das aulas no portal do aluno. Vídeos e materiais de
+  apoio continuam disponíveis. Não há exclusão de dados; o banco de questões, o
+  menu avulso e a área própria de simulados mantêm seus fluxos.
+
 ## 2026-09-16 — Vídeos do Drive abriam fora da aula
 
 - **Sintoma:** aulas gravadas com link `drive.google.com/file/d/.../view` exibiam

@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/types/database";
-import { getAlternativasQuestao } from "@/app/aluno/(area)/treino/actions";
 import { ProjetoPageClient, type AulaCompleta } from "./projeto-page-client";
 
 const TEAL = "rgb(91,184,193)";
@@ -43,7 +42,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
 
   const adminClient = createAdminClient();
 
-  // Busca questões e monta AulaCompleta para cada aula
+  // Monta as aulas publicadas com seus materiais de apoio.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const aulasRaw = ((projeto as any).aulas ?? []) as any[];
 
@@ -52,7 +51,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
     aulasRaw
       .filter((a) => a.tipo !== "simulado" && a.publicada)
       .map(async (aula) => {
-        // 1. Signed URLs dos materiais
+        // Signed URLs dos materiais
         const materiaisComUrl = await Promise.all(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ((aula.materiais ?? []) as any[]).map(async (m) => {
@@ -62,24 +61,6 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
             return { ...m, signedUrl: data?.signedUrl ?? null };
           }),
         );
-
-        // 2. Questões vinculadas à aula
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: aulaQuestoes } = await (adminClient as any)
-          .from("preparacao_aula_questao")
-          .select(
-            "*, questao:questao_id(id, olimpiada, nivel, fase, ano, numero, enunciado, enunciado_blocos, imagem_url, assunto, topico, subtopico, tipo, video_url, ativo)",
-          )
-          .eq("aula_id", aula.id)
-          .order("ordem");
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const questoes = ((aulaQuestoes ?? []) as any[])
-          .map((aq) => aq.questao)
-          .filter((q) => q && q.ativo);
-
-        // 3. Alternativas da primeira questão (pré-carregamento)
-        const primeiraAlt = questoes.length > 0 ? await getAlternativasQuestao(questoes[0].id) : [];
 
         return {
           id: aula.id,
@@ -93,8 +74,6 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
           polos: aula.polos,
           ordem: aula.ordem,
           materiais: materiaisComUrl,
-          questoes,
-          primeiraAlt,
         } satisfies AulaCompleta;
       }),
   );
@@ -134,7 +113,7 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
         )}
       </div>
 
-      <ProjetoPageClient projetoId={id} aulas={aulasCompletas} />
+      <ProjetoPageClient aulas={aulasCompletas} />
     </div>
   );
 }
