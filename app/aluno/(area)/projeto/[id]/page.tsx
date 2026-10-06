@@ -2,12 +2,15 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "@/lib/types/database";
+import { getOlimpiadaIdsConfirmadas } from "@/lib/aluno/projetos-queries";
+import { isProjetoVisivelParaAluno } from "@/lib/aluno/simulado-access";
+import type { PreparacaoProjeto, PreparacaoAula, PreparacaoMaterial } from "@/lib/types/database";
 import { ProjetoPageClient, type AulaCompleta } from "./projeto-page-client";
 
 const TEAL = "rgb(91,184,193)";
+
+type AulaComMateriais = PreparacaoAula & { materiais: PreparacaoMaterial[] };
+type ProjetoComAulas = PreparacaoProjeto & { aulas: AulaComMateriais[] };
 
 export default async function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,36 +18,26 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
+  const supabase = createAdminClient();
 
-  const { data: projeto } = await supabase
+  const { data, error } = await supabase
     .from("preparacao_projeto")
     .select("*, aulas:preparacao_aula(*, materiais:preparacao_material(*))")
     .eq("id", id)
     .eq("publicado", true)
-    .single();
+    .eq("ativo", true)
+    .maybeSingle();
 
-  if (!projeto) notFound();
-
-  const adminClient = createAdminClient();
+  if (error) {
+    console.error("[projetos] Falha ao carregar projeto:", error.message);
+    throw new Error("Não foi possível carregar o projeto. Tente novamente.");
+  }
+  const projeto = data as unknown as ProjetoComAulas | null;
+  const olimpiadaIdsConfirmadas = await getOlimpiadaIdsConfirmadas(supabase, session.aluno.id);
+  if (!projeto || !isProjetoVisivelParaAluno(projeto, olimpiadaIdsConfirmadas)) notFound();
 
   // Monta as aulas publicadas com seus materiais de apoio.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const aulasRaw = ((projeto as any).aulas ?? []) as any[];
+  const aulasRaw = projeto.aulas ?? [];
 
   // Exclui simulados — eles têm área própria em /aluno/simulados
   const aulasCompletas: AulaCompleta[] = await Promise.all(
@@ -53,9 +46,8 @@ export default async function ProjetoPage({ params }: { params: Promise<{ id: st
       .map(async (aula) => {
         // Signed URLs dos materiais
         const materiaisComUrl = await Promise.all(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ((aula.materiais ?? []) as any[]).map(async (m) => {
-            const { data } = await adminClient.storage
+          (aula.materiais ?? []).map(async (m) => {
+            const { data } = await supabase.storage
               .from("preparacao-materiais")
               .createSignedUrl(m.arquivo_path, 3600);
             return { ...m, signedUrl: data?.signedUrl ?? null };

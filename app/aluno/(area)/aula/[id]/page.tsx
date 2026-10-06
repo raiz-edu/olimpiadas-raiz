@@ -2,11 +2,20 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "@/lib/types/database";
+import { getOlimpiadaIdsConfirmadas } from "@/lib/aluno/projetos-queries";
+import { isProjetoVisivelParaAluno } from "@/lib/aluno/simulado-access";
+import type { PreparacaoProjeto, PreparacaoAula, PreparacaoMaterial } from "@/lib/types/database";
 import { AulaPlayer } from "@/components/aluno/aula-player";
 import { MaterialList } from "@/components/aluno/material-list";
+
+type ProjetoDaAula = Pick<
+  PreparacaoProjeto,
+  "id" | "nome" | "olimpiada_sigla" | "olimpiada_id" | "publicado" | "ativo"
+>;
+type AulaComMateriais = PreparacaoAula & {
+  materiais: PreparacaoMaterial[];
+  projeto: ProjetoDaAula | null;
+};
 
 function fmtDateTime(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -38,48 +47,43 @@ export default async function AulaPage({ params }: { params: Promise<{ id: strin
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
+  const supabase = createAdminClient();
 
-  const { data: aula } = await supabase
+  const { data, error } = await supabase
     .from("preparacao_aula")
     .select(
-      "*, materiais:preparacao_material(*), projeto:preparacao_projeto(id, nome, olimpiada_sigla)",
+      "*, materiais:preparacao_material(*), projeto:preparacao_projeto(id, nome, olimpiada_sigla, olimpiada_id, publicado, ativo)",
     )
     .eq("id", id)
     .eq("publicada", true)
-    .single();
+    .neq("tipo", "simulado")
+    .maybeSingle();
 
-  if (!aula) notFound();
+  if (error) {
+    console.error("[projetos] Falha ao carregar aula:", error.message);
+    throw new Error("Não foi possível carregar a aula. Tente novamente.");
+  }
+  const aula = data as unknown as AulaComMateriais | null;
+  const olimpiadaIdsConfirmadas = await getOlimpiadaIdsConfirmadas(supabase, session.aluno.id);
+  if (
+    !aula ||
+    !aula.publicada ||
+    aula.tipo === "simulado" ||
+    !isProjetoVisivelParaAluno(aula.projeto, olimpiadaIdsConfirmadas)
+  )
+    notFound();
 
-  const adminClient = createAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const materiais = (aula as any).materiais ?? [];
+  const materiais = aula.materiais ?? [];
   const materiaisComUrl = await Promise.all(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    materiais.map(async (m: any) => {
-      const { data } = await adminClient.storage
+    materiais.map(async (m) => {
+      const { data } = await supabase.storage
         .from("preparacao-materiais")
         .createSignedUrl(m.arquivo_path, 300);
       return { ...m, signedUrl: data?.signedUrl ?? null };
     }),
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const projeto = (aula as any).projeto;
+  const projeto = aula.projeto;
   const isLive = aula.tipo === "online" && isLiveNow(aula.data_hora);
   const waitingForLive = aula.tipo === "online" && isBeforeLive(aula.data_hora);
 

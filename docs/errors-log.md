@@ -1,5 +1,20 @@
 # Registro de correções
 
+## 2026-10-06 — Projetos e vídeos com a sessão própria do aluno na Vercel
+
+- **Sintoma:** a lista de projetos ficava vazia mesmo com `aluno_session` válido,
+  e abrir um projeto publicado devolvia 404.
+- **Causa:** essas páginas consultavam o banco como anônimo, mas o login do aluno
+  usa uma sessão própria e não fornece o JWT exigido pelas policies do Supabase.
+- **Correção:** lista, projeto e aula consultam o banco no servidor após validar
+  a sessão. A autorização exige projeto publicado e ativo, geral ou de olimpíada
+  com inscrição confirmada do aluno; aulas devem estar publicadas e simulados
+  continuam na área própria. Falhas de banco passam a ser registradas e lançadas,
+  sem serem apresentadas como ausência de projetos. Questões continuam fora das aulas.
+- **Validação local:** 25 regressões novas com cookie próprio assinado e sem
+  sessão Supabase; suíte com 269 testes aprovados, 3 ignorados e 14 pendentes.
+  Typecheck, lint dos arquivos alterados, Prettier e build Webpack aprovados.
+
 ## 2026-09-16 — Retirada da lista de questões das aulas
 
 - **Sintoma:** a “Lista de questões” continuava aparecendo abaixo do vídeo na
