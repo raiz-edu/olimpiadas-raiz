@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentSession } from "@/lib/auth/student-session";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database, PreparacaoProjeto, PreparacaoAula } from "@/lib/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getOlimpiadaIdsConfirmadas } from "@/lib/aluno/projetos-queries";
+import { isProjetoVisivelParaAluno } from "@/lib/aluno/simulado-access";
+import type { PreparacaoProjeto, PreparacaoAula } from "@/lib/types/database";
 
 export const metadata = { title: "Projetos — Plataforma Olímpica" };
 
@@ -23,29 +24,9 @@ export default async function ProjetosPage() {
   const session = await getStudentSession();
   if (!session) redirect("/aluno/login");
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cs) {
-          cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    },
-  );
-
-  const { data: inscricoes } = await supabase
-    .from("inscricao")
-    .select("olimpiada_id")
-    .eq("aluno_id", session.aluno.id)
-    .eq("status", "confirmada");
-
-  const olimpiadaIds = (inscricoes ?? []).map((i) => i.olimpiada_id);
+  const supabase = createAdminClient();
+  const olimpiadaIdsConfirmadas = await getOlimpiadaIdsConfirmadas(supabase, session.aluno.id);
+  const olimpiadaIds = [...olimpiadaIdsConfirmadas];
 
   let query = supabase
     .from("preparacao_projeto")
@@ -59,8 +40,14 @@ export default async function ProjetosPage() {
     query = query.is("olimpiada_id", null);
   }
 
-  const { data: projetos } = await query.order("criado_em", { ascending: false });
-  const lista = (projetos ?? []) as unknown as ProjetoComAulas[];
+  const { data: projetos, error } = await query.order("criado_em", { ascending: false });
+  if (error) {
+    console.error("[projetos] Falha ao carregar projetos:", error.message);
+    throw new Error("Não foi possível carregar os projetos. Tente novamente.");
+  }
+  const lista = ((projetos ?? []) as unknown as ProjetoComAulas[]).filter((projeto) =>
+    isProjetoVisivelParaAluno(projeto, olimpiadaIdsConfirmadas),
+  );
 
   return (
     <div className="space-y-6">
@@ -84,7 +71,7 @@ export default async function ProjetosPage() {
               (a) => a.tipo !== "simulado" && a.publicada,
             ).length;
             const aulaViva = projeto.aulas.find(
-              (a) => a.tipo === "online" && isLiveNow(a.data_hora),
+              (a) => a.publicada && a.tipo === "online" && isLiveNow(a.data_hora),
             );
             return (
               <Link
