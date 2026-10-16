@@ -26,6 +26,7 @@ export default async function NovaInscricaoPage() {
       .from("aluno")
       .select("id, nome, turma_id, turma:turma_id(nome, serie, unidade:unidade_id(nome))")
       .eq("ativo", true)
+      .or("tipo_usuario.is.null,tipo_usuario.eq.aluno")
       .order("nome"),
   ]);
 

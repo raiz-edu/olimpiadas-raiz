@@ -1,4 +1,5 @@
 import type { Aluno } from "@/lib/types/database";
+import { compoeIndicadoresAluno } from "@/lib/auth/portal-profile";
 
 export const CONTEXTOS = {
   banco: "Treino livre",
@@ -16,7 +17,8 @@ export type SituacaoEstudo = keyof typeof SITUACOES;
 export type AlunoBase = Pick<
   Aluno,
   "id" | "nome" | "marca_id" | "turma_id" | "serie" | "login_count" | "last_login_at"
->;
+> &
+  Partial<Pick<Aluno, "unidade_id" | "tipo_usuario" | "serie_cadastro">>;
 export type MarcaBase = { id: string; nome: string };
 export type UnidadeBase = { id: string; nome: string; marca_id: string };
 export type TurmaBase = { id: string; nome: string; serie: string; unidade_id: string };
@@ -140,8 +142,9 @@ export function montarAlunosEngajamento(
   const ultimas = new Map<string, RespostaEstudo>();
 
   for (const base of dados.alunos) {
+    if (!compoeIndicadoresAluno(base.tipo_usuario)) continue;
     const turma = base.turma_id ? turmas.get(base.turma_id) : null;
-    const unidade = turma ? unidades.get(turma.unidade_id) : null;
+    const unidade = unidades.get(turma?.unidade_id ?? base.unidade_id ?? "");
     const marcaId = base.marca_id ?? unidade?.marca_id ?? null;
     alunos.set(base.id, {
       ...base,
@@ -150,7 +153,7 @@ export function montarAlunosEngajamento(
       unidadeId: unidade?.id ?? null,
       unidade: unidade?.nome ?? "Sem unidade informada",
       turma: turma?.nome ?? null,
-      serie: base.serie?.trim() || turma?.serie?.trim() || null,
+      serie: base.serie?.trim() || turma?.serie?.trim() || base.serie_cadastro?.trim() || null,
       diasPratica: [],
       tentativas: 0,
       questoesUnicas: 0,

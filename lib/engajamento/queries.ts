@@ -16,8 +16,11 @@ export async function carregarDadosEngajamento(agora: Date): Promise<DadosEngaja
     buscarPaginasEngajamento((inicio, final) =>
       db
         .from("aluno")
-        .select("id, nome, marca_id, turma_id, serie, login_count, last_login_at")
+        .select(
+          "id, nome, marca_id, unidade_id, tipo_usuario, turma_id, serie, serie_cadastro, login_count, last_login_at",
+        )
         .eq("ativo", true)
+        .or("tipo_usuario.is.null,tipo_usuario.eq.aluno")
         .order("id")
         .range(inicio, final)
         .abortSignal(AbortSignal.timeout(15_000)),

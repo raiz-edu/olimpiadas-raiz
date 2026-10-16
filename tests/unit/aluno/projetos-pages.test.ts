@@ -80,7 +80,17 @@ function makeDatabase() {
     ],
   };
   const tables: Record<Table, Row[]> = {
-    aluno: [{ id: ALUNO_ID, ativo: true, turma_id: null, marca_id: null }],
+    aluno: [
+      {
+        id: ALUNO_ID,
+        ativo: true,
+        turma_id: null,
+        marca_id: null,
+        tipo_usuario: "professor",
+        cadastro_concluido_em: "2026-10-16T12:00:00Z",
+        consentimento_responsavel: false,
+      },
+    ],
     inscricao: [],
     preparacao_projeto: [projeto],
     preparacao_aula: [{ ...aula, projeto }],

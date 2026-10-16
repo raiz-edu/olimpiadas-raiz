@@ -12,7 +12,7 @@ type AlunoFormProps = {
     id: string;
     nome: string;
     turma_id: string | null;
-    data_nascimento: string;
+    data_nascimento: string | null;
     cpf: string | null;
     ativo: boolean;
   };

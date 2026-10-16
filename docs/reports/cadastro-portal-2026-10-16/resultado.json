@@ -1,0 +1,12 @@
+{
+  "dados": "sintéticos",
+  "verificacoes": [
+    "Aluno: unidades oficiais e 12 séries de Fundamental/Médio em desktop.",
+    "Falha recuperável mantém perfil, unidade, série e modo popup.",
+    "Professor e outro profissional dispensam dados escolares; orientação de gestão presente.",
+    "Aluno identificado tem perfil bloqueado e série oficial preservada.",
+    "Falha do catálogo explica o problema e bloqueia envio do aluno.",
+    "Celular 390px e tema escuro sem rolagem horizontal."
+  ],
+  "errosConsole": []
+}

@@ -9,6 +9,7 @@
 // =============================================================================
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type TipoUsuarioPortal = "pendente" | "aluno" | "professor" | "colaborador";
 
 // ---------------------------------------------------------------------------
 // ENUMS
@@ -20,22 +21,14 @@ export type OlimpiadaQuestao = string; // campo livre desde migration 017
 // ATENÇÃO: "verdadeiro_ou_falso" NÃO existe no enum do banco — é oferecido nos
 // formulários de cadastro/edição mas falha ao salvar. Bug pré-existente.
 export type TipoQuestao =
-  | "multipla_escolha"
-  | "aberta"
-  | "resposta_numerica"
-  | "verdadeiro_ou_falso";
+  "multipla_escolha" | "aberta" | "resposta_numerica" | "verdadeiro_ou_falso";
 export type TipoDificuldade = "elementar" | "facil" | "medio" | "dificil" | "muito_dificil";
 export type TipoPublicoAlvo = "EFAI" | "EFAF" | "EM" | "Todos";
 export type TipoResolucaoStatus = "sim" | "nao" | "em_producao";
 export type TipoStatusCadastro = "publicado" | "aguardando_revisao";
 export type StatusInscricao = "pendente" | "confirmada" | "cancelada";
 export type TipoResultado =
-  | "aprovado"
-  | "nao_aprovado"
-  | "ouro"
-  | "prata"
-  | "bronze"
-  | "mencao_honrosa";
+  "aprovado" | "nao_aprovado" | "ouro" | "prata" | "bronze" | "mencao_honrosa";
 export type RoleUsuario =
   | "raiz" // flag interno dos admins do sistema — não aparece no seletor de roles
   | "diretor_marca"
@@ -144,10 +137,14 @@ export type Database = {
       };
       aluno: {
         Row: {
+          tipo_usuario: TipoUsuarioPortal | null;
+          unidade_id: string | null;
+          cadastro_concluido_em: string | null;
+          serie_cadastro: string | null;
           id: string;
           turma_id: string | null;
           nome: string;
-          data_nascimento: string;
+          data_nascimento: string | null;
           cpf: string | null;
           email: string | null;
           email_responsavel: string | null;
@@ -170,10 +167,14 @@ export type Database = {
           login_count: number;
         };
         Insert: {
+          tipo_usuario?: TipoUsuarioPortal | null;
+          unidade_id?: string | null;
+          cadastro_concluido_em?: string | null;
+          serie_cadastro?: string | null;
           id?: string;
           turma_id?: string | null;
           nome: string;
-          data_nascimento: string;
+          data_nascimento?: string | null;
           cpf?: string | null;
           email?: string | null;
           email_responsavel?: string | null;
@@ -196,10 +197,14 @@ export type Database = {
           login_count?: number;
         };
         Update: {
+          tipo_usuario?: TipoUsuarioPortal | null;
+          unidade_id?: string | null;
+          cadastro_concluido_em?: string | null;
+          serie_cadastro?: string | null;
           id?: string;
           turma_id?: string | null;
           nome?: string;
-          data_nascimento?: string;
+          data_nascimento?: string | null;
           cpf?: string | null;
           email?: string | null;
           email_responsavel?: string | null;
@@ -1159,6 +1164,15 @@ export type Database = {
       };
       registrar_login_aluno: {
         Args: { p_aluno_id: string };
+        Returns: undefined;
+      };
+      concluir_cadastro_portal: {
+        Args: {
+          p_aluno_id: string;
+          p_tipo: string;
+          p_unidade_id?: string | null;
+          p_serie?: string | null;
+        };
         Returns: undefined;
       };
       get_olimpiadas_stats: {

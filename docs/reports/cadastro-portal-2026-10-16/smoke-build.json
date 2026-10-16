@@ -1,0 +1,12 @@
+{
+  "ambiente": "build local de producao",
+  "verificacoes": [
+    "/aluno/cadastro sem sessao redireciona para /aluno/login",
+    "/aluno/cadastro?popup=1 sem sessao redireciona para /aluno/login?popup=1",
+    "/aluno/dashboard sem sessao redireciona para /aluno/login",
+    "Login de estudos renderiza campos e acesso da equipe no aplicativo compilado.",
+    "Login da equipe tem retorno a estudos e nao produz rolagem horizontal em 390px.",
+    "Cookie adulterado e recusado; retorno ao login mantem modo popup."
+  ],
+  "errosPagina": []
+}

@@ -20,12 +20,12 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <Link href="/login">
-          <Button size="lg">Acessar plataforma</Button>
+        <Link href="/aluno/login">
+          <Button size="lg">Área de estudos</Button>
         </Link>
-        <Link href="/dashboard">
+        <Link href="/login">
           <Button variant="outline" size="lg">
-            Ver dashboard
+            Professores e equipe
           </Button>
         </Link>
       </div>

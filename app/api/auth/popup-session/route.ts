@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { podeEstudarNoPortal } from "@/lib/auth/portal-profile";
 import {
   ALUNO_SESSION_COOKIE,
   signStudentCookie,
@@ -26,12 +27,12 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient();
   const { data: aluno } = await admin
     .from("aluno")
-    .select("id")
+    .select("*")
     .eq("id", alunoId)
     .eq("ativo", true)
     .maybeSingle();
 
-  if (!aluno) {
+  if (!aluno || !podeEstudarNoPortal(aluno)) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 

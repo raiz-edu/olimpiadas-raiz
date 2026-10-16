@@ -9,6 +9,7 @@ const TEAL = "rgb(91,184,193)";
 const subscribeNoop = () => () => {};
 
 const ERROS_OAUTH: Record<string, string> = {
+  inativo: "Seu acesso está inativo. Fale com a coordenação.",
   oauth: "Não foi possível autenticar com o Google. Tente novamente.",
   dominio: "Este e-mail não pertence a uma instituição parceira. Use seu e-mail institucional.",
   portal:
@@ -20,7 +21,7 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
     loginAluno,
     initialNeedsConsent ? ({ needsConsent: true } as { needsConsent: true }) : null,
   );
-  const needsConsent = state !== null && "needsConsent" in state;
+  const needsConsent = state?.needsConsent === true;
   const errorMsg = state !== null && "error" in state ? state.error : null;
   const formRef = useRef<HTMLFormElement>(null);
   const [googlePending, setGooglePending] = useState(false);
@@ -258,13 +259,11 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
                   clipRule="evenodd"
                 />
               </svg>
-              <span>Login com Google verificado! Falta só mais um passo.</span>
+              <span>Conta verificada! Falta só a autorização.</span>
             </div>
 
             <div className="rounded-xl border border-border bg-muted/20 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Passo 2 de 2 — Autorização do responsável
-              </p>
+              <p className="text-sm font-semibold text-foreground">Autorização do responsável</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Necessária uma única vez para liberar o acesso ao portal.
               </p>
@@ -281,6 +280,8 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
                 id="responsavel_nome"
                 name="responsavel_nome"
                 type="text"
+                maxLength={160}
+                required
                 autoComplete="off"
                 autoFocus
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
@@ -324,7 +325,10 @@ export function LoginAlunoForm({ initialNeedsConsent = false }: { initialNeedsCo
         )}
 
         {errorMsg && (
-          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {errorMsg}
           </p>
         )}
