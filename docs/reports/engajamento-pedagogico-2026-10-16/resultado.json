@@ -1,0 +1,14 @@
+{
+  "dados": "sintéticos",
+  "verificacoes": [
+    "Desktop: indicadores, gráfico real e primeira página de 25 alunos.",
+    "Filtro de retomada: quatro alunos; denominador geral preservado em 32.",
+    "Navegação parcial por marca e situação mantém os seletores sincronizados com o recorte.",
+    "Paginação: os sete alunos restantes aparecem na segunda página.",
+    "Marca, período e busca funcionam juntos e reiniciam a paginação.",
+    "Estado vazio explica o recorte sem sugerir falha de aprendizagem.",
+    "Celular: sem transbordamento horizontal; cartões e análise individual expansível.",
+    "Tablet e período de 90 dias: sem transbordamento horizontal."
+  ],
+  "errosConsole": []
+}
