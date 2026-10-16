@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import type { Aluno } from "@/lib/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ALUNO_SESSION_COOKIE, verifyStudentCookie } from "./student-cookie";
+import { destinoPortal } from "./portal-profile";
 
 export type StudentSession = {
   aluno: Aluno;
@@ -12,7 +14,10 @@ export type StudentSession = {
  * Recupera a sessão do aluno a partir do cookie próprio aluno_session.
  * Completamente independente do Supabase Auth — não é afetado pelo logout do admin.
  */
-export async function getStudentSession(): Promise<StudentSession> {
+export async function getStudentSession(options?: {
+  permitirCadastroIncompleto?: boolean;
+  popup?: boolean;
+}): Promise<StudentSession> {
   const cookieStore = await cookies();
   const raw = cookieStore.get(ALUNO_SESSION_COOKIE)?.value;
   if (!raw) return null;
@@ -30,6 +35,11 @@ export async function getStudentSession(): Promise<StudentSession> {
     .single();
 
   if (!aluno) return null;
+
+  if (!options?.permitirCadastroIncompleto) {
+    const destino = destinoPortal(aluno, options?.popup);
+    if (destino !== "/aluno/dashboard" && destino !== "/auth/popup-callback") redirect(destino);
+  }
 
   // Busca o slug da marca via adminClient
   let marcaSlug: string | null = null;

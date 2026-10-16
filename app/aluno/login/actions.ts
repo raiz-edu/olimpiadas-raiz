@@ -10,30 +10,21 @@ import {
   signStudentCookie,
   verifyStudentCookie,
   cookieSessionOpts,
-  cookiePendingOpts,
 } from "@/lib/auth/student-cookie";
+import { getStudentSession } from "@/lib/auth/student-session";
+import { cadastroPortalConcluido, destinoPortal } from "@/lib/auth/portal-profile";
+import { abrirSessaoPortal } from "@/lib/auth/portal-login";
 import { getMarcaSlugForEmail } from "@/lib/auth/domains";
 
-const MARCA_HINT_COOKIE = "marca_hint";
-const MARCA_HINT_OPTS = {
-  maxAge: 365 * 24 * 60 * 60,
-  path: "/",
-  sameSite: "lax" as const,
-  httpOnly: true,
-};
+export type LoginAlunoState = { error?: string; needsConsent?: boolean } | null;
 
-export type LoginAlunoState = { error: string } | { needsConsent: true } | null;
-
-// Cliente isolado: não lê nem escreve cookies do request — não interfere com sessão do admin.
+// Verifica senha sem tocar na sessão Supabase independente da equipe.
 function makeVerifySupabase() {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        getAll: () => [],
-        setAll: () => {},
-      },
+      cookies: { getAll: () => [], setAll: () => {} },
     },
   );
 }
@@ -42,106 +33,106 @@ export async function loginAluno(
   _prevState: LoginAlunoState,
   formData: FormData,
 ): Promise<LoginAlunoState> {
-  const cookieStore = await cookies();
-  const adminClient = createAdminClient();
-
-  // ── Já tem sessão própria ───────────────────────────────────────────────────
-  const existingSession = cookieStore.get(ALUNO_SESSION_COOKIE)?.value;
-  if (existingSession && verifyStudentCookie(existingSession)) {
-    redirect("/aluno/dashboard");
+  const store = await cookies();
+  const admin = createAdminClient();
+  const popup = formData.get("popup") === "1";
+  const session = await getStudentSession({ permitirCadastroIncompleto: true });
+  let aluno = session?.aluno ?? null;
+  // Compatibilidade com quem já iniciou consentimento antes desta publicação.
+  if (!aluno) {
+    const raw = store.get(ALUNO_PENDING_COOKIE)?.value;
+    const id = raw ? verifyStudentCookie(raw) : null;
+    if (id) {
+      const { data } = await admin
+        .from("aluno")
+        .select("*")
+        .eq("id", id)
+        .eq("ativo", true)
+        .maybeSingle();
+      aluno = data;
+      if (aluno) store.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());
+    }
   }
 
-  // ── Reenvio do formulário de consentimento ──────────────────────────────────
-  const pendingRaw = cookieStore.get(ALUNO_PENDING_COOKIE)?.value;
-  const pendingAlunoId = pendingRaw ? verifyStudentCookie(pendingRaw) : null;
-
-  if (pendingAlunoId && formData.get("responsavel_nome")) {
-    const nome = (formData.get("responsavel_nome") as string)?.trim();
-    const tipo = formData.get("responsavel_tipo") as string;
-    const aceito = formData.get("consentimento_aceito") === "on";
-
-    if (!nome) return { error: "Informe o nome completo do responsável." };
-    if (!tipo || !["pedagogico", "financeiro"].includes(tipo))
-      return { error: "Selecione o tipo de responsável." };
-    if (!aceito) return { error: "O responsável deve aceitar os termos para liberar o acesso." };
-
-    await adminClient
-      .from("aluno")
-      .update({
-        consentimento_responsavel: true,
-        consentimento_data: new Date().toISOString(),
-        consentimento_responsavel_nome: nome,
-        consentimento_responsavel_tipo: tipo as "pedagogico" | "financeiro",
-      })
-      .eq("id", pendingAlunoId);
-
-    cookieStore.delete(ALUNO_PENDING_COOKIE);
-    cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(pendingAlunoId), cookieSessionOpts());
-    await adminClient.rpc("registrar_login_aluno", { p_aluno_id: pendingAlunoId });
-    // Consentimento dado dentro do popup de login (plataforma embutida):
-    // segue para o handoff que devolve a sessão ao iframe via postMessage.
-    if (formData.get("popup") === "1") redirect("/auth/popup-callback");
-    redirect("/aluno/dashboard");
+  if (aluno) {
+    if (!cadastroPortalConcluido(aluno)) redirect(destinoPortal(aluno, popup));
+    if (aluno.tipo_usuario !== "aluno" || aluno.consentimento_responsavel)
+      redirect(destinoPortal(aluno, popup));
+    const nome =
+      typeof formData.get("responsavel_nome") === "string"
+        ? String(formData.get("responsavel_nome")).trim()
+        : "";
+    const tipo = formData.get("responsavel_tipo");
+    if (nome.length < 2 || nome.length > 160)
+      return {
+        needsConsent: true,
+        error: "Informe o nome completo do responsável (até 160 caracteres).",
+      };
+    if (tipo !== "pedagogico" && tipo !== "financeiro")
+      return { needsConsent: true, error: "Selecione o tipo de responsável." };
+    if (formData.get("consentimento_aceito") !== "on")
+      return {
+        needsConsent: true,
+        error: "O responsável deve aceitar os termos para liberar o acesso.",
+      };
+    try {
+      const { data, error } = await admin
+        .from("aluno")
+        .update({
+          consentimento_responsavel: true,
+          consentimento_data: new Date().toISOString(),
+          consentimento_responsavel_nome: nome,
+          consentimento_responsavel_tipo: tipo,
+        })
+        .eq("id", aluno.id)
+        .eq("ativo", true)
+        .eq("tipo_usuario", "aluno")
+        .select("*")
+        .maybeSingle();
+      if (error || !data)
+        return {
+          needsConsent: true,
+          error: "Não foi possível salvar a autorização. Tente novamente.",
+        };
+      aluno = data;
+    } catch {
+      return { needsConsent: true, error: "A conexão foi interrompida. Tente novamente." };
+    }
+    store.delete(ALUNO_PENDING_COOKIE);
+    redirect(destinoPortal(aluno, popup));
   }
 
-  // ── Login com e-mail e senha ────────────────────────────────────────────────
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
+  const email =
+    typeof formData.get("email") === "string" ? String(formData.get("email")).trim() : "";
+  const password =
+    typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
   if (!email || !password) return { error: "Preencha e-mail e senha." };
-
-  // Cliente isolado: verifica credenciais sem tocar nos cookies do request
-  const supabase = makeVerifySupabase();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    const isInvalid =
-      error.message.toLowerCase().includes("invalid") ||
-      error.message.toLowerCase().includes("credentials");
-    return {
-      error: isInvalid
-        ? "E-mail ou senha incorretos."
-        : "Não foi possível fazer login. Tente novamente.",
-    };
-  }
-
-  // Busca o aluno via adminClient (não depende da sessão Supabase)
-  const { data: aluno, error: alunoError } = await adminClient
+  const { data, error } = await makeVerifySupabase().auth.signInWithPassword({ email, password });
+  if (error || !data.user)
+    return { error: "E-mail ou senha incorretos. Verifique os dados e tente novamente." };
+  const result = await admin
     .from("aluno")
-    .select("id, consentimento_responsavel")
+    .select("*")
     .eq("supabase_auth_id", data.user.id)
     .eq("ativo", true)
     .maybeSingle();
-
-  if (alunoError) {
-    console.error("Erro ao buscar aluno:", alunoError.code ?? "unknown");
-    return { error: "Não foi possível verificar o acesso. Tente novamente." };
-  }
-
-  if (!aluno) {
+  if (result.error) return { error: "Não foi possível verificar o acesso. Tente novamente." };
+  if (!result.data)
     return { error: "Acesso não encontrado. Fale com a coordenação da sua escola." };
-  }
-
-  if (!aluno.consentimento_responsavel) {
-    // Guarda o aluno_id temporariamente (10 min) para o formulário de consentimento
-    cookieStore.set(ALUNO_PENDING_COOKIE, signStudentCookie(aluno.id), cookiePendingOpts());
-    return { needsConsent: true };
-  }
-
-  // Hint de marca para personalizar logo na próxima visita ao login
-  const marcaSlug = getMarcaSlugForEmail(email);
-  if (marcaSlug) cookieStore.set(MARCA_HINT_COOKIE, marcaSlug, MARCA_HINT_OPTS);
-
-  // Define o cookie de sessão próprio do aluno (7 dias, independente do admin)
-  cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());
-  await adminClient.rpc("registrar_login_aluno", { p_aluno_id: aluno.id });
-  redirect("/aluno/dashboard");
+  const marca = getMarcaSlugForEmail(email);
+  if (marca)
+    store.set("marca_hint", marca, {
+      maxAge: 365 * 86400,
+      path: "/",
+      sameSite: "lax",
+      httpOnly: true,
+    });
+  redirect(await abrirSessaoPortal(result.data, popup));
 }
 
-export async function logoutAluno() {
-  const cookieStore = await cookies();
-  // Apaga APENAS o cookie próprio do aluno — não toca nos cookies do admin
-  cookieStore.delete(ALUNO_SESSION_COOKIE);
-  cookieStore.delete(ALUNO_PENDING_COOKIE);
-  redirect("/aluno/login");
+export async function logoutAluno(form?: FormData) {
+  const store = await cookies();
+  store.delete(ALUNO_SESSION_COOKIE);
+  store.delete(ALUNO_PENDING_COOKIE);
+  redirect(`/aluno/login${form?.get("popup") === "1" ? "?popup=1" : ""}`);
 }

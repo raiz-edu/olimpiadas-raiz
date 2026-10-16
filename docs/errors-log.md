@@ -1,5 +1,16 @@
 # Registro de correções
 
+## 2026-10-16 — Vínculo escolar e retomada do cadastro em popup
+
+- **Sintoma:** uma transferência sincronizada podia manter a unidade do cadastro
+  anterior; sessão expirada durante cadastro em popup perdia o modo de retorno.
+- **Correção:** mudanças de marca/coligada/filial de aluno sem turma invalidam somente
+  unidade declarada e conclusão. Página e action preservam `popup=1` ao pedir novo login.
+- **Validação:** regressões reproduzidas antes das correções; suíte final com 348 testes
+  aprovados, build com TypeScript, lint dos arquivos da tarefa, revisão independente e
+  smoke no aplicativo compilado aprovados. Série declarada não autoriza simulados.
+- **Evidências e implantação:** [relatório](reports/cadastro-portal-2026-10-16/validacao.md).
+
 ## 2026-10-06 — Projetos e vídeos com a sessão própria do aluno na Vercel
 
 - **Sintoma:** a lista de projetos ficava vazia mesmo com `aluno_session` válido,

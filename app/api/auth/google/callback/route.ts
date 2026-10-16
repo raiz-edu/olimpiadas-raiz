@@ -11,13 +11,7 @@ import {
   getMarcaSlugForEmail,
   podeEntrarNoPortalStaff,
 } from "@/lib/auth/domains";
-import {
-  ALUNO_SESSION_COOKIE,
-  ALUNO_PENDING_COOKIE,
-  signStudentCookie,
-  cookieSessionOpts,
-  cookiePendingOpts,
-} from "@/lib/auth/student-cookie";
+import { abrirSessaoPortal } from "@/lib/auth/portal-login";
 import { resolverPrimeiroAcesso, marcarConviteAceito } from "@/lib/auth/primeiro-acesso";
 
 interface GoogleTokens {
@@ -171,33 +165,56 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/aluno/login?erro=dominio${popupQS}`);
   }
 
-  let { data: aluno } = await admin
+  const { data: alunoExistente, error: alunoError } = await admin
     .from("aluno")
-    .select("id, consentimento_responsavel")
+    .select("*")
     .eq("email", email)
-    .eq("ativo", true)
     .maybeSingle();
+
+  if (alunoError) return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
+  let aluno = alunoExistente;
+
+  // Um acesso desativado não deve ser reprovisionado pelo Google.
+  if (aluno && !aluno.ativo) {
+    return NextResponse.redirect(`${origin}/aluno/login?erro=inativo${popupQS}`);
+  }
 
   if (!aluno) {
     const marcaSlug = getMarcaSlugForEmail(email);
     let marcaId: string | null = null;
     if (marcaSlug) {
-      const { data: marca } = await admin
+      const { data: marca, error: marcaError } = await admin
         .from("marca")
         .select("id")
         .eq("slug", marcaSlug)
         .maybeSingle();
+      if (marcaError) return NextResponse.redirect(`${origin}/aluno/login?erro=oauth${popupQS}`);
       marcaId = marca?.id ?? null;
     }
 
-    const { data: novoAluno } = await admin
+    const { data: novoAluno, error: insertError } = await admin
       .from("aluno")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert({ email, nome: payload.name, ativo: true, marca_id: marcaId } as any)
-      .select("id, consentimento_responsavel")
+      .insert({
+        email,
+        nome: payload.name || email.split("@")[0] || "Conta institucional",
+        ativo: true,
+        marca_id: marcaId,
+        tipo_usuario: "pendente",
+      })
+      .select("*")
       .single();
 
     aluno = novoAluno;
+    // Dois retornos OAuth simultâneos: o índice único de email preserva a identidade.
+    if (insertError?.code === "23505") {
+      const result = await admin
+        .from("aluno")
+        .select("*")
+        .eq("email", email)
+        .eq("ativo", true)
+        .maybeSingle();
+      if (!result.error) aluno = result.data;
+    }
   }
 
   if (!aluno) {
@@ -212,17 +229,7 @@ export async function GET(request: NextRequest) {
     httpOnly: true,
   };
 
-  if (!aluno.consentimento_responsavel) {
-    if (marcaSlugHint) cookieStore.set("marca_hint", marcaSlugHint, marcaHintOpts);
-    cookieStore.set(ALUNO_PENDING_COOKIE, signStudentCookie(aluno.id), cookiePendingOpts());
-    // Em popup, o passo de consentimento acontece no próprio popup (top-level,
-    // cookies funcionam normalmente); após autorizar, a action envia ao handoff.
-    return NextResponse.redirect(`${origin}/aluno/login${isPopup ? "?popup=1" : ""}`);
-  }
-
   if (marcaSlugHint) cookieStore.set("marca_hint", marcaSlugHint, marcaHintOpts);
-  cookieStore.set(ALUNO_SESSION_COOKIE, signStudentCookie(aluno.id), cookieSessionOpts());
-  // Em popup, a sessão foi criada no jar do popup; /auth/popup-callback gera o
-  // token de handoff e o entrega ao iframe via postMessage.
-  return NextResponse.redirect(`${origin}${isPopup ? "/auth/popup-callback" : "/aluno/dashboard"}`);
+  const destino = await abrirSessaoPortal(aluno, isPopup);
+  return NextResponse.redirect(`${origin}${destino}`);
 }

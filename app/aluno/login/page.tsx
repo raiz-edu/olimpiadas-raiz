@@ -4,9 +4,13 @@ import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
 import { getConfigValue } from "@/lib/config/queries";
 import { ALUNO_PENDING_COOKIE } from "@/lib/auth/student-cookie";
 import { identidadeDaMarca } from "@/lib/marcas/identidade";
+import { getStudentSession } from "@/lib/auth/student-session";
+import { destinoPortal } from "@/lib/auth/portal-profile";
+import { redirect } from "next/navigation";
+import { logoutAluno } from "./actions";
 
 export const metadata = {
-  title: "Acesso do Aluno — Plataforma Olímpica",
+  title: "Área de estudos — Plataforma Olímpica",
 };
 
 // ─── Vídeo de fundo ───────────────────────────────────────────────────────────
@@ -71,12 +75,18 @@ const TEAL = "rgb(91,184,193)";
 export default async function LoginAlunoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ marca?: string }>;
+  searchParams: Promise<{ marca?: string; popup?: string }>;
 }) {
-  const { marca } = await searchParams;
+  const { marca, popup } = await searchParams;
   const videoSrc = await getConfigValue("video_login_url");
   const cookieStore = await cookies();
-  const initialNeedsConsent = !!cookieStore.get(ALUNO_PENDING_COOKIE)?.value;
+  const session = await getStudentSession({ permitirCadastroIncompleto: true });
+  let initialNeedsConsent = !!cookieStore.get(ALUNO_PENDING_COOKIE)?.value;
+  if (session) {
+    const destino = destinoPortal(session.aluno, popup === "1");
+    if (!destino.startsWith("/aluno/login")) redirect(destino);
+    initialNeedsConsent = true;
+  }
   const marcaHint = cookieStore.get("marca_hint")?.value || null;
   const effectiveMarca = marca ?? marcaHint;
   const identidade = identidadeDaMarca(effectiveMarca);
@@ -144,10 +154,33 @@ export default async function LoginAlunoPage({
 
           {/* Card de login */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <LoginAlunoForm initialNeedsConsent={initialNeedsConsent} />
+            <LoginAlunoForm
+              key={initialNeedsConsent ? "consentimento" : "login"}
+              initialNeedsConsent={initialNeedsConsent}
+            />
+            {initialNeedsConsent ? (
+              <form action={logoutAluno} className="mt-4 text-center">
+                {popup === "1" && <input type="hidden" name="popup" value="1" />}
+                <button className="text-xs text-muted-foreground underline">
+                  Usar outra conta
+                </button>
+              </form>
+            ) : (
+              <p className="mt-5 text-center text-xs leading-relaxed text-muted-foreground">
+                Alunos, professores e outros profissionais usam o e-mail institucional. No primeiro
+                acesso, vamos confirmar seu perfil e sua escola.
+              </p>
+            )}
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
+            <a
+              href="/login"
+              className="mb-4 block font-semibold hover:underline"
+              style={{ color: TEAL }}
+            >
+              Professores e equipe: acessar gestão pedagógica
+            </a>
             Dificuldades para acessar?{" "}
             <a
               href="mailto:olimpiadas@raizeducacao.com.br"

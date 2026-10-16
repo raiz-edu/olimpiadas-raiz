@@ -1,6 +1,7 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { TrilhaOlimpica } from "@/components/trilha/trilha-olimpica";
 import { identidadeDaMarca } from "@/lib/marcas/identidade";
+import Link from "next/link";
 
 export const metadata = {
   title: "Login — Olimpíadas do Conhecimento",
@@ -56,12 +57,24 @@ export default async function LoginPage({
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-            <h2 className="mb-6 text-lg font-semibold text-foreground">Entrar na plataforma</h2>
+            <Link
+              href={`/aluno/login${marca ? `?marca=${encodeURIComponent(marca)}` : ""}`}
+              className="mb-6 block rounded-xl border border-primary/30 bg-primary/8 p-4 text-sm font-semibold text-primary"
+            >
+              Sou aluno{" "}
+              <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                Entrar na área de estudos →
+              </span>
+            </Link>
+            <h2 className="text-lg font-semibold text-foreground">Professores e equipe</h2>
+            <p className="mb-6 mt-2 text-xs leading-relaxed text-muted-foreground">
+              Acesso à gestão pedagógica com as permissões da sua conta.
+            </p>
             <LoginForm />
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Acesso somente por convite.{" "}
+            Use seu e-mail institucional ou o acesso recebido por convite.{" "}
             <a
               href="mailto:olimpiadas@raizeducacao.com.br"
               className="text-primary hover:underline"

@@ -19,6 +19,37 @@ import {
 
 const janela = criarJanelaEstudo(30, AGORA_ENGAJAMENTO);
 
+describe("identificação escolar no acompanhamento", () => {
+  it("exclui profissionais e pendentes, preservando alunos e legados", () => {
+    const dados = dadosBase();
+    dados.alunos = [
+      alunoBase("aluno", { tipo_usuario: "aluno" }),
+      alunoBase("legado", { tipo_usuario: null }),
+      alunoBase("prof", { tipo_usuario: "professor" }),
+      alunoBase("colab", { tipo_usuario: "colaborador" }),
+      alunoBase("pendente", { tipo_usuario: "pendente" }),
+    ];
+    expect(montarAlunosEngajamento(dados, janela).map((a) => a.id)).toEqual(["aluno", "legado"]);
+  });
+  it("identifica unidade do aluno novo sem turma pelo cadastro oficial", () => {
+    const dados = dadosBase();
+    const unidade = dados.unidades[0]!;
+    dados.alunos = [
+      alunoBase("novo", {
+        turma_id: null,
+        unidade_id: unidade.id,
+        tipo_usuario: "aluno",
+        serie: null,
+        serie_cadastro: "6º",
+      }),
+    ];
+    const aluno = montarAlunosEngajamento(dados, janela)[0];
+    expect(aluno?.unidadeId).toBe(unidade.id);
+    expect(aluno?.unidade).toBe(unidade.nome);
+    expect(aluno?.serie).toBe("6º");
+  });
+});
+
 describe("calendário de estudo", () => {
   it("inclui hoje em São Paulo, sem incluir o dia UTC seguinte", () => {
     const recorte = criarJanelaEstudo(7, new Date("2026-10-16T02:30:00Z"));

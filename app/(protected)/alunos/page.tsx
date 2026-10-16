@@ -28,6 +28,7 @@ export default async function AlunosPage() {
     .select(
       "id, nome, data_nascimento, cpf, ativo, turma_id, turma:turma_id(nome, unidade:unidade_id(nome, marca:marca_id(cor_primaria)))",
     )
+    .or("tipo_usuario.is.null,tipo_usuario.eq.aluno")
     .order("nome");
 
   type AlunoRow = NonNullable<typeof alunos>[number];

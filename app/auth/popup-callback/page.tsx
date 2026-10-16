@@ -1,9 +1,5 @@
-import { cookies } from "next/headers";
-import {
-  ALUNO_SESSION_COOKIE,
-  verifyStudentCookie,
-  signPopupHandoff,
-} from "@/lib/auth/student-cookie";
+import { signPopupHandoff } from "@/lib/auth/student-cookie";
+import { getStudentSession } from "@/lib/auth/student-session";
 import { PopupCallbackClient } from "./popup-callback-client";
 
 export const metadata = {
@@ -17,10 +13,8 @@ export const metadata = {
  * que abriu o popup via postMessage (mesma origem).
  */
 export default async function PopupCallbackPage() {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(ALUNO_SESSION_COOKIE)?.value;
-  const alunoId = raw ? verifyStudentCookie(raw) : null;
-  const handoff = alunoId ? signPopupHandoff(alunoId) : null;
+  const session = await getStudentSession({ popup: true });
+  const handoff = session ? signPopupHandoff(session.aluno.id) : null;
 
   return <PopupCallbackClient handoff={handoff} />;
 }

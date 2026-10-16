@@ -93,6 +93,7 @@ export default async function AnalyticsPage() {
       .from("aluno")
       .select("id, nome, marca_id, last_login_at, login_count")
       .eq("ativo", true)
+      .or("tipo_usuario.is.null,tipo_usuario.eq.aluno")
       .not("last_login_at", "is", null),
     // Camada de agregados: histórico sem granularidade de aluno (migration 044)
     supabase

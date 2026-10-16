@@ -58,8 +58,8 @@ export function verifyPopupHandoff(signed: string): string | null {
   const value = verifyStudentCookie(signed);
   if (!value) return null;
   const [tag, alunoId, exp] = value.split(":");
-  if (tag !== "popup" || !alunoId || !exp) return null;
-  if (Date.now() > Number(exp)) return null;
+  if (value.split(":").length !== 3 || tag !== "popup" || !alunoId || !exp) return null;
+  if (!Number.isFinite(Number(exp)) || Date.now() > Number(exp)) return null;
   return alunoId;
 }
 
