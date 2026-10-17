@@ -1,0 +1,20 @@
+{
+  "dados": "sintéticos",
+  "verificacoes": [
+    "Desktop: indicadores, gráfico real e primeira página de 25 alunos.",
+    "Perfis NULL, undefined e pendente em lista própria de 28 cadastros, sem profissionais nem desempenho; paginação de 25 sem alterar alunos.",
+    "Filtro de retomada: quatro alunos; denominador geral preservado em 32.",
+    "Navegação parcial por marca e situação mantém os seletores sincronizados com o recorte.",
+    "Paginação: os sete alunos restantes aparecem na segunda página.",
+    "As duas paginações preservam a página da outra lista.",
+    "Voltar à primeira página mantém a lista aberta; refinar a ordenação de alunos preserva a página dos perfis.",
+    "Marca, período e busca funcionam juntos e reiniciam a paginação.",
+    "Estado vazio explica o recorte sem sugerir falha de aprendizagem.",
+    "Marca, unidade e série exclusivas de pendentes permanecem nos filtros; recorte sem alunos abre lista e mantém vínculos na paginação.",
+    "Busca filtra perfis; período e situação de estudo não ocultam a pendência cadastral.",
+    "Celular: sem transbordamento horizontal; cartões e análise individual expansível.",
+    "Celular: lista pendente com rolagem interna, sem overflow da página, e próxima página acessível.",
+    "Tablet e período de 90 dias: sem transbordamento horizontal."
+  ],
+  "errosConsole": []
+}

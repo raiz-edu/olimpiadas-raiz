@@ -93,7 +93,7 @@ export default async function AnalyticsPage() {
       .from("aluno")
       .select("id, nome, marca_id, last_login_at, login_count")
       .eq("ativo", true)
-      .or("tipo_usuario.is.null,tipo_usuario.eq.aluno")
+      .eq("tipo_usuario", "aluno")
       .not("last_login_at", "is", null),
     // Camada de agregados: histórico sem granularidade de aluno (migration 044)
     supabase
@@ -1116,6 +1116,16 @@ export default async function AnalyticsPage() {
 
       {/* ── SPRINT 5 ──────────────────────────────────────────────────────── */}
       <Divider label="Plataforma do Aluno" />
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        Os indicadores de uso consideram somente perfis identificados como alunos.{" "}
+        <Link
+          href="/academico/desempenho#perfis-nao-confirmados"
+          className="text-primary underline underline-offset-4"
+        >
+          Consultar perfis não confirmados
+        </Link>
+        .
+      </p>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-4 text-center">
@@ -1133,7 +1143,9 @@ export default async function AnalyticsPage() {
       {/* Atividade por marca */}
       <SectionCard title="Atividade por marca">
         {atividadeMarcaList.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum acesso registrado ainda.</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhum acesso de aluno confirmado registrado ainda.
+          </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">
@@ -1177,7 +1189,9 @@ export default async function AnalyticsPage() {
       {/* Alunos mais frequentes */}
       <SectionCard title="Alunos mais frequentes">
         {maisFrequentes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum acesso registrado ainda.</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhum acesso de aluno confirmado registrado ainda.
+          </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">

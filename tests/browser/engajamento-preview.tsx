@@ -5,8 +5,9 @@ import {
   criarJanelaEstudo,
   lerFiltrosEngajamento,
   montarAlunosEngajamento,
+  montarPerfisNaoConfirmados,
 } from "@/lib/engajamento/metricas";
-import { AGORA_ENGAJAMENTO, fixturePedagogico } from "@/tests/fixtures/engajamento";
+import { AGORA_ENGAJAMENTO, fixturePerfisNaoConfirmados } from "@/tests/fixtures/engajamento";
 import "@/app/globals.css";
 
 // Mantém a árvore React entre alterações na URL, como a navegação do Next.
@@ -22,13 +23,15 @@ function PreviewPedagogico() {
   );
   const filtros = lerFiltrosEngajamento(Object.fromEntries(new URLSearchParams(busca)));
   const janela = criarJanelaEstudo(filtros.periodo, AGORA_ENGAJAMENTO);
+  const dados = fixturePerfisNaoConfirmados();
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-8">
       <p className="mb-5 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
         Verificação visual · dados sintéticos de teste
       </p>
       <PainelEngajamento
-        alunos={montarAlunosEngajamento(fixturePedagogico(), janela)}
+        alunos={montarAlunosEngajamento(dados, janela)}
+        naoConfirmados={montarPerfisNaoConfirmados(dados)}
         filtros={filtros}
         janela={janela}
       />

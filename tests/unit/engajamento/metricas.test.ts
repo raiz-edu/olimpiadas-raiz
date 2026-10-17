@@ -5,6 +5,7 @@ import {
   filtrarCoorte,
   lerFiltrosEngajamento,
   montarAlunosEngajamento,
+  montarPerfisNaoConfirmados,
   resumirEngajamento,
   selecionarAlunos,
   taxaAcerto,
@@ -20,7 +21,7 @@ import {
 const janela = criarJanelaEstudo(30, AGORA_ENGAJAMENTO);
 
 describe("identificação escolar no acompanhamento", () => {
-  it("exclui profissionais e pendentes, preservando alunos e legados", () => {
+  it("somente alunos confirmados compõem os indicadores", () => {
     const dados = dadosBase();
     dados.alunos = [
       alunoBase("aluno", { tipo_usuario: "aluno" }),
@@ -29,7 +30,20 @@ describe("identificação escolar no acompanhamento", () => {
       alunoBase("colab", { tipo_usuario: "colaborador" }),
       alunoBase("pendente", { tipo_usuario: "pendente" }),
     ];
-    expect(montarAlunosEngajamento(dados, janela).map((a) => a.id)).toEqual(["aluno", "legado"]);
+    dados.respostas = [
+      respostaBase("certa", "aluno"),
+      respostaBase("legado-erro", "legado", { correta: false }),
+      respostaBase("pendente-erro", "pendente", { correta: false }),
+      respostaBase("prof-erro", "prof", { correta: false }),
+    ];
+    const alunos = montarAlunosEngajamento(dados, janela);
+    expect(alunos.map((a) => a.id)).toEqual(["aluno"]);
+    expect(resumirEngajamento(alunos, janela)).toMatchObject({
+      total: 1,
+      ativos: 1,
+      tentativas: 1,
+      desempenho: { corrigidas: 1, acertos: 1, pendentes: 0 },
+    });
   });
   it("identifica unidade do aluno novo sem turma pelo cadastro oficial", () => {
     const dados = dadosBase();
@@ -47,6 +61,59 @@ describe("identificação escolar no acompanhamento", () => {
     expect(aluno?.unidadeId).toBe(unidade.id);
     expect(aluno?.unidade).toBe(unidade.nome);
     expect(aluno?.serie).toBe("6º");
+  });
+  it("apresenta legados e pendentes sem lhes atribuir desempenho de aluno", () => {
+    const dados = dadosBase();
+    dados.alunos = [
+      alunoBase("legado", {
+        tipo_usuario: null,
+        nome: "Beatriz",
+        last_login_at: "2026-10-15T12:00:00Z",
+      }),
+      alunoBase("novo", {
+        tipo_usuario: "pendente",
+        nome: "Álvaro",
+        turma_id: null,
+        marca_id: null,
+      }),
+      alunoBase("prof", { tipo_usuario: "professor" }),
+      alunoBase("colab", { tipo_usuario: "colaborador" }),
+      alunoBase("aluno"),
+    ];
+    const pendentes = montarPerfisNaoConfirmados(dados);
+    expect(pendentes.map((p) => p.id)).toEqual(["novo", "legado"]);
+    expect(pendentes[0]).toMatchObject({ marcaId: null, unidadeId: null, serie: null });
+    expect(pendentes[1]).toMatchObject({
+      marca: "Matriz Educação",
+      unidade: "Unidade Centro",
+      last_login_at: "2026-10-15T12:00:00Z",
+    });
+    expect(pendentes[1]).not.toHaveProperty("desempenho");
+    expect(pendentes[1]).not.toHaveProperty("situacao");
+    expect(
+      filtrarCoorte(
+        pendentes,
+        lerFiltrosEngajamento({ busca: "alvaro", marca: "sem-vinculo" }),
+      ).map((p) => p.id),
+    ).toEqual(["novo"]);
+  });
+  it("reclassifica na leitura seguinte sem perder identidade ou histórico", () => {
+    const dados = dadosBase();
+    const pessoa = alunoBase("mesma-identidade", { tipo_usuario: null });
+    dados.alunos = [pessoa];
+    dados.respostas = [respostaBase("historico", pessoa.id)];
+    expect(montarAlunosEngajamento(dados, janela)).toHaveLength(0);
+    expect(montarPerfisNaoConfirmados(dados)).toHaveLength(1);
+    pessoa.tipo_usuario = "aluno";
+    expect(montarPerfisNaoConfirmados(dados)).toHaveLength(0);
+    expect(montarAlunosEngajamento(dados, janela)[0]).toMatchObject({
+      id: pessoa.id,
+      tentativas: 1,
+    });
+    pessoa.tipo_usuario = "professor";
+    expect(montarPerfisNaoConfirmados(dados)).toHaveLength(0);
+    expect(montarAlunosEngajamento(dados, janela)).toHaveLength(0);
+    expect(dados.respostas).toHaveLength(1);
   });
 });
 
@@ -303,14 +370,24 @@ describe("recortes da equipe pedagógica", () => {
       lerFiltrosEngajamento({
         periodo: "999",
         pagina: "-1",
+        pagina_perfis: "1e309",
         situacao: "__proto__",
         ordenar: ["nome"],
       }),
-    ).toMatchObject({ periodo: 30, pagina: 1, situacao: "", ordenar: "atencao" });
+    ).toMatchObject({
+      periodo: 30,
+      pagina: 1,
+      pagina_perfis: null,
+      situacao: "",
+      ordenar: "atencao",
+    });
     expect(lerFiltrosEngajamento({ periodo: "7", pagina: "2", situacao: "apoio" })).toMatchObject({
       periodo: 7,
       pagina: 2,
       situacao: "apoio",
     });
+    expect(lerFiltrosEngajamento({ pagina_perfis: "2" }).pagina_perfis).toBe(2);
+    expect(lerFiltrosEngajamento({ pagina_perfis: "1" }).pagina_perfis).toBe(1);
+    expect(lerFiltrosEngajamento({}).pagina_perfis).toBeNull();
   });
 });

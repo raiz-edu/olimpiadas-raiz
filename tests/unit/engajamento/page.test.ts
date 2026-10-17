@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Pagina from "@/app/(protected)/academico/desempenho/page";
 import { carregarDadosEngajamento } from "@/lib/engajamento/queries";
-import { dadosBase } from "@/tests/fixtures/engajamento";
+import { dadosBase, fixturePerfisNaoConfirmados } from "@/tests/fixtures/engajamento";
 
 const mocks = vi.hoisted(() => ({
   sessao: vi.fn(),
@@ -64,5 +64,15 @@ describe("acesso e indisponibilidade do painel", () => {
     vi.mocked(carregarDadosEngajamento).mockResolvedValue(dadosBase());
     const pagina = await Pagina({ searchParams: Promise.resolve({ periodo: "7" }) });
     expect(renderToStaticMarkup(pagina!)).toContain("Painel pedagógico");
+  });
+  it("entrega alunos e pendências em grupos separados, sem profissionais", async () => {
+    vi.mocked(carregarDadosEngajamento).mockResolvedValue(fixturePerfisNaoConfirmados());
+    const pagina = await Pagina({ searchParams: Promise.resolve({ pagina_perfis: "2" }) });
+    const { alunos, naoConfirmados, filtros } = pagina!.props;
+    expect(alunos).toHaveLength(32);
+    expect(naoConfirmados).toHaveLength(28);
+    expect(alunos.every((a: { tipo_usuario: string }) => a.tipo_usuario === "aluno")).toBe(true);
+    expect(naoConfirmados.every((p: { id: string }) => p.id.startsWith("pendente-"))).toBe(true);
+    expect(filtros.pagina_perfis).toBe(2);
   });
 });

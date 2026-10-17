@@ -39,9 +39,11 @@ Os dois acessos continuam com sessões independentes.
 ## Legado e implantação
 
 Adicionar tipo nullable sem default e só então definir default `pendente` para novas linhas.
-Legado sem classificação continua visível até confirmação; registros com turma/RA são alunos.
+Legado sem classificação fica em lista própria de perfis não confirmados no acompanhamento
+pedagógico até confirmação; registros com turma/RA são alunos.
 Não deduzir automaticamente que todo login histórico é aluno. Novos cadastros administrativos
-e sincronizados têm tipo aluno explícito. Novos acessos Google pendentes não entram no painel.
+e sincronizados têm tipo aluno explícito. Novos acessos Google pendentes aparecem nessa lista,
+sem compor os indicadores de alunos.
 O painel usa unidade da turma e, na ausência dela, a unidade oficial do cadastro.
 Mudanças de marca, coligada ou filial na sincronização de aluno sem turma invalidam a
 unidade autodeclarada e pedem sua confirmação novamente, preservando histórico e autorização.

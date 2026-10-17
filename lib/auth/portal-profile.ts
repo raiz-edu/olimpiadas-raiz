@@ -64,7 +64,10 @@ export function destinoPortal(aluno: Perfil, popup = false): string {
 export function podeEstudarNoPortal(aluno: Perfil): boolean {
   return destinoPortal(aluno) === "/aluno/dashboard";
 }
-/** NULL é legado ainda não classificado; pendente novo não compõe o denominador. */
+/** Os indicadores contam somente identidades já classificadas como aluno. */
 export function compoeIndicadoresAluno(tipo: Aluno["tipo_usuario"] | undefined): boolean {
-  return tipo == null || tipo === "aluno";
+  return tipo === "aluno";
+}
+export function perfilPortalNaoConfirmado(tipo: Aluno["tipo_usuario"] | undefined): boolean {
+  return tipo == null || tipo === "pendente";
 }
