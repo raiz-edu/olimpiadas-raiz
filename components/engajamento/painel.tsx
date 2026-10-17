@@ -27,6 +27,14 @@ import {
 } from "@/lib/engajamento/metricas";
 import { AtividadeChart } from "./atividade-chart";
 import { PerfisNaoConfirmados } from "./perfis-nao-confirmados";
+import {
+  catalogoRecortes,
+  temRecorteQuestoes,
+  type OrigemRecorte,
+} from "@/lib/engajamento/recortes";
+import { FiltrosQuestoes } from "./filtros-questoes";
+import { NavegacaoPedagogica } from "./navegacao";
+import { ComparacaoAluno, ComparacaoPeriodo } from "./comparacao-periodo";
 
 const CAMPO =
   "h-10 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -100,7 +108,15 @@ function Situacao({ aluno }: { aluno: AlunoEngajamento }) {
     </div>
   );
 }
-function DetalheAluno({ aluno, janela }: { aluno: AlunoEngajamento; janela: JanelaEstudo }) {
+function DetalheAluno({
+  aluno,
+  anterior,
+  janela,
+}: {
+  aluno: AlunoEngajamento;
+  anterior?: AlunoEngajamento;
+  janela: JanelaEstudo;
+}) {
   return (
     <details className="mt-2 text-xs">
       <summary className="w-fit cursor-pointer rounded py-1 font-medium text-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
@@ -142,6 +158,7 @@ function DetalheAluno({ aluno, janela }: { aluno: AlunoEngajamento; janela: Jane
             </div>
           ))}
         </dl>
+        <ComparacaoAluno atual={aluno.desempenho} anterior={anterior?.desempenho} />
         <p className="border-t border-border pt-2 text-muted-foreground">
           Histórico: {numero(aluno.premiacoes)} premiação(ões) · {numero(aluno.login_count)}{" "}
           login(s). Último login: {dataCurta(aluno.last_login_at)}.
@@ -246,15 +263,22 @@ function Grupos({
 export function PainelEngajamento({
   alunos,
   naoConfirmados = [],
+  anteriores = [],
+  catalogo = catalogoRecortes({ respostas: [] }),
   filtros,
   janela,
 }: {
   alunos: AlunoEngajamento[];
   naoConfirmados?: PerfilNaoConfirmado[];
+  anteriores?: AlunoEngajamento[];
+  catalogo?: OrigemRecorte[];
   filtros: FiltrosEngajamento;
   janela: JanelaEstudo;
 }) {
   const coorte = filtrarCoorte(alunos, filtros);
+  const anteriorPorId = new Map(anteriores.map((a) => [a.id, a]));
+  const resumoAnterior = resumirEngajamento(filtrarCoorte(anteriores, filtros), janela);
+  const recorteAtivo = temRecorteQuestoes(filtros);
   const pendentes = filtrarCoorte(naoConfirmados, filtros);
   const paginasPerfis = Math.max(1, Math.ceil(pendentes.length / POR_PAGINA));
   const paginaPerfis = Math.min(filtros.pagina_perfis ?? 1, paginasPerfis);
@@ -305,7 +329,7 @@ export function PainelEngajamento({
             Acompanhamento pedagógico
           </p>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Engajamento e desempenho
+            Desempenho dos alunos
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Entenda a participação dos alunos, identifique dificuldades e organize os próximos
@@ -318,10 +342,12 @@ export function PainelEngajamento({
         </p>
       </header>
 
+      <NavegacaoPedagogica atual="desempenho" filtros={filtros} />
+
       <form
         key={`recorte-${urlEngajamento(filtros)}`}
         action="/academico/desempenho"
-        className={`${CARTAO} grid gap-3 sm:grid-cols-2 xl:grid-cols-6`}
+        className={`${CARTAO} grid gap-3 sm:grid-cols-2 xl:grid-cols-4`}
         aria-label="Filtrar acompanhamento pedagógico"
       >
         {campos.map((campo) => (
@@ -353,6 +379,7 @@ export function PainelEngajamento({
             </select>
           </label>
         ))}
+        <FiltrosQuestoes catalogo={catalogo} filtros={filtros} className={CAMPO} />
         <label className="min-w-0 space-y-1.5 text-xs font-medium text-muted-foreground">
           Buscar por nome
           <input
@@ -379,6 +406,14 @@ export function PainelEngajamento({
           </Link>
         </div>
       </form>
+
+      {recorteAtivo && (
+        <p className="rounded-lg border border-teal-300/20 bg-teal-300/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+          Neste recorte, atividade e desempenho consideram as respostas das questões selecionadas. A
+          base mantém todos os alunos dos filtros de marca, unidade e série. Aulas assistidas sem
+          vínculo com a olimpíada ficam na visão geral.
+        </p>
+      )}
 
       <PerfisNaoConfirmados
         perfis={pendentes.slice((paginaPerfis - 1) * POR_PAGINA, paginaPerfis * POR_PAGINA)}
@@ -417,7 +452,7 @@ export function PainelEngajamento({
           {
             titulo: "Estudaram no período",
             valor: numero(resumo.ativos),
-            descricao: `${percentual(resumo.total ? (resumo.ativos / resumo.total) * 100 : null)} dos alunos · respostas ou progresso em aula`,
+            descricao: `${percentual(resumo.total ? (resumo.ativos / resumo.total) * 100 : null)} dos alunos · ${recorteAtivo ? "respostas no recorte" : "respostas ou progresso em aula"}`,
             Icone: Activity,
           },
           {
@@ -447,6 +482,12 @@ export function PainelEngajamento({
           </section>
         ))}
       </div>
+
+      <ComparacaoPeriodo
+        atual={resumo.desempenho}
+        anterior={resumoAnterior.desempenho}
+        janela={janela}
+      />
 
       {coorte.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-border py-14 text-center">
@@ -489,8 +530,12 @@ export function PainelEngajamento({
                 {
                   filtro: "sem_estudo" as const,
                   total: resumo.semEstudo,
-                  titulo: "Incentivar o primeiro estudo",
-                  descricao: "Já fez login, mas ainda não há estudo registrado",
+                  titulo: recorteAtivo
+                    ? "Incentivar o estudo neste recorte"
+                    : "Incentivar o primeiro estudo",
+                  descricao: recorteAtivo
+                    ? "Sem respostas registradas para as questões selecionadas"
+                    : "Já fez login, mas ainda não há estudo registrado",
                   cor: "text-cyan-200",
                 },
                 {
@@ -554,8 +599,9 @@ export function PainelEngajamento({
                 ))}
               </dl>
               <p className="mt-3 text-xs text-muted-foreground">
-                {numero(resumo.aulasAssistidas)} registro(s) de aulas assistidas atualizados no
-                período.
+                {recorteAtivo
+                  ? "Aulas assistidas disponíveis na visão geral, sem filtro de questões."
+                  : `${numero(resumo.aulasAssistidas)} registro(s) de aulas assistidas atualizados no período.`}
               </p>
             </section>
           </div>
@@ -635,16 +681,26 @@ export function PainelEngajamento({
                 className="flex w-full flex-wrap items-end gap-2 sm:w-auto"
                 aria-label="Refinar lista de alunos"
               >
-                {(["marca", "unidade", "serie", "periodo", "busca", "pagina_perfis"] as const).map(
-                  (chave) => (
-                    <input
-                      key={chave}
-                      type="hidden"
-                      name={chave}
-                      value={String(filtros[chave] ?? "")}
-                    />
-                  ),
-                )}
+                {(
+                  [
+                    "marca",
+                    "unidade",
+                    "serie",
+                    "periodo",
+                    "busca",
+                    "pagina_perfis",
+                    "olimpiada",
+                    "nivel",
+                    "fase",
+                  ] as const
+                ).map((chave) => (
+                  <input
+                    key={chave}
+                    type="hidden"
+                    name={chave}
+                    value={String(filtros[chave] ?? "")}
+                  />
+                ))}
                 <label className="min-w-0 basis-full space-y-1 text-xs text-muted-foreground sm:basis-auto">
                   Situação
                   <select
@@ -742,7 +798,11 @@ export function PainelEngajamento({
                               {aluno.serie ?? "Sem série"}
                               {aluno.turma ? ` · ${aluno.turma}` : ""}
                             </p>
-                            <DetalheAluno aluno={aluno} janela={janela} />
+                            <DetalheAluno
+                              aluno={aluno}
+                              anterior={anteriorPorId.get(aluno.id)}
+                              janela={janela}
+                            />
                           </th>
                           <td className="px-4 py-4">
                             <Situacao aluno={aluno} />
@@ -764,7 +824,7 @@ export function PainelEngajamento({
                             <Acerto dados={aluno.desempenho} />
                           </td>
                           <td className="px-4 py-4 text-right tabular-nums">
-                            {numero(aluno.aulasAssistidas)}
+                            {recorteAtivo ? "—" : numero(aluno.aulasAssistidas)}
                           </td>
                         </tr>
                       ))}
@@ -804,7 +864,11 @@ export function PainelEngajamento({
                           <dd className="mt-1">{dataCurta(aluno.ultimaAtividade)}</dd>
                         </div>
                       </dl>
-                      <DetalheAluno aluno={aluno} janela={janela} />
+                      <DetalheAluno
+                        aluno={aluno}
+                        anterior={anteriorPorId.get(aluno.id)}
+                        janela={janela}
+                      />
                     </article>
                   ))}
                 </div>

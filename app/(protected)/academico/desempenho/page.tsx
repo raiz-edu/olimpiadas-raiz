@@ -8,10 +8,12 @@ import {
   lerFiltrosEngajamento,
   montarAlunosEngajamento,
   montarPerfisNaoConfirmados,
+  janelaAnteriorEstudo,
 } from "@/lib/engajamento/metricas";
+import { catalogoRecortes } from "@/lib/engajamento/recortes";
 import { PainelEngajamento } from "@/components/engajamento/painel";
 
-export const metadata = { title: "Engajamento e Desempenho — Olimpíadas" };
+export const metadata = { title: "Desempenho dos alunos — Olimpíadas" };
 
 export default async function EngajamentoDesempenhoPage({
   searchParams,
@@ -50,7 +52,9 @@ export default async function EngajamentoDesempenhoPage({
   const janela = criarJanelaEstudo(filtros.periodo, agora);
   return (
     <PainelEngajamento
-      alunos={montarAlunosEngajamento(dados, janela)}
+      alunos={montarAlunosEngajamento(dados, janela, filtros)}
+      anteriores={montarAlunosEngajamento(dados, janelaAnteriorEstudo(janela), filtros)}
+      catalogo={catalogoRecortes(dados)}
       naoConfirmados={montarPerfisNaoConfirmados(dados)}
       filtros={filtros}
       janela={janela}

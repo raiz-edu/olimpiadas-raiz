@@ -63,7 +63,7 @@ export function PerfisNaoConfirmados({
           </summary>
           <p className="mb-3 mt-2 text-xs leading-relaxed text-muted-foreground">
             Marca, unidade, série e busca seguem os filtros acima. A pendência cadastral independe
-            do período e da situação de estudo.
+            do período, da situação de estudo e dos filtros de questões.
           </p>
           <div
             className="overflow-x-auto rounded-xl border border-border"

@@ -237,7 +237,13 @@ function SidebarContent({ apostilasLabel = "Apostilas" }: { apostilasLabel?: str
             active={pathname.startsWith("/academico/desempenho")}
             onClick={() => go("/academico/desempenho")}
           >
-            Engajamento e Desempenho
+            Desempenho dos alunos
+          </SubItem>
+          <SubItem
+            active={pathname.startsWith("/academico/ranking")}
+            onClick={() => go("/academico/ranking")}
+          >
+            Ranking por marca
           </SubItem>
           <SubItem
             active={

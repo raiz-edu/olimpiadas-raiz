@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 
 // Renderiza o componente real. Nenhum bypass de autenticação é adicionado ao app.
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const saida = path.join(raiz, "docs/reports/perfis-nao-confirmados-2026-10-16");
+const saida = path.join(raiz, "docs/reports/desempenho-ranking-2026-10-16");
 await fs.mkdir(saida, { recursive: true });
 const html =
   '<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Verificação pedagógica</title></head><body><div id="root"></div><script type="module" src="/tests/browser/engajamento-preview.tsx"></script></body></html>';
@@ -39,7 +39,11 @@ const servidor = await createServer({
       name: "harness-pedagogico",
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
-          if (new URL(req.url, "http://127.0.0.1").pathname !== "/academico/desempenho")
+          if (
+            !["/academico/desempenho", "/academico/ranking"].includes(
+              new URL(req.url, "http://127.0.0.1").pathname,
+            )
+          )
             return next();
           try {
             res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -72,7 +76,7 @@ try {
   const listaPerfis = () => pagina.locator("#perfis-nao-confirmados");
   const abrir = async (sufixo = "") => {
     await pagina.goto(`${endereco}${sufixo}`, { waitUntil: "networkidle" });
-    await pagina.getByRole("heading", { name: "Engajamento e desempenho", exact: true }).waitFor();
+    await pagina.getByRole("heading", { name: "Desempenho dos alunos", exact: true }).waitFor();
   };
   await abrir();
   await pagina.locator(".recharts-surface").waitFor();
@@ -245,6 +249,145 @@ try {
     false,
   );
   resultado.verificacoes.push("Tablet e período de 90 dias: sem transbordamento horizontal.");
+
+  await pagina.setViewportSize({ width: 1440, height: 1050 });
+  await abrir();
+  await pagina.getByLabel("Marca", { exact: true }).selectOption("marca-1");
+  await pagina.getByLabel("Olimpíada", { exact: true }).selectOption("obmep");
+  await pagina.getByLabel("Nível", { exact: true }).selectOption("nivel_2");
+  await pagina.getByLabel("Fase", { exact: true }).selectOption("1");
+  await pagina.getByRole("button", { name: "Aplicar filtros" }).click();
+  await pagina.waitForURL(/olimpiada=obmep/);
+  await pagina.screenshot({ path: path.join(saida, "desempenho-filtros.png"), fullPage: false });
+  await pagina
+    .getByRole("heading", { name: "Comparação com período anterior", exact: true })
+    .locator("..")
+    .screenshot({ path: path.join(saida, "comparacao-periodos.png") });
+  assert.equal(await tabelaAlunos().locator("tbody tr").count(), 16);
+  const primeiroRecorte = tabelaAlunos().getByRole("row").filter({ hasText: "Aluno de teste 01" });
+  assert.ok((await primeiroRecorte.innerText()).includes("2/6 acertos"));
+  await primeiroRecorte.getByText("Ver análise", { exact: true }).click();
+  assert.ok((await primeiroRecorte.locator("details[open]").innerText()).includes("4/8 acertos"));
+  assert.ok((await primeiroRecorte.locator("details[open]").innerText()).includes("-16,7 p.p."));
+  await pagina.screenshot({ path: path.join(saida, "desempenho-recorte.png"), fullPage: false });
+  resultado.verificacoes.push(
+    "Desempenho: filtros de olimpíada, nível e fase recortam respostas, preservam 16 alunos e comparam o período anterior com base explícita.",
+  );
+
+  await pagina.getByRole("link", { name: "Ranking por marca", exact: true }).click();
+  await pagina.waitForURL(/\/academico\/ranking/);
+  await pagina.getByRole("heading", { name: "Ranking por marca", exact: true }).waitFor();
+  const tabelaRanking = () =>
+    pagina.getByRole("table", {
+      name: "Ranking de preparação dos alunos da marca no período selecionado",
+    });
+  await tabelaRanking().waitFor();
+  assert.equal(await tabelaRanking().locator("tbody tr").count(), 25);
+  assert.deepEqual(
+    await tabelaRanking()
+      .locator("tbody tr td:first-child")
+      .allTextContents()
+      .then((v) => v.slice(0, 4)),
+    ["1º", "1º", "1º", "4º"],
+  );
+  assert.ok(
+    (
+      await pagina.locator('section[aria-label="Alunos confirmados da marca"]').innerText()
+    ).includes("32"),
+  );
+  assert.equal(await pagina.getByText(/Perfil excluído/).count(), 0);
+  await pagina.screenshot({ path: path.join(saida, "ranking-desktop.png"), fullPage: false });
+  resultado.verificacoes.push(
+    "Navegação entre visões preserva marca/olimpíada/nível/fase; ranking mantém empates 1,1,1,4 e exclui profissionais e pendentes.",
+  );
+
+  await pagina.getByRole("link", { name: "Próxima página", exact: true }).click();
+  await pagina.waitForURL(/pagina=2/);
+  assert.equal(await tabelaRanking().locator("tbody tr").count(), 7);
+  assert.equal(await tabelaRanking().getByText("Sem posição", { exact: true }).count(), 2);
+  await pagina.getByLabel("Unidade", { exact: true }).selectOption("ranking-unidade-2");
+  await pagina.getByRole("button", { name: "Filtrar alunos", exact: true }).click();
+  await pagina.waitForURL(/unidade=ranking-unidade-2/);
+  assert.equal(await tabelaRanking().locator("tbody tr").count(), 11);
+  assert.equal(
+    await tabelaRanking().locator("tbody tr td:first-child").first().textContent(),
+    "10º",
+  );
+  await pagina.getByLabel("Buscar aluno", { exact: true }).fill("olimpico 11");
+  await pagina.getByRole("button", { name: "Filtrar alunos", exact: true }).click();
+  await pagina.waitForURL(/busca=olimpico/);
+  assert.equal(await tabelaRanking().locator("tbody tr").count(), 1);
+  assert.equal(
+    await tabelaRanking().locator("tbody tr td:first-child").first().textContent(),
+    "10º",
+  );
+  assert.equal(new URL(pagina.url()).searchParams.has("pagina"), false);
+  resultado.verificacoes.push(
+    "Ranking: paginação de 25 + 7, alunos sem acertos sem posição; unidade e busca sem acento preservam posição na marca e reiniciam página.",
+  );
+
+  await pagina.getByLabel("Olimpíada", { exact: true }).selectOption("canguru");
+  assert.equal(await pagina.getByLabel("Nível", { exact: true }).inputValue(), "");
+  assert.equal(await pagina.getByLabel("Fase", { exact: true }).inputValue(), "1");
+  await pagina.getByLabel("Nível", { exact: true }).selectOption("C");
+  await pagina.getByRole("button", { name: "Ver ranking", exact: true }).click();
+  await pagina.waitForURL(/olimpiada=canguru/);
+  assert.equal(await tabelaRanking().locator("tbody tr").count(), 25);
+  assert.equal(
+    await tabelaRanking().locator("tbody tr td:first-child").first().textContent(),
+    "1º",
+  );
+  resultado.verificacoes.push(
+    "Trocar olimpíada limpa o nível e ajusta fase única; nova definição não herda busca/unidade do recorte anterior.",
+  );
+
+  const rankingBase = "http://127.0.0.1:3102/academico/ranking";
+  await pagina.goto(`${rankingBase}?marca=marca-1&olimpiada=canguru&nivel=nivel_2&fase=2`, {
+    waitUntil: "networkidle",
+  });
+  await pagina.getByRole("heading", { name: "Revise o recorte do ranking" }).waitFor();
+  assert.equal(await tabelaRanking().count(), 0);
+  await pagina.goto(rankingBase, { waitUntil: "networkidle" });
+  await pagina.getByRole("heading", { name: "Defina o recorte do ranking" }).waitFor();
+  resultado.verificacoes.push(
+    "Seleções incompatíveis e incompletas pedem definição, sem produzir ranking zerado.",
+  );
+
+  await pagina.goto(`${rankingBase}?marca=marca-vazia&olimpiada=obmep&nivel=nivel_2&fase=1`, {
+    waitUntil: "networkidle",
+  });
+  await pagina.getByText("Nenhum aluno confirmado nesta marca.", { exact: false }).waitFor();
+  assert.equal(await tabelaRanking().count(), 0);
+  resultado.verificacoes.push(
+    "Marca sem alunos confirmados apresenta orientação de cadastro, sem classificação fictícia.",
+  );
+
+  await pagina.setViewportSize({ width: 390, height: 844 });
+  await pagina.goto(`${rankingBase}?marca=marca-1&olimpiada=obmep&nivel=nivel_2&fase=1`, {
+    waitUntil: "networkidle",
+  });
+  await tabelaRanking().waitFor();
+  assert.equal(
+    await pagina.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
+    false,
+  );
+  await pagina.screenshot({ path: path.join(saida, "ranking-celular.png"), fullPage: false });
+  await pagina
+    .locator('section[aria-labelledby="ranking-alunos-titulo"]')
+    .screenshot({ path: path.join(saida, "ranking-tabela-celular.png") });
+  const regiaoRanking = pagina.getByRole("region", {
+    name: "Classificação de preparação por marca",
+    exact: true,
+  });
+  await regiaoRanking.focus();
+  await pagina.keyboard.press("ArrowRight");
+  await pagina.waitForFunction(
+    () =>
+      document.querySelector('[aria-label="Classificação de preparação por marca"]').scrollLeft > 0,
+  );
+  resultado.verificacoes.push(
+    "Ranking no celular: sem overflow da página; tabela com rolagem interna por teclado.",
+  );
   assert.deepEqual(resultado.errosConsole, []);
   console.log(JSON.stringify(resultado, null, 2));
 } finally {
