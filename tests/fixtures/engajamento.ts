@@ -28,7 +28,14 @@ export function respostaBase(
     aula_id: null,
     respondido_em: "2026-10-16T12:00:00Z",
     feedback_ia: null,
-    questao: { tipo: "multipla_escolha", topico: "Geometria", assunto: null, olimpiada: "OBMEP" },
+    questao: {
+      tipo: "multipla_escolha",
+      topico: "Geometria",
+      assunto: null,
+      olimpiada: "obmep",
+      nivel: "nivel_2",
+      fase: 1,
+    },
     ...extra,
   };
 }
@@ -82,12 +89,22 @@ export function fixturePedagogico(): DadosEngajamento {
             tipo: "multipla_escolha",
             topico: q < 6 ? "Geometria" : "Álgebra",
             assunto: null,
-            olimpiada: "OBMEP",
+            olimpiada: q >= 6 && q < 9 ? "canguru" : "obmep",
+            nivel: q < 6 ? "nivel_2" : q < 9 ? "C" : "nivel_3",
+            fase: q < 9 ? 1 : 2,
           },
         }),
       );
     }
   }
+  for (let i = 0; i < 8; i++)
+    dados.respostas.push(
+      respostaBase(`anterior-${i}`, "01", {
+        questao_id: `anterior-q-${i}`,
+        correta: i < 4,
+        respondido_em: "2026-09-12T12:00:00Z",
+      }),
+    );
   return dados;
 }
 
@@ -115,5 +132,64 @@ export function fixturePerfisNaoConfirmados(): DadosEngajamento {
     dados.respostas.push(respostaBase(`resposta-${tipo}`, tipo));
   }
   dados.respostas.push(respostaBase("resposta-pendente", "pendente-01"));
+  return dados;
+}
+
+export function fixtureRankingOlimpico(): DadosEngajamento {
+  const dados = dadosBase();
+  dados.marcas.push({ id: "marca-vazia", nome: "Marca sem alunos confirmados" });
+  dados.unidades.push({
+    id: "ranking-unidade-2",
+    nome: "Unidade Olímpica Sul",
+    marca_id: "marca-1",
+  });
+  for (let i = 0; i < 36; i++) {
+    const id = `olimpico-${String(i + 1).padStart(2, "0")}`;
+    const acertos = i >= 30 ? (i >= 32 ? 5 : 0) : 10 - Math.floor(i / 3);
+    dados.alunos.push(
+      alunoBase(id, {
+        nome: `Aluno olímpico ${String(i + 1).padStart(2, "0")}`,
+        marca_id: i < 32 ? "marca-1" : "marca-2",
+        turma_id: null,
+        unidade_id:
+          i < 10 || (i >= 21 && i < 32) ? "unidade-1" : i < 32 ? "ranking-unidade-2" : "unidade-2",
+        serie_cadastro: "9º EF",
+      }),
+    );
+    for (let q = 0; q < 12; q++)
+      dados.respostas.push(
+        respostaBase(`${id}-${q}`, id, {
+          questao_id: `ranking-q-${q}`,
+          correta: q < acertos,
+        }),
+      );
+    dados.respostas.push(
+      respostaBase(`${id}-repetida`, id, {
+        questao_id: "ranking-q-0",
+        correta: acertos > 0,
+        contexto: "aula",
+        aula_id: "ranking-aula",
+      }),
+    );
+    dados.respostas.push(
+      respostaBase(`${id}-outra`, id, {
+        questao: {
+          tipo: "multipla_escolha",
+          topico: "Álgebra",
+          assunto: null,
+          olimpiada: "canguru",
+          nivel: "C",
+          fase: 1,
+        },
+      }),
+    );
+  }
+  for (const tipo of [null, "pendente", "professor", "colaborador"] as const) {
+    const id = `fora-${tipo ?? "legado"}`;
+    dados.alunos.push(
+      alunoBase(id, { nome: `Perfil excluído ${tipo ?? "legado"}`, tipo_usuario: tipo }),
+    );
+    dados.respostas.push(respostaBase(`${id}-resposta`, id));
+  }
   return dados;
 }

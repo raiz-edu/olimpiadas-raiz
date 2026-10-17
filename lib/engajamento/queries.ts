@@ -63,7 +63,7 @@ export async function carregarDadosEngajamento(agora: Date): Promise<DadosEngaja
         db
           .from("resposta_aluno")
           .select(
-            "id, aluno_id, questao_id, correta, contexto, aula_id, respondido_em, feedback_ia:feedback_ia->itens, questao:questao_id(tipo, topico, assunto, olimpiada)",
+            "id, aluno_id, questao_id, correta, contexto, aula_id, respondido_em, feedback_ia:feedback_ia->itens, questao:questao_id(tipo, topico, assunto, olimpiada, nivel, fase)",
           )
           .in("aluno_id", ids)
           .lte("respondido_em", fim)

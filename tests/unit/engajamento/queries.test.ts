@@ -12,6 +12,7 @@ let tabelas: Record<string, Row[]>;
 let falha: string | null;
 let from: ReturnType<typeof vi.fn>;
 let leituras: { tabela: string; campo: string; ids: unknown[] }[];
+let selecoes: { tabela: string; campos: string }[];
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -19,6 +20,7 @@ beforeEach(() => {
   mocks.permitido.mockReturnValue(true);
   falha = null;
   leituras = [];
+  selecoes = [];
   tabelas = {
     aluno: [
       { ...alunoBase("confirmado"), ativo: true },
@@ -37,7 +39,10 @@ beforeEach(() => {
     let inicio = 0;
     let final = 999;
     const q = {
-      select: () => q,
+      select: (campos: string) => {
+        selecoes.push({ tabela, campos });
+        return q;
+      },
       eq: (campo: string, valor: unknown) => {
         filtros.push((r) => r[campo] === valor);
         return q;
@@ -86,6 +91,9 @@ describe("consultas dos grupos de perfil", () => {
     const dados = await carregarDadosEngajamento(AGORA_ENGAJAMENTO);
     expect(dados.alunos.map((a) => a.id)).toEqual(["confirmado", "legado", "pendente"]);
     expect(dados.respostas.map((r) => r.id)).toEqual(["resposta-confirmada"]);
+    expect(selecoes.find((s) => s.tabela === "resposta_aluno")!.campos).toContain(
+      "olimpiada, nivel, fase",
+    );
     expect(leituras.map((leitura) => leitura.ids)).toEqual([
       ["confirmado"],
       ["confirmado"],

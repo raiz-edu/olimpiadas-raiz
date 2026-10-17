@@ -1,5 +1,11 @@
 import type { Aluno } from "@/lib/types/database";
 import { compoeIndicadoresAluno, perfilPortalNaoConfirmado } from "@/lib/auth/portal-profile";
+import {
+  respostaCorrigida,
+  respostaNoRecorte,
+  temRecorteQuestoes,
+  type RecorteQuestoes,
+} from "./recortes";
 
 export const CONTEXTOS = {
   banco: "Treino livre",
@@ -36,6 +42,8 @@ export type RespostaEstudo = {
     topico: string | null;
     assunto: string | null;
     olimpiada: string;
+    nivel?: string | null;
+    fase?: number | null;
   } | null;
 };
 export type ProgressoEstudo = {
@@ -131,6 +139,13 @@ export function criarJanelaEstudo(dias: 7 | 30 | 90, agora: Date) {
   };
 }
 export type JanelaEstudo = ReturnType<typeof criarJanelaEstudo>;
+export function janelaAnteriorEstudo(janela: JanelaEstudo) {
+  return criarJanelaEstudo(janela.dias, new Date(Date.parse(janela.inicio) - 1));
+}
+export function variacaoAcerto(atual: ContagemAcertos, anterior: ContagemAcertos): number | null {
+  if (atual.corrigidas < 5 || anterior.corrigidas < 5) return null;
+  return taxaAcerto(atual)! - taxaAcerto(anterior)!;
+}
 
 export function taxaAcerto(contagem: ContagemAcertos): number | null {
   return contagem.corrigidas ? (contagem.acertos / contagem.corrigidas) * 100 : null;
@@ -157,6 +172,7 @@ function somarContagem(destino: ContagemAcertos, origem: ContagemAcertos) {
 export function montarAlunosEngajamento(
   dados: DadosEngajamento,
   janela: JanelaEstudo,
+  recorte: RecorteQuestoes = {},
 ): AlunoEngajamento[] {
   const agoraMs = Date.parse(janela.fim);
   const inicioMs = Date.parse(janela.inicio);
@@ -166,6 +182,7 @@ export function montarAlunosEngajamento(
   const dias = new Map<string, Set<string>>();
   const questoes = new Map<string, Set<string>>();
   const ultimas = new Map<string, RespostaEstudo>();
+  const evidenciasGerais = new Set<string>();
 
   for (const base of dados.alunos) {
     if (!compoeIndicadoresAluno(base.tipo_usuario)) continue;
@@ -199,6 +216,8 @@ export function montarAlunosEngajamento(
     const aluno = alunos.get(resposta.aluno_id);
     const ms = timestampValido(resposta.respondido_em, agoraMs);
     if (!aluno || ms === null) continue;
+    evidenciasGerais.add(aluno.id);
+    if (!respostaNoRecorte(resposta, recorte)) continue;
     registrarEstudo(aluno, resposta.respondido_em, ms);
     if (ms < inicioMs) continue;
     aluno.tentativas++;
@@ -225,6 +244,8 @@ export function montarAlunosEngajamento(
     // Abrir uma aula com progresso zero não comprova estudo.
     if (!aluno || ms === null || (!progresso.assistido && progresso.progresso_segundos <= 0))
       continue;
+    evidenciasGerais.add(aluno.id);
+    if (temRecorteQuestoes(recorte)) continue;
     registrarEstudo(aluno, progresso.updated_at, ms);
     if (ms >= inicioMs && progresso.assistido) aluno.aulasAssistidas++;
   }
@@ -234,10 +255,7 @@ export function montarAlunosEngajamento(
     const aluno = alunos.get(resposta.aluno_id)!;
     const contexto = contextoEstudo(resposta.contexto);
     // Uma questão excluída ou aberta sem avaliação não equivale a um erro.
-    const pendente =
-      !resposta.questao ||
-      resposta.correta === null ||
-      (resposta.questao.tipo === "aberta" && !resposta.feedback_ia);
+    const pendente = !respostaCorrigida(resposta);
     const contagem = {
       corrigidas: pendente ? 0 : 1,
       acertos: !pendente && resposta.correta ? 1 : 0,
@@ -267,7 +285,11 @@ export function montarAlunosEngajamento(
       const ultimoDia = diaEmSaoPaulo(aluno.ultimaAtividade);
       aluno.diasSemEstudo = Math.round((Date.parse(janela.hoje) - Date.parse(ultimoDia)) / DIA_MS);
       aluno.situacao = ultimoDia < janela.inicioAtivos7d ? "retomar" : "em_estudo";
-    } else if (aluno.login_count > 0 || timestampValido(aluno.last_login_at, agoraMs) !== null) {
+    } else if (
+      aluno.login_count > 0 ||
+      timestampValido(aluno.last_login_at, agoraMs) !== null ||
+      evidenciasGerais.has(aluno.id)
+    ) {
       aluno.situacao = "sem_estudo";
     }
     aluno.precisaApoio =
@@ -276,7 +298,7 @@ export function montarAlunosEngajamento(
   return [...alunos.values()];
 }
 
-export type FiltrosEngajamento = {
+export type FiltrosEngajamento = Required<RecorteQuestoes> & {
   marca: string;
   unidade: string;
   serie: string;
@@ -291,12 +313,16 @@ export type FiltrosEngajamento = {
 export function lerFiltrosEngajamento(
   params: Record<string, string | string[] | undefined>,
 ): FiltrosEngajamento {
-  const texto = (chave: string) => (typeof params[chave] === "string" ? params[chave] : "");
+  const texto = (chave: string) =>
+    typeof params[chave] === "string" ? params[chave].trim().slice(0, 120) : "";
   const situacao = texto("situacao");
   const ordenar = texto("ordenar");
   const pagina = Number(texto("pagina"));
   const paginaPerfis = Number(texto("pagina_perfis"));
   return {
+    olimpiada: texto("olimpiada"),
+    nivel: texto("nivel"),
+    fase: texto("fase"),
     marca: texto("marca"),
     unidade: texto("unidade"),
     serie: texto("serie"),
