@@ -1,5 +1,5 @@
 import type { Aluno } from "@/lib/types/database";
-import { compoeIndicadoresAluno } from "@/lib/auth/portal-profile";
+import { compoeIndicadoresAluno, perfilPortalNaoConfirmado } from "@/lib/auth/portal-profile";
 
 export const CONTEXTOS = {
   banco: "Treino livre",
@@ -76,6 +76,34 @@ export type AlunoEngajamento = AlunoBase & {
   porContexto: Record<ContextoEstudo, ContagemAcertos>;
   topicos: { nome: string; olimpiada: string; corrigidas: number; acertos: number }[];
 };
+export type PerfilNaoConfirmado = Pick<AlunoBase, "id" | "nome" | "last_login_at"> &
+  Pick<AlunoEngajamento, "marcaId" | "marca" | "unidadeId" | "unidade" | "serie" | "turma">;
+
+function resolvedorVinculos(dados: Pick<DadosEngajamento, "marcas" | "unidades" | "turmas">) {
+  const marcas = new Map(dados.marcas.map((m) => [m.id, m.nome]));
+  const unidades = new Map(dados.unidades.map((u) => [u.id, u]));
+  const turmas = new Map(dados.turmas.map((t) => [t.id, t]));
+  return (base: AlunoBase) => {
+    const turma = base.turma_id ? turmas.get(base.turma_id) : null;
+    const unidade = unidades.get(turma?.unidade_id ?? base.unidade_id ?? "");
+    const marcaId = base.marca_id ?? unidade?.marca_id ?? null;
+    return {
+      marcaId,
+      marca: marcas.get(marcaId ?? "") ?? "Sem marca informada",
+      unidadeId: unidade?.id ?? null,
+      unidade: unidade?.nome ?? "Sem unidade informada",
+      turma: turma?.nome ?? null,
+      serie: base.serie?.trim() || turma?.serie?.trim() || base.serie_cadastro?.trim() || null,
+    };
+  };
+}
+export function montarPerfisNaoConfirmados(dados: DadosEngajamento): PerfilNaoConfirmado[] {
+  const vinculo = resolvedorVinculos(dados);
+  return dados.alunos
+    .filter((a) => perfilPortalNaoConfirmado(a.tipo_usuario))
+    .map((a) => ({ id: a.id, nome: a.nome, last_login_at: a.last_login_at, ...vinculo(a) }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
 
 const DIA_MS = 86_400_000;
 const formatadorDia = new Intl.DateTimeFormat("en-CA", {
@@ -132,9 +160,7 @@ export function montarAlunosEngajamento(
 ): AlunoEngajamento[] {
   const agoraMs = Date.parse(janela.fim);
   const inicioMs = Date.parse(janela.inicio);
-  const marcas = new Map(dados.marcas.map((m) => [m.id, m.nome]));
-  const unidades = new Map(dados.unidades.map((u) => [u.id, u]));
-  const turmas = new Map(dados.turmas.map((t) => [t.id, t]));
+  const vinculo = resolvedorVinculos(dados);
   const premios = new Map(dados.premiacoes.map((p) => [p.aluno_id, p.total]));
   const alunos = new Map<string, AlunoEngajamento>();
   const dias = new Map<string, Set<string>>();
@@ -143,17 +169,9 @@ export function montarAlunosEngajamento(
 
   for (const base of dados.alunos) {
     if (!compoeIndicadoresAluno(base.tipo_usuario)) continue;
-    const turma = base.turma_id ? turmas.get(base.turma_id) : null;
-    const unidade = unidades.get(turma?.unidade_id ?? base.unidade_id ?? "");
-    const marcaId = base.marca_id ?? unidade?.marca_id ?? null;
     alunos.set(base.id, {
       ...base,
-      marcaId,
-      marca: marcas.get(marcaId ?? "") ?? "Sem marca informada",
-      unidadeId: unidade?.id ?? null,
-      unidade: unidade?.nome ?? "Sem unidade informada",
-      turma: turma?.nome ?? null,
-      serie: base.serie?.trim() || turma?.serie?.trim() || base.serie_cadastro?.trim() || null,
+      ...vinculo(base),
       diasPratica: [],
       tentativas: 0,
       questoesUnicas: 0,
@@ -267,6 +285,8 @@ export type FiltrosEngajamento = {
   situacao: SituacaoEstudo | "apoio" | "";
   ordenar: "atencao" | "atividade" | "acerto" | "nome";
   pagina: number;
+  // null mantém a lista recolhida até uma navegação explícita ou um recorte sem alunos.
+  pagina_perfis: number | null;
 };
 export function lerFiltrosEngajamento(
   params: Record<string, string | string[] | undefined>,
@@ -275,6 +295,7 @@ export function lerFiltrosEngajamento(
   const situacao = texto("situacao");
   const ordenar = texto("ordenar");
   const pagina = Number(texto("pagina"));
+  const paginaPerfis = Number(texto("pagina_perfis"));
   return {
     marca: texto("marca"),
     unidade: texto("unidade"),
@@ -288,6 +309,7 @@ export function lerFiltrosEngajamento(
     ordenar:
       ordenar === "atividade" || ordenar === "acerto" || ordenar === "nome" ? ordenar : "atencao",
     pagina: Number.isSafeInteger(pagina) && pagina > 0 ? pagina : 1,
+    pagina_perfis: Number.isSafeInteger(paginaPerfis) && paginaPerfis > 0 ? paginaPerfis : null,
   };
 }
 function normalizarBusca(valor: string) {
@@ -296,7 +318,9 @@ function normalizarBusca(valor: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("pt-BR");
 }
-export function filtrarCoorte(alunos: AlunoEngajamento[], filtros: FiltrosEngajamento) {
+export function filtrarCoorte<
+  T extends Pick<AlunoEngajamento, "nome" | "marcaId" | "unidadeId" | "serie">,
+>(alunos: T[], filtros: FiltrosEngajamento) {
   return alunos.filter(
     (a) =>
       (!filtros.marca || (a.marcaId ?? "sem-vinculo") === filtros.marca) &&

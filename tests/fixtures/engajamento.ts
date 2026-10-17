@@ -10,6 +10,7 @@ export function alunoBase(id: string, extra: Partial<AlunoBase> = {}): AlunoBase
     serie: null,
     login_count: 0,
     last_login_at: null,
+    tipo_usuario: "aluno",
     ...extra,
   };
 }
@@ -87,5 +88,32 @@ export function fixturePedagogico(): DadosEngajamento {
       );
     }
   }
+  return dados;
+}
+
+/** Inclui perfis de todos os tipos para verificar a separação no painel real. */
+export function fixturePerfisNaoConfirmados(): DadosEngajamento {
+  const dados = fixturePedagogico();
+  dados.marcas.push({ id: "marca-3", nome: "Marca só com pendentes" });
+  dados.unidades.push({ id: "unidade-3", nome: "Unidade Jardim", marca_id: "marca-3" });
+  for (let i = 0; i < 28; i++) {
+    const numero = String(i + 1).padStart(2, "0");
+    dados.alunos.push(
+      alunoBase(`pendente-${numero}`, {
+        nome: `Perfil aguardando ${numero}`,
+        tipo_usuario: i % 3 === 0 ? null : i % 3 === 1 ? "pendente" : undefined,
+        turma_id: null,
+        marca_id: i === 27 ? null : "marca-3",
+        unidade_id: i === 27 ? null : "unidade-3",
+        serie_cadastro: i === 27 ? null : "2º EM",
+        last_login_at: i % 2 === 0 ? "2026-10-16T10:00:00Z" : null,
+      }),
+    );
+  }
+  for (const tipo of ["professor", "colaborador"] as const) {
+    dados.alunos.push(alunoBase(tipo, { nome: `Profissional ${tipo}`, tipo_usuario: tipo }));
+    dados.respostas.push(respostaBase(`resposta-${tipo}`, tipo));
+  }
+  dados.respostas.push(respostaBase("resposta-pendente", "pendente-01"));
   return dados;
 }

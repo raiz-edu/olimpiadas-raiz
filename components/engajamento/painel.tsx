@@ -23,8 +23,10 @@ import {
   type ContextoEstudo,
   type FiltrosEngajamento,
   type JanelaEstudo,
+  type PerfilNaoConfirmado,
 } from "@/lib/engajamento/metricas";
 import { AtividadeChart } from "./atividade-chart";
+import { PerfisNaoConfirmados } from "./perfis-nao-confirmados";
 
 const CAMPO =
   "h-10 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -49,7 +51,8 @@ export function urlEngajamento(
 ) {
   const params = new URLSearchParams();
   for (const [chave, valor] of Object.entries({ ...filtros, ...alteracoes })) {
-    if (valor !== "" && !(chave === "pagina" && valor === 1)) params.set(chave, String(valor));
+    if (valor != null && valor !== "" && !(chave === "pagina" && valor === 1))
+      params.set(chave, String(valor));
   }
   return `/academico/desempenho?${params.toString()}${ancora}`;
 }
@@ -242,32 +245,38 @@ function Grupos({
 
 export function PainelEngajamento({
   alunos,
+  naoConfirmados = [],
   filtros,
   janela,
 }: {
   alunos: AlunoEngajamento[];
+  naoConfirmados?: PerfilNaoConfirmado[];
   filtros: FiltrosEngajamento;
   janela: JanelaEstudo;
 }) {
   const coorte = filtrarCoorte(alunos, filtros);
+  const pendentes = filtrarCoorte(naoConfirmados, filtros);
+  const paginasPerfis = Math.max(1, Math.ceil(pendentes.length / POR_PAGINA));
+  const paginaPerfis = Math.min(filtros.pagina_perfis ?? 1, paginasPerfis);
   const resumo = resumirEngajamento(coorte, janela);
   const selecionados = selecionarAlunos(coorte, filtros);
   const paginas = Math.max(1, Math.ceil(selecionados.length / POR_PAGINA));
   const pagina = Math.min(filtros.pagina, paginas);
   const linhas = selecionados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const revisoes = topicosParaRevisar(coorte);
+  const perfisDisponiveis = [...alunos, ...naoConfirmados];
   const marcas = [
-    ...new Map(alunos.map((a) => [a.marcaId ?? "sem-vinculo", a.marca])).entries(),
+    ...new Map(perfisDisponiveis.map((a) => [a.marcaId ?? "sem-vinculo", a.marca])).entries(),
   ].sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
   const unidades = [
     ...new Map(
-      alunos.map((a) => [
+      perfisDisponiveis.map((a) => [
         a.unidadeId ?? "sem-vinculo",
         a.unidadeId ? `${a.unidade} · ${a.marca}` : a.unidade,
       ]),
     ).entries(),
   ].sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
-  const series = [...new Set(alunos.map((a) => a.serie ?? "sem-vinculo"))].sort((a, b) =>
+  const series = [...new Set(perfisDisponiveis.map((a) => a.serie ?? "sem-vinculo"))].sort((a, b) =>
     a.localeCompare(b, "pt-BR", { numeric: true }),
   );
   const campos = [
@@ -345,13 +354,13 @@ export function PainelEngajamento({
           </label>
         ))}
         <label className="min-w-0 space-y-1.5 text-xs font-medium text-muted-foreground">
-          Buscar aluno
+          Buscar por nome
           <input
             className={CAMPO}
             name="busca"
             type="search"
             defaultValue={filtros.busca}
-            placeholder="Nome do aluno"
+            placeholder="Nome do cadastro"
             maxLength={120}
           />
         </label>
@@ -371,12 +380,38 @@ export function PainelEngajamento({
         </div>
       </form>
 
+      <PerfisNaoConfirmados
+        perfis={pendentes.slice((paginaPerfis - 1) * POR_PAGINA, paginaPerfis * POR_PAGINA)}
+        abrirLista={coorte.length === 0 || filtros.pagina_perfis !== null}
+        paginacao={{
+          pagina: paginaPerfis,
+          paginas: paginasPerfis,
+          total: pendentes.length,
+          anterior:
+            paginaPerfis > 1
+              ? urlEngajamento(
+                  filtros,
+                  { pagina_perfis: paginaPerfis - 1 },
+                  "#perfis-nao-confirmados",
+                )
+              : null,
+          proxima:
+            paginaPerfis < paginasPerfis
+              ? urlEngajamento(
+                  filtros,
+                  { pagina_perfis: paginaPerfis + 1 },
+                  "#perfis-nao-confirmados",
+                )
+              : null,
+        }}
+      />
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
-            titulo: "Alunos no recorte",
+            titulo: "Alunos confirmados",
             valor: numero(resumo.total),
-            descricao: "Todos os cadastros ativos, inclusive sem estudo",
+            descricao: "Perfis identificados como aluno, inclusive sem estudo",
             Icone: Users,
           },
           {
@@ -416,9 +451,11 @@ export function PainelEngajamento({
       {coorte.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-border py-14 text-center">
           <Users className="mx-auto mb-3 h-7 w-7 text-muted-foreground" aria-hidden="true" />
-          <h2 className="font-semibold">Nenhum aluno neste recorte</h2>
+          <h2 className="font-semibold">Nenhum aluno confirmado neste recorte</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Revise a marca, a unidade, a série ou o nome pesquisado.
+            {pendentes.length > 0
+              ? "Há cadastros aguardando confirmação de perfil. Eles aparecem na lista separada acima."
+              : "Revise a marca, a unidade, a série ou o nome pesquisado."}
           </p>
           <Link
             href="/academico/desempenho"
@@ -598,9 +635,16 @@ export function PainelEngajamento({
                 className="flex w-full flex-wrap items-end gap-2 sm:w-auto"
                 aria-label="Refinar lista de alunos"
               >
-                {(["marca", "unidade", "serie", "periodo", "busca"] as const).map((chave) => (
-                  <input key={chave} type="hidden" name={chave} value={String(filtros[chave])} />
-                ))}
+                {(["marca", "unidade", "serie", "periodo", "busca", "pagina_perfis"] as const).map(
+                  (chave) => (
+                    <input
+                      key={chave}
+                      type="hidden"
+                      name={chave}
+                      value={String(filtros[chave] ?? "")}
+                    />
+                  ),
+                )}
                 <label className="min-w-0 basis-full space-y-1 text-xs text-muted-foreground sm:basis-auto">
                   Situação
                   <select

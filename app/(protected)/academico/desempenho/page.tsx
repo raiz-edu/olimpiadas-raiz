@@ -7,6 +7,7 @@ import {
   criarJanelaEstudo,
   lerFiltrosEngajamento,
   montarAlunosEngajamento,
+  montarPerfisNaoConfirmados,
 } from "@/lib/engajamento/metricas";
 import { PainelEngajamento } from "@/components/engajamento/painel";
 
@@ -50,6 +51,7 @@ export default async function EngajamentoDesempenhoPage({
   return (
     <PainelEngajamento
       alunos={montarAlunosEngajamento(dados, janela)}
+      naoConfirmados={montarPerfisNaoConfirmados(dados)}
       filtros={filtros}
       janela={janela}
     />

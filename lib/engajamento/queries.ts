@@ -2,6 +2,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buscarPaginasEngajamento } from "./paginacao";
+import { compoeIndicadoresAluno } from "@/lib/auth/portal-profile";
 import type { DadosEngajamento, RespostaEstudo } from "./metricas";
 
 const TIPOS_PREMIADOS = new Set(["ouro", "prata", "bronze", "mencao_honrosa"]);
@@ -20,7 +21,7 @@ export async function carregarDadosEngajamento(agora: Date): Promise<DadosEngaja
           "id, nome, marca_id, unidade_id, tipo_usuario, turma_id, serie, serie_cadastro, login_count, last_login_at",
         )
         .eq("ativo", true)
-        .or("tipo_usuario.is.null,tipo_usuario.eq.aluno")
+        .or("tipo_usuario.is.null,tipo_usuario.eq.pendente,tipo_usuario.eq.aluno")
         .order("id")
         .range(inicio, final)
         .abortSignal(AbortSignal.timeout(15_000)),
@@ -54,8 +55,9 @@ export async function carregarDadosEngajamento(agora: Date): Promise<DadosEngaja
   const progressos: DadosEngajamento["progressos"] = [];
   const inscricoes: { id: string; aluno_id: string }[] = [];
   // Lotes de IDs evitam URLs excessivas; range evita truncamento de respostas.
-  for (let i = 0; i < alunos.length; i += 100) {
-    const ids = alunos.slice(i, i + 100).map((a) => a.id);
+  const confirmados = alunos.filter((a) => compoeIndicadoresAluno(a.tipo_usuario));
+  for (let i = 0; i < confirmados.length; i += 100) {
+    const ids = confirmados.slice(i, i + 100).map((a) => a.id);
     const [respostasLote, progressosLote, inscricoesLote] = await Promise.all([
       buscarPaginasEngajamento((inicio, final) =>
         db
