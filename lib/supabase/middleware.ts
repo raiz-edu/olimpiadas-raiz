@@ -16,6 +16,8 @@ function getRouteAccess(pathname: string) {
   // Apresentação "A Trilha Olímpica" — página editorial pública, também
   // renderizada dentro do login.
   const isApresentacao = pathname.startsWith("/apresentacao");
+  // O endpoint valida a sessão de cada área; portal usa cookie próprio, não Supabase Auth.
+  const isAcessoTelemetry = pathname === "/api/acessos";
 
   return {
     isPublicPath:
@@ -26,6 +28,7 @@ function getRouteAccess(pathname: string) {
       isAcceptInvite ||
       isGoogleOAuth ||
       isPopupAuth ||
+      isAcessoTelemetry ||
       isApresentacao,
   };
 }

@@ -1,0 +1,101 @@
+
+> olimpiadas-raiz@0.1.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 189ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 23.2s
+  Running TypeScript ...
+  Finished TypeScript in 17.5s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/60) ...
+  Generating static pages using 7 workers (15/60)
+  Generating static pages using 7 workers (30/60)
+  Generating static pages using 7 workers (45/60)
+✓ Generating static pages using 7 workers (60/60) in 2.6s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /academico/apostilas
+├ ƒ /academico/apostilas/[id]
+├ ƒ /academico/apostilas/[id]/editar
+├ ƒ /academico/apostilas/nova
+├ ƒ /academico/banco-questoes
+├ ƒ /academico/banco-questoes/[id]
+├ ƒ /academico/banco-questoes/[id]/preview
+├ ƒ /academico/banco-questoes/nova
+├ ƒ /academico/banco-questoes/prova
+├ ƒ /academico/banco-questoes/raio-x
+├ ƒ /academico/calendario
+├ ƒ /academico/desempenho
+├ ƒ /academico/ingresso
+├ ƒ /academico/olimpiadas
+├ ƒ /academico/preparacao
+├ ƒ /academico/ranking
+├ ƒ /academico/simulados
+├ ƒ /academico/simulados/[id]
+├ ƒ /academico/simulados/novo
+├ ƒ /aceitar-convite
+├ ƒ /aluno/aula/[id]
+├ ƒ /aluno/cadastro
+├ ƒ /aluno/dashboard
+├ ƒ /aluno/ingresso
+├ ƒ /aluno/login
+├ ƒ /aluno/projeto/[id]
+├ ƒ /aluno/projetos
+├ ƒ /aluno/simulados
+├ ƒ /aluno/simulados/[id]
+├ ƒ /aluno/simulados/[id]/relatorio
+├ ƒ /aluno/treino
+├ ƒ /aluno/treino/[questaoId]
+├ ƒ /aluno/treino/dashboard
+├ ƒ /alunos
+├ ƒ /alunos/[id]/editar
+├ ƒ /alunos/novo
+├ ƒ /alunos/sincronizacao
+├ ƒ /analytics
+├ ƒ /analytics/acessos
+├ ƒ /analytics/banco-questoes
+├ ƒ /analytics/metas
+├ ƒ /api/academico/calendario/doc
+├ ƒ /api/acessos
+├ ƒ /api/auth/callback
+├ ƒ /api/auth/google
+├ ƒ /api/auth/google/callback
+├ ƒ /api/auth/popup-session
+├ ƒ /api/convites
+├ ƒ /api/olimpiadas/[sigla]/doc
+├ ƒ /api/planilhas/download
+├ ○ /apresentacao
+├ ƒ /auth/callback
+├ ƒ /auth/popup-callback
+├ ƒ /auth/popup-callback-staff
+├ ƒ /calendario
+├ ƒ /configuracoes
+├ ƒ /configuracoes/credenciais
+├ ƒ /dashboard
+├ ƒ /inscricoes
+├ ƒ /inscricoes/nova
+├ ƒ /login
+├ ƒ /olimpiadas
+├ ƒ /resultados
+├ ƒ /resultados/olimpiadas
+├ ƒ /resultados/painel
+├ ƒ /turmas
+├ ƒ /turmas/[id]/editar
+├ ƒ /turmas/nova
+├ ƒ /unidades
+├ ƒ /unidades/[id]/editar
+├ ƒ /unidades/nova
+└ ƒ /usuarios
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

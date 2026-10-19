@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { RegistrarAcesso } from "@/components/acessos/registrar-acesso";
 import Image from "next/image";
 import { getServerSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -62,6 +64,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <UserProvider user={user}>
+      <Suspense fallback={null}>
+        <RegistrarAcesso area="gestao" />
+      </Suspense>
       <div className="flex min-h-screen flex-col">
         {/* Top navbar */}
         <header

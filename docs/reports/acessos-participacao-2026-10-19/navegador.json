@@ -1,0 +1,13 @@
+{
+  "dados": "sintéticos",
+  "verificacoes": [
+    "Desktop: indicadores, comparação acesso/estudo, perfis, séries e unidades.",
+    "Filtros combinados de marca/perfil/série/período; limpar por navegação parcial sincroniza seletores.",
+    "Professores aparecem na adoção sem compor a base de alunos.",
+    "Conjunto vazio explícito, sem confundir com indisponibilidade.",
+    "Visão restrita apresenta apenas a marca e unidades do diretor.",
+    "Celular: sem overflow da página, tabela em região própria e filtro de perfis pendentes funcional.",
+    "Tracker real: cadastro pendente e gestão; login ignorado, throttle entre navegações, ausência de heartbeat e aba oculta ignorada."
+  ],
+  "errosConsole": []
+}

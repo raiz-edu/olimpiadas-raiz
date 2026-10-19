@@ -1,0 +1,47 @@
+[
+  {
+    "caminho": "/analytics/acessos",
+    "metodo": "GET",
+    "status": 307
+  },
+  {
+    "caminho": "/api/acessos",
+    "metodo": "GET",
+    "status": 405
+  },
+  {
+    "caminho": "/api/acessos",
+    "metodo": "POST",
+    "status": 401
+  },
+  {
+    "caminho": "/api/acessos",
+    "metodo": "POST",
+    "status": 401
+  },
+  {
+    "caminho": "/api/acessos",
+    "metodo": "POST",
+    "status": 403
+  },
+  {
+    "caminho": "/api/acessos",
+    "metodo": "POST",
+    "status": 400
+  },
+  {
+    "caminho": "/api/acessos/outro",
+    "metodo": "POST",
+    "status": 307
+  },
+  {
+    "caminho": "/aluno/login",
+    "metodo": "GET",
+    "status": 200
+  },
+  {
+    "caminho": "/aluno/cadastro",
+    "metodo": "GET",
+    "status": 307
+  }
+]
