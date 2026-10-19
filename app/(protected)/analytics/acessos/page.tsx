@@ -24,7 +24,7 @@ export default async function PaginaAcessos({
   } catch {
     return (
       <div className="max-w-2xl space-y-4 rounded-2xl border border-border bg-card p-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Gestão</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Acadêmico</p>
         <h1 className="text-2xl font-bold">Acessos e participação</h1>
         <p role="alert" className="text-sm text-muted-foreground">
           Os indicadores estão indisponíveis no momento. Tente novamente. Se o problema continuar,

@@ -1,6 +1,7 @@
 # Implantação de Acessos e participação
 
-Área: `/analytics/acessos`, menu Gestão. Requer o mesmo acesso de Gestão
+Área: `/analytics/acessos`, menu Acadêmico, logo abaixo de Calendário.
+Requer o mesmo acesso de Gestão
 (`audit_log:read`). Raiz consulta a rede; diretor consulta sua marca ativa.
 
 ## Ordem

@@ -141,7 +141,7 @@ export function PainelAcessos({
       <header className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Gestão · uso da plataforma
+            Acadêmico · uso da plataforma
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
             Acessos e participação

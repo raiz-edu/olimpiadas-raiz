@@ -8,6 +8,7 @@ O catálogo externo `~/Codex/assets/design-library` não está disponível.
 ## Fluxo e acesso
 
 - `GET /analytics/acessos`: Server Component; gate `audit_log:read`, igual a Gestão.
+  Item no menu Acadêmico, logo abaixo de Calendário, conforme ajuste solicitado.
   Raiz tem visão da rede; diretor de marca recebe sua `marca_ativa_id` do banco.
   Diretor sem vínculo não recebe dados. Revalidar esse escopo junto da consulta.
 - `POST /api/acessos`: mesma origem, JSON apenas com `area: portal|gestao`.

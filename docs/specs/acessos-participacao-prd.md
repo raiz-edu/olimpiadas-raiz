@@ -6,7 +6,7 @@ A gestão precisa conhecer a adesão à Plataforma Olímpica por marca, unidade,
 série e perfil. O desempenho acadêmico já acompanha o estudo de alunos; os
 indicadores antigos de Gestão confundem login com frequência e presença online.
 
-Entregar uma área em Gestão com pessoas únicas com acesso registrado, sessões
+Entregar uma área em Acadêmico, abaixo de Calendário, com pessoas únicas com acesso registrado, sessões
 de uso, novos cadastros, ativos em 7/30 dias, distribuição por perfil e série e
 comparação entre alunos que acessam e alunos com estudo registrado. Incluir
 alunos, professores, outros profissionais, equipe e cadastros pendentes.
