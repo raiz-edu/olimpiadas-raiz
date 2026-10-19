@@ -1166,6 +1166,30 @@ export type Database = {
         Args: { p_aluno_id: string };
         Returns: undefined;
       };
+      registrar_acesso: {
+        Args: { p_aluno_id?: string | null; p_usuario_id?: string | null };
+        Returns: string;
+      };
+      gestao_acessos: {
+        Args: {
+          p_marcas?: string[] | null;
+          p_desde?: string | null;
+          p_ate?: string;
+        };
+        Returns: {
+          pessoa_id: string;
+          tipo_usuario: TipoUsuarioPortal | "equipe";
+          marca_id: string | null;
+          unidade_id: string | null;
+          serie: string | null;
+          criado_em: string;
+          ultimo_acesso: string | null;
+          sessoes: number;
+          acessou_periodo: boolean;
+          estudou_periodo: boolean;
+          medicao_desde: string | null;
+        }[];
+      };
       concluir_cadastro_portal: {
         Args: {
           p_aluno_id: string;
